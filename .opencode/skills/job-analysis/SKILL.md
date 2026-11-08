@@ -13,9 +13,12 @@ Read `job-hunter.config.json`. Use:
 For each vacancy:
 - Identify its country and distinguish it from the candidate's current country.
 - Separate mandatory requirements from preferred qualifications.
-- Compare role scope, skills, architecture, domain experience, seniority, location, work mode, language, compensation and work authorization.
+- Compare role scope, core and secondary skills, domain experience, seniority, location, work mode, language, compensation and work authorization. Do not create a separate architecture or engineering-practices scoring dimension.
 - Interpret country-specific requirements in the context of the vacancy's country; verify legal claims from authoritative sources.
-- If sponsorship, language, salary or remote eligibility is unstated, mark it unknown.
+- If sponsorship, language, salary or remote eligibility is unstated, mark it unknown rather than assuming a mismatch.
+- Calculate the score using only the configured matching weights. The weights must sum to 100.
+- Use the score only to rank and organize vacancies. Never automatically reject, delete, or hide a vacancy because of its score.
+- Keep low-scoring and uncertain matches visible for human review. Missing information must not be treated as a confirmed mismatch or automatic zero.
 - Return a 0–100 score with evidence, strengths, gaps, unknowns and recommendation.
 - A score is decision support, not interview probability.
 - Never apply or contact the employer.
