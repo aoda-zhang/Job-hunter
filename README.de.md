@@ -103,7 +103,6 @@ Die Datei enthält drei Bereiche auf oberster Ebene:
 | `salary.note` | string | Ja | Kontext wie Bruttojahresgehalt, Verhandelbarkeit oder unverbindlicher Richtwert. |
 | `coreSkills` | string[] | Ja | Zentrale Fachkenntnisse für die angestrebte Position. |
 | `secondarySkills` | string[] | Ja | Ergänzende oder sekundäre Kenntnisse. |
-| `architectureSkills` | string[] | Ja | Kenntnisse in Architektur, Systemdesign und Engineering-Praktiken. |
 | `experienceEvidence` | string[] | Ja | Kurze Nachweise aus Projekten und Berufserfahrung. Möglichst Kontext, Verantwortung, Technologien und Ergebnisse nennen statt nur Schlagwörter. |
 
 ## 5. matching – Bewertungsregeln
@@ -113,14 +112,12 @@ Die Datei enthält drei Bereiche auf oberster Ebene:
 Jeder Schlüssel steht für eine Bewertungsdimension. Der Zahlenwert gibt deren relatives Gewicht an.
 
 | Schlüssel | Aktuelles Gewicht | Bedeutung |
-|---|---:|---|
-| `roleTitle` | 20 | Übereinstimmung zwischen Stellentitel und Zielrolle |
-| `coreSkills` | 25 | Übereinstimmung der Kernkompetenzen |
-| `architecture` | 15 | Architektur, Systemdesign und Engineering-Praktiken |
-| `seniority` | 10 | Erfahrungs- und Senioritätsniveau |
+| `roleTitle` | 25 | Übereinstimmung zwischen Stellentitel und Zielrolle |
+| `coreSkills` | 35 | Übereinstimmung der Kernkompetenzen |
+| `seniority` | 15 | Erfahrungs- und Senioritätsniveau |
 | `domainExperience` | 10 | Branchen- und Domänenerfahrung |
-| `locationAndWorkMode` | 8 | Standort und Arbeitsmodell |
-| `language` | 7 | Anforderungen an Arbeitssprachen |
+| `locationAndWorkMode` | 5 | Standort und Arbeitsmodell |
+| `language` | 5 | Anforderungen an Arbeitssprachen |
 | `salary` | 5 | Übereinstimmung der Vergütung |
 
 Die Gewichte ergeben zusammen 100; die Konfigurationsprüfung erzwingt diese Summe. Scores dienen ausschließlich zur Sortierung und Orientierung. Stellen mit niedriger Bewertung oder fehlenden Angaben müssen für die manuelle Prüfung sichtbar bleiben und dürfen niemals automatisch gelöscht oder ausgeblendet werden.
