@@ -18,6 +18,10 @@ Edit only `job-hunter.config.json`:
 
 There is no candidate profile, weighted matching score, or score threshold in the discovery configuration. Runtime validation lives in `src/config.ts`.
 
+## Daily report output
+
+The target output is one Markdown file per calendar date at `reports/daily/YYYY-MM-DD.md`. Each file groups the final matched and review-needed vacancies by company. Each company section explains its main business, core products/services and customers with source links. Each distinct role also gets a tailored, fact-based spoken answer to **“Why do you want to join our company?”** Multiple runs on the same day update that day's file rather than creating duplicate files.
+
 ## Quick start
 
 Requirements: Node.js 22+ and npm.
@@ -34,7 +38,7 @@ npm run dev -- report
 
 ## Project status
 
-Early MVP scaffold. Single-file configuration and runtime validation are implemented. Source adapters, end-to-end collection, deterministic three-dimension filtering and report generation still need implementation and validation.
+Early MVP scaffold. Single-file configuration and runtime validation are implemented. Company-research and daily-report workflows are specified, but source adapters, end-to-end collection, deterministic three-dimension filtering, structured company research and automatic daily Markdown report generation still need implementation and validation. The report format above is the target behavior, not a claim that report generation already works.
 
 ## Safety
 
