@@ -1,19 +1,14 @@
 ---
 name: company-research
-description: Research employers behind shortlisted job postings in any configured target country using reliable, dated sources.
+description: Research shortlisted employers in any configured target country using dated, reliable sources.
 ---
 
 # Company Research
 
-For shortlisted employers, investigate official company pages, product, engineering blog, careers pages, public technical materials, and reputable business sources.
+Read the vacancy and the single root `job-hunter.config.json` to identify the target country and relevant role.
 
-Return:
-- What the company does and its presence in the vacancy's country/region.
-- Product and engineering context relevant to the role.
-- Evidence of technology stack and engineering practices.
-- Hiring location and work model.
-- Publicly stated language, compensation, relocation, and work-authorization information relevant to that country.
-- Source URLs and publication/access dates.
-- Unknowns and conflicting information.
+Investigate official company pages, products, engineering blogs, careers pages, public technical materials and reputable business sources.
 
-Do not fabricate headcount, revenue, salary, sponsorship, or engineering stack. Prefer primary sources. Do not assume country-specific rules; verify them from authoritative sources.
+Return company overview, presence in the vacancy's country, role-relevant product and engineering context, technology evidence, hiring location and work model, stated language/compensation/relocation/work-authorization information, source URLs and dates, unknowns and conflicts.
+
+Do not fabricate headcount, revenue, salary, sponsorship or technology stack. Verify country-specific legal or hiring claims from authoritative sources. Never contact the employer.
