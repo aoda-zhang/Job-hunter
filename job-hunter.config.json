@@ -12,11 +12,7 @@
     "lookbackHours": 72,
     "maxResultsPerSource": 50,
     "sources": [
-      "company-career-pages",
-      "LinkedIn",
-      "StepStone",
-      "Indeed",
-      "XING"
+      "LinkedIn"
     ],
     "jobTitles": {
       "include": [
