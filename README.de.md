@@ -58,7 +58,7 @@ Phase 2 ist von der täglichen LinkedIn-Suche getrennt und wird niemals automati
 
 - `.opencode/agents/job-hunter.md` – der Primary Agent und einzige interaktive Einstiegspunkt. Er ordnet Anfragen zu, lädt den passenden Skill und koordiniert den Ablauf.
 - `.opencode/skills/job-discovery/SKILL.md` – Phase 1: LinkedIn-Stellensuche und Tagesbericht.
-- `.opencode/skills/company-research/SKILL.md` – Phase 2: Unternehmensrecherche, Rollen分析 und Interviewvorbereitung.
+- `.opencode/skills/company-research/SKILL.md` – Phase 2: Unternehmensrecherche, Rollenanalyse und Interviewvorbereitung.
 
 Die Skills sind Fachfunktionen des Primary Agents und keine getrennten Abläufe, die du selbst koordinieren musst.
 
