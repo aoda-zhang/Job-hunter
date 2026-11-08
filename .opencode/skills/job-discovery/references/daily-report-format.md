@@ -1,195 +1,167 @@
-# Daily Job Report Reference
+# 每日报告格式规范
 
-This document is the canonical format specification for every Job Hunter daily report.
+本文档是 `reports/daily/` 下所有报告的**唯一格式基准**。`job-discovery` skill 在创建或更新任何日报前必须先读本文档；若本文档与 skill 正文或其它说明冲突，以本文档的结构为准，匹配逻辑仍以 skill 为准。
 
-The `job-discovery` skill MUST read and follow this document before creating or updating any file under `reports/daily/`. If report-format instructions elsewhere conflict with this document, this document defines the report structure; the skill still defines the search and matching logic.
+## 文件位置与更新
 
-## File location
+- 每个本地日历日一个文件：`reports/daily/YYYY-MM-DD.md`
+- 目录不存在时先创建
+- 当日文件已存在时**保留已有内容**，只追加新发现或补充新证据；不得覆盖、删除或悄悄降级此前已确认的条目
+- 去重键：LinkedIn 职位的 canonical URL
 
-Use one Markdown file per local calendar date:
+## 语言与呈现
 
-`reports/daily/YYYY-MM-DD.md`
+- 全文使用**中文**（公司名、职位名、技术名词保留原文，不翻译）
+- 以**表格**为主要呈现形式，便于扫读
+- 不使用长段落复述 JD；不逐条贴 JD 全文
+- 不加匹配分数、排名、推荐等级、星级，也不做候选人画像评估
 
-Create `reports/daily/` when it does not exist. When today's report already exists, preserve its existing entries and append or update findings. Never overwrite useful findings from an earlier run on the same date.
+## 章节顺序
 
-## Report structure
-
-Use these sections in this order:
-
-1. Report title and run metadata.
-2. Search scope.
-3. Run summary.
-4. Matched vacancies.
-5. Vacancies requiring review.
-6. Excluded vacancies summary.
-7. Search limitations and notes.
-
-### 1. Title and run metadata
-
-Start with:
+正文从标题行开始，直接进入表格，不设元数据表和搜索范围表：
 
 ```markdown
-# LinkedIn Job Discovery — YYYY-MM-DD
-
-- **Run time:** YYYY-MM-DD HH:mm (local time; timezone if known)
-- **Source:** LinkedIn
-- **Configuration:** `job-hunter.config.json`
+# LinkedIn 每日职位发现 — YYYY-MM-DD
 ```
 
-Do not invent a timezone. If the local timezone is unknown, label the time as local time without an offset.
+1. 运行汇总
+2. 命中岗位
+3. 被排除岗位
+4. 待人工复核 —— **仅当有条目时输出，位于所有职位表之后**
+5. 异常说明 —— **仅当运行失败或大面积异常时输出，位于全篇最末**
 
-### 2. Search scope
+正常运行时只有前 3 节；第 4、5 节按条件出现，不得为凑格式而写「无」。
 
-Record the actual scope used in the run:
+之后依次附「证据与一致性规则」「跨日重复与更新」，顺序固定。
 
-- Countries
-- Locations
-- Job-title search terms
-- Posting lookback window
-- Maximum inspection limit
+### 1. 运行汇总
 
-These are discovery parameters, not additional vacancy-matching dimensions.
-
-### 3. Run summary
-
-Use a compact table:
-
-| Metric | Count |
+```markdown
+| 指标 | 数量 |
 |---|---:|
-| Search results encountered | N |
-| Distinct vacancy pages opened | N |
-| Job descriptions inspected | N |
-| Matched | N |
-| Needs review | N |
-| Confirmed non-matches excluded | N |
-
-Only report counts supported by the actual browser session. If a count cannot be established, write `Not available`; do not estimate it. Search-result cards are not equivalent to opened vacancy pages or inspected JDs.
-
-### 4. Matched vacancies
-
-Create one subsection per company. Each vacancy must use this structure:
-
-```markdown
-### Company Name
-
-#### Job Title
-
-- **Status:** matched
-- **Location:** As displayed / Not specified
-- **Work mode:** On-site / Hybrid / Remote / Not specified
-- **Posted:** Date as displayed / Not specified
-- **Discovered:** YYYY-MM-DD
-- **JD language:** English (evidence: ...)
-- **Job title check:** Match — brief title-family evidence.
-- **JD language check:** Match — brief language evidence.
-- **Technical keyword check:** Match — list configured keywords found.
-- **Source:** LinkedIn
-- **Job URL:** https://...
-
-**Role summary**
-- Concise summary of responsibilities.
-- Main required technologies, based on the JD.
-
-**JD content**
-Include the full JD when reasonably short. For long JDs, include a useful, faithful excerpt and explicitly state that it is an excerpt; retain the direct source URL.
+| 打开的结果页 | N |
+| 打开的职位详情页 | N |
+| 成功读取 JD | N |
+| 命中 | N |
+| 需人工复核 | N |
+| 确认不符（已排除） | N |
+| 其中跨日重复 | N |
 ```
 
-Do not infer missing location, work mode or posting date. Do not add a fit score, ranking, recommendation tier or candidate-profile assessment.
+- 只填浏览器会话能支撑的数字；无法确认时写「无法统计」，**不得估算**
+- 搜索结果卡片数 ≠ 打开的职位页数，不得混用
+- 自检：命中 + 复核 + 排除 = 成功读取 JD 的页数
 
-### 5. Vacancies requiring review
+### 2. 命中岗位
 
-Use the same vacancy structure, but set `Status: review`. For each uncertain dimension:
+按**城市**分组（`### 慕尼黑（13/30）` / `### 柏林（13/30）` / `### 汉堡（4/30）` …），城市内按**公司规模**排序，不按匹配度排序。
 
-- State `Unknown` or `Needs manual review`.
-- Explain exactly what evidence is missing or ambiguous.
-- Do not describe an unknown result as a match or mismatch.
-- Keep the vacancy visible even when the JD is inaccessible, too short, mixed-language or truncated, provided there is enough verified information to identify the vacancy.
+城市标题后的括号是该城市的**命中占比**：`该城市命中数/当日命中总数`。分母只算当日命中表里的行数，不含排除项和复核项；没有命中项的城市不出现在本节。
 
-### 6. Excluded vacancies summary
+排序规则：
 
-Do not put confirmed `not_matched` vacancies in the main vacancy sections. Provide a compact summary with:
+- 依据 `sortBy`（当前仅支持 `companySize`）与 `sortDirection`（`asc` / `desc`，默认 `asc`）
+- 规模取页面显示的区间，按**区间下限**比较：`11-50` → 11，`10001+` → 10001，`9,000` → 9000
+- 规模相同的保持发现顺序
+- `sortBy` 缺失或为未知值时，保持发现顺序
+- 排序后按最终展示顺序重排 `#` 列，并同步更新正文中的内部引用（如「与 #22 同一套 JD」）
 
-- Total number excluded.
-- Mismatch dimension(s): job title, JD language and/or technical keywords.
-- A short reason where evidence is available.
-
-Do not expose long JD text for excluded jobs unless the user explicitly asks for it.
-
-### 7. Limitations and notes
-
-Record relevant operational limitations, for example:
-
-- LinkedIn login/session unavailable.
-- Search result pages inaccessible.
-- JD content hidden or truncated.
-- Browser tool unavailable.
-- Search stopped at the configured inspection limit.
-
-Distinguish clearly between vacancies seen in search results and vacancies whose actual JD was opened and inspected.
-
-## Evidence and consistency rules
-
-- Use only facts visible on the LinkedIn page or verified in the browser session.
-- Keep the three matching dimensions separate and show brief evidence for each.
-- The overall status is `matched` only when all three dimensions are confirmed matches.
-- The overall status is `review` when no dimension is a confirmed mismatch and at least one is unknown.
-- A confirmed mismatch in any one dimension means `not_matched`.
-- Preserve the original job URL. Do not invent or reconstruct an unverified URL.
-- Use `Not specified` for absent optional metadata.
-- Use the same labels and section order across dates so reports remain easy to scan and compare.
-- Group by company for readability only. Do not rank vacancies.
-- Avoid duplicating the same vacancy in one report. Prefer the canonical LinkedIn job URL as the deduplication key.
-- When updating an existing daily report, preserve prior entries and refresh only when new evidence is available. Do not silently downgrade or remove a previously verified entry.
-
-## Compact example
+每张表列固定：
 
 ```markdown
-# LinkedIn Job Discovery — 2026-11-08
-
-- **Run time:** 2026-11-08 09:30 (local time)
-- **Source:** LinkedIn
-- **Configuration:** `job-hunter.config.json`
-
-## Search scope
-- **Countries:** Germany
-- **Locations:** Munich, Berlin
-- **Title terms:** Senior Frontend Engineer; Senior React Engineer
-- **Lookback:** 72 hours
-- **Inspection limit:** 50
-
-## Run summary
-| Metric | Count |
-|---|---:|
-| Search results encountered | 18 |
-| Distinct vacancy pages opened | 12 |
-| Job descriptions inspected | 10 |
-| Matched | 6 |
-| Needs review | 2 |
-| Confirmed non-matches excluded | 2 |
-
-## Matched vacancies
-
-### Example Company
-
-#### Senior Frontend Engineer
-- **Status:** matched
-- **Location:** Munich, Germany
-- **Work mode:** Hybrid
-- **Posted:** 2 days ago
-- **Discovered:** 2026-11-08
-- **JD language:** English (evidence: description body)
-- **Job title check:** Match — frontend engineering role.
-- **JD language check:** Match — JD is written in English.
-- **Technical keyword check:** Match — React, TypeScript.
-- **Source:** LinkedIn
-- **Job URL:** https://www.linkedin.com/jobs/view/...
-
-**Role summary**
-- Build and maintain frontend product features.
-- Main technologies: React and TypeScript.
-
-**JD content**
-Excerpt: [faithful excerpt from the inspected JD]. Full description is available at the source URL.
+| # | 公司 | 规模 | 职位 | 模式 | 发布 | 命中关键词 | 备注 | 链接 |
+|---|---|---|---|---|---|---|---|---|
 ```
 
-The example is illustrative only. Never copy its company, vacancy, URL, dates, evidence or counts into a real report.
+列填写规则：
+
+| 列 | 规则 |
+|---|---|
+| # | 按最终展示顺序连续编号（城市分组 + 类型排序之后重排） |
+| 公司 | 取 LinkedIn 页面公司字段；发布方 ≠ 实际雇主时，公司列填发布方，实际雇主写进备注 |
+| 规模 | 取页面显示的公司规模，写成 `51-200 人`、`9,000 人`、`10001+ 人`；页面未显示写「未标注」 |
+| 职位 | 原样保留，含 (m/f/d)、(all genders) 等后缀；标题内不得出现竖线 `\|`，用「·」替代 |
+| 模式 | 原样填 `On-site` / `Hybrid` / `Remote`；页面无此字段写「未标注」（该条须移入复核表）；与 JD 正文冲突时加 ⚠️ 并在备注说明 |
+| 发布 | 转成中文相对时间（`2 天前`、`19 小时前`）；重新发布标注「（重发）」 |
+| 命中关键词 | 只列**配置内**且在 JD 中真实出现的词，用顿号分隔；不得添加未配置的技术词 |
+| 备注 | 只写可在页面上核实的事实：主栈、级别、合同安排、发布方/雇主差异、字段冲突；≤ 约 60 字；不得写「很适合」「推荐」之类评价。跨日重复标记见「跨日重复与更新」 |
+| 链接 | `[打开](URL)`，必须是本次实际访问过的 canonical 职位 URL |
+
+城市不在表中单列：由所在小节标题（`### 慕尼黑（13/30）`）给出。非市区岗位（如 Pullach）、远程范围限制（如仅限 EMEA）等与标题不一致的地点信息，写入备注。
+
+雇佣类型是过滤条件，不单独成列；当它影响判断时（例如合同制、产假替补、兼职）写入备注。
+
+JD 语言同样是过滤条件，不单独成列：命中表里的岗位默认已符合 `jdLanguages.include`。若语言无法判定而被放进复核表，须在备注写明「语言未知」及原因。
+### 3. 被排除岗位
+
+单独成节，不计入主表。列固定：
+
+```markdown
+| # | 公司 | 职位 | 城市 | 模式 | 发布时间 | 排除原因 | 链接 |
+|---|---|---|---|---|---|---|---|---|
+```
+
+- 发布时间：转成中文相对时间（`2 天前`、`19 小时前`），重新发布标注「（重发）」；页面未显示时写「未标注」
+- 排除原因必须写明**维度**（JD 语言 / 职位标题 / 技术关键词 / 工作模式 / 雇佣类型），并附一句短证据（如德语原文片段、缺失的关键词、页面显示的模式或类型）
+- 同类原因（例如全部为德语 JD）按顺序集中排列，便于扫读
+- 不贴长 JD 正文
+- 允许标注重复关系（同岗异地版、同岗双语版），但不得重复计入命中
+- **链接列必须填写**，格式 `[打开](URL)`，指向本次实际打开过的职位页，方便逐条自行核查
+- 排除表的 URL 仅用于人工复核，**不得作为跨日去重依据**（见「跨日重复与更新」）
+### 4. 待人工复核
+
+**仅当有条目时输出**，位于所有职位表之后。无条目时整节省略，不写「无」。
+
+使用与第 2 节相同的表结构，并在**备注**列写清楚：
+
+- 哪一项未知（标题 / 语言 / 关键词 / 工作模式 / 雇佣类型）
+- 缺失或模糊的具体原因（JD 未加载、过短、被截断、中英混排、页面未给出该字段等）
+
+未知项**不得**写成命中或排除。
+
+### 5. 异常说明
+
+**仅当出现以下情况时输出，且位于全篇最末**；正常运行一律不写，不罗列常规搜索口径（城市半径、翻页方式、时区等）：
+
+- 运行失败或中断：登录失效、验证码、限流、浏览器工具不可用
+- 未跑完：结果页未翻完、提前停止
+- 大面积异常：因 JD 无法读取、被截断或关键字段缺失，导致相当比例的职位无法判定
+
+写法限制：3 行以内，只写三件事——发生了什么、影响多少条、停在哪里。不做免责声明式的长篇说明。
+
+## 证据与一致性规则
+
+- 只使用 LinkedIn 页面上可见或浏览器会话中验证过的事实
+- 所有适用的匹配维度必须彼此独立，各自都能追溯到具体证据
+- 只有全部适用维度确认符合才可标为命中
+- 字段缺失一律写「未标注」，不得推断地点、工作模式、雇佣类型或发布日期
+- URL 必须原样保留，不得拼接或臆造
+- 同一职位在同一份报告内只出现一次；命中与排除不得重复计入
+- 各日期报告使用相同章节顺序与表格列，保证可对比
+- 不输出候选人匹配度、薪资预期、签证判断等画像类结论
+
+## 跨日重复与更新
+
+日报是**当日快照**，不是累积清单。跨日重复照常列出，只做标注，不做删除。
+
+读取范围：`reports/daily/` 下**此前 7 个本地日期**的报告文件；文件缺失或无法解析时跳过，不报错。
+
+比对基准：这些文件中出现在**命中表**或**复核表**里的 canonical URL，以及「公司 + 规范化职位名 + 城市」组合。
+
+| 情况 | 处理 |
+|---|---|
+| URL 与此前命中记录相同 | 照常列入当日报告，备注追加 `[已报 MM-DD]`（取最早日期）；不得删除、不得改判、不得移入排除表 |
+| 公司 + 职位名 + 城市相同但 URL 不同 | 照常列入，备注追加 `[疑似重发 MM-DD]`；不得合并，不得屏蔽 |
+| 此前仅在排除表中出现 | **不参与去重**，当日重新评估；排除表虽记录 URL，但不得作为去重依据 |
+| 无历史报告 | 跳过该步骤，不输出任何标记 |
+
+- 标注只影响可读性，不得减少当日实际打开的职位数
+- 同一 URL 在当日报告内仍只出现一次
+- 运行汇总的「其中跨日重复」= 当日命中表中带 `[已报 …]` 或 `[疑似重发 …]` 标记的行数
+- 历史标记一律使用 `MM-DD`（两位月日），避免跨年歧义
+
+## 更新已有报告时
+
+- 保留原有条目与其证据
+- 仅在有新证据时补充或修正
+- 不因配置变化而静默改写旧结论；若配置变化导致某条判定翻转，在新条目或备注中说明原因

@@ -8,6 +8,9 @@ job-hunter.config.json
 .browser-data/
 .playwright/
 
+# Generated daily job reports (local only)
+reports/daily/
+
 # Logs and temporary files
 *.log
 logs/

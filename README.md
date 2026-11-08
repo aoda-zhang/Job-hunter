@@ -6,7 +6,7 @@ Each user has different search preferences, so the personal config is not tracke
 
 A lightweight, local-first **LinkedIn job discovery harness powered by OpenCode**.
 
-OpenCode uses browser tools configured in your local environment to search LinkedIn, open real vacancy pages, inspect job descriptions, apply exactly three filters, and save a daily Markdown report.
+OpenCode uses browser tools configured in your local environment to search LinkedIn, open real vacancy pages, inspect job descriptions, apply the configured filters, and save a daily Markdown report.
 
 ## Start
 
@@ -20,11 +20,13 @@ No application code, Node.js runtime, backend, database, cloud service, CI pipel
 
 ## Vacancy filters
 
-Only these three dimensions determine whether a vacancy matches:
+Only the configured dimensions determine whether a vacancy matches:
 
 - **Job title** — semantic matching against configured title variants.
 - **JD language** — detect the language actually used in the job description.
 - **Technical keywords** — search the JD for configured technologies using `any` or `all`.
+- **Work mode** — only active when `workModes` is a real subset of `Remote` / `Hybrid` / `On-site`; listing all three (or omitting the field) disables this dimension.
+- **Employment type** — only active when `employmentTypes` is a real subset of `Full-time` / `Part-time` / `Contract` / `Temporary` / `Internship` / `Volunteer`.
 
 Country, location and posting date define the LinkedIn search scope only. They are not candidate-fit filters. Do not add filters for years of experience, seniority, salary, visa/work authorization, candidate language proficiency, industry or architecture background.
 

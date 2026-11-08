@@ -4,17 +4,19 @@
 
 每个人的搜索偏好都不同，因此仓库不跟踪个人配置。首次使用时，将 `job-hunter.config.example.json` 复制为 `job-hunter.config.json`，再按自己的需求修改。个人配置文件已加入 `.gitignore`，只有示例模板会提交到 Git。
 
-Job Hunter 是一个**本地运行、由 OpenCode 驱动的 LinkedIn 职位搜索 Harness**。OpenCode 使用你本地已配置的浏览器工具搜索 LinkedIn、打开真实职位页面、检查 JD、按三个条件筛选，并将结果保存到本地 Markdown 日报。不需要应用后端、云端服务、数据库、CLI 或 CI。
+Job Hunter 是一个**本地运行、由 OpenCode 驱动的 LinkedIn 职位搜索 Harness**。OpenCode 使用你本地已配置的浏览器工具搜索 LinkedIn、打开真实职位页面、检查 JD、按配置的条件筛选，并将结果保存到本地 Markdown 日报。不需要应用后端、云端服务、数据库、CLI 或 CI。
 
 ## 1. 创建个人配置文件
 
 首次使用时，先将 `job-hunter.config.example.json` 复制为 `job-hunter.config.json`，然后编辑个人配置。个人配置已加入 `.gitignore`，不会提交到仓库。
 
 - `countries`、`locations`：LinkedIn 搜索范围。
+- `workModes`：接受的工作模式（`Remote`、`Hybrid`、`On-site`）；三项全配等于不过滤。
 - `lookbackHours`：优先查找最近发布的职位。
-- `maxResultsPerSource`：单次最多检查的 LinkedIn 职位数量。
+- `employmentTypes`：接受的雇佣类型（`Full-time`、`Part-time`、`Contract`、`Temporary`、`Internship`、`Volunteer`）；全部列出等于不过滤。
 - `sources`：搜索来源，目前使用 LinkedIn。
 - `jobTitles.include`：目标职位名称及常见变体。
+- `sortBy`：命中岗位在城市内的排序依据（目前支持 `companySize`）；`sortDirection`：`asc` / `desc`。
 - `jdLanguages.include`：接受的 JD 语言。
 - `technicalKeywords.include`：JD 中希望命中的技术关键词。
 - `technicalKeywords.matchMode`：`any` 表示任意关键词命中即可；`all` 表示全部命中。
@@ -30,7 +32,7 @@ Job Hunter 是一个**本地运行、由 OpenCode 驱动的 LinkedIn 职位搜�
 2. 检查当前 OpenCode 环境实际可用的浏览器工具。
 3. 根据国家、地点、职位名称和发布时间在 LinkedIn Jobs 中搜索。
 4. 打开职位详情并检查 JD，不只依赖搜索结果摘要。
-5. 按三个维度筛选职位。
+5. 按配置的维度筛选职位。
 6. 将匹配和需要复核的职位保存到当天的 Markdown 日报。
 
 日报位置：
@@ -39,16 +41,18 @@ Job Hunter 是一个**本地运行、由 OpenCode 驱动的 LinkedIn 职位搜�
 
 不需要运行 npm 命令、初始化数据库或配置 CI。如果 OpenCode 没有可用的浏览器工具，Skill 必须明确说明，不会假装已经完成搜索。
 
-## 3. 三个筛选维度
+## 3. 筛选维度
 
 | 维度 | 规则 |
 |---|---|
 | Job Title | 支持常见职位名称变体；Senior、Mid-level、Junior 等级别不作为额外淘汰条件 |
 | JD Language | 识别 JD 实际使用的语言，不根据国家或网页界面语言推断 |
 | Technical Keywords | 在 JD 中查找配置关键词，支持常见大小写和明确别名 |
+| Work Mode | 与 `workModes` 比对；该字段缺失、为空或三种全配时不生效 |
+| Employment Type | 与 `employmentTypes` 比对；该字段缺失、为空或全部列出时不生效 |
 
 结果分为：
-- `matched`：三个维度均确认匹配。
+- `matched`：所有生效维度均确认匹配。
 - `review`：信息不足或不确定，保留人工检查。
 - `not_matched`：至少一个维度有明确不匹配证据，不放入日报主体。
 

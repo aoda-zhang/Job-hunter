@@ -9,10 +9,20 @@
     "Remote"
   ],
   "lookbackHours": 72,
-  "maxResultsPerSource": 50,
+  "workModes": [
+    "Remote",
+    "Hybrid",
+    "On-site"
+  ],
+  "employmentTypes": [
+    "Full-time",
+    "Part-time"
+  ],
   "sources": [
     "LinkedIn"
   ],
+  "sortBy": "companySize",
+  "sortDirection": "asc",
   "jobTitles": {
     "include": [
       "Senior Frontend Engineer",

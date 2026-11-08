@@ -4,7 +4,7 @@
 
 Each user has different search preferences, so the personal config is not tracked. First copy `job-hunter.config.example.json` to `job-hunter.config.json`, then customize it. The personal `job-hunter.config.json` is ignored by Git; only the example template is committed.
 
-Job Hunter is a **local LinkedIn job discovery harness powered by OpenCode**. OpenCode uses browser tools already configured in your local environment to search LinkedIn, inspect real vacancy pages and job descriptions, apply exactly three filters, and save a daily Markdown report.
+Job Hunter is a **local LinkedIn job discovery harness powered by OpenCode**. OpenCode uses browser tools already configured in your local environment to search LinkedIn, inspect real vacancy pages and job descriptions, apply the configured filters, and save a daily Markdown report.
 
 No application code, backend, database, cloud service, CLI or CI pipeline is required.
 
@@ -13,10 +13,12 @@ No application code, backend, database, cloud service, CLI or CI pipeline is req
 First copy `job-hunter.config.example.json` to `job-hunter.config.json`, then customize your local file. The personal config is ignored by Git.
 
 - `countries`, `locations`: LinkedIn search scope.
+- `workModes`: accepted workplace types (`Remote`, `Hybrid`, `On-site`); listing all three disables this filter.
 - `lookbackHours`: preferred posting recency.
-- `maxResultsPerSource`: maximum LinkedIn vacancies to inspect in one run.
+- `employmentTypes`: accepted employment types (`Full-time`, `Part-time`, `Contract`, `Temporary`, `Internship`, `Volunteer`); listing all of them disables this filter.
 - `sources`: configured source; currently LinkedIn.
 - `jobTitles.include`: target job-title variants.
+- `sortBy`: how matched rows are ordered inside each city (currently `companySize`); `sortDirection`: `asc` / `desc`.
 - `jdLanguages.include`: accepted JD languages.
 - `technicalKeywords.include`: technologies to find in the JD.
 - `technicalKeywords.matchMode`: `any` means at least one keyword; `all` means every keyword.
@@ -27,22 +29,24 @@ Country, location and posting date define search scope only. Vacancy filtering u
 
 Open this repository locally in OpenCode, select the **Job Hunter** primary agent (press `Tab` to switch agents if needed), and simply ask it to find suitable jobs.
 
-You interact with the Primary Agent only. It routes the request and loads `job-discovery` automatically. The skill reads the single config, checks which browser tools are actually available, searches LinkedIn Jobs, opens vacancy pages, inspects the JD, applies the three filters and saves the daily report to:
+You interact with the Primary Agent only. It routes the request and loads `job-discovery` automatically. The skill reads the single config, checks which browser tools are actually available, searches LinkedIn Jobs, opens vacancy pages, inspects the JD, applies the configured filters and saves the daily report to:
 
 `reports/daily/YYYY-MM-DD.md`
 
 You do not need to run an npm command, initialize a database or configure CI. If browser automation is unavailable in the current OpenCode environment, the skill must say so rather than pretend it searched LinkedIn.
 
-## 3. The three filters
+## 3. Matching filters
 
 | Dimension | Rule |
 |---|---|
 | Job title | Recognize common title variants; seniority wording is not an extra rejection criterion |
 | JD language | Detect the language used in the JD, not the country or page interface |
 | Technical keywords | Search the JD case-insensitively and recognize clear aliases |
+| Work mode | Compare with `workModes`; disabled when the list is absent, empty or lists all three types |
+| Employment type | Compare with `employmentTypes`; disabled when the list is absent, empty or lists every type |
 
 Results:
-- `matched`: all three dimensions are confirmed matches.
+- `matched`: all applicable dimensions are confirmed matches.
 - `review`: evidence is missing, short, truncated or ambiguous; retain it for manual review.
 - `not_matched`: at least one dimension has clear mismatch evidence; exclude it from the main report.
 

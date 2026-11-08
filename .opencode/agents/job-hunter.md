@@ -32,10 +32,14 @@ When the user asks to find/search/discover jobs, run a search, refresh today's r
 3. Use the configured local browser integration only if it is actually available.
 4. Report the real inspection counts, limitations and report path. Never claim that LinkedIn was searched unless pages were actually opened.
 
-Routine discovery evaluates exactly three dimensions:
+Routine discovery evaluates the configured matching dimensions:
 - Job title
 - Actual language used in the JD
 - Configured technical keywords
+- Configured work modes (`workModes`), but only when the list is a real subset — if it is absent, empty or lists `Remote`, `Hybrid` and `On-site`, this dimension is disabled and must not exclude anything
+- Configured employment types (`employmentTypes`), with the same subset rule over `Full-time`, `Part-time`, `Contract`, `Temporary`, `Internship`, `Volunteer`
+
+There is no inspection cap: cover every distinct vacancy inside the posting window.
 
 Country, location and posting date are search scope only. Do not introduce candidate-fit scoring or extra filters.
 
