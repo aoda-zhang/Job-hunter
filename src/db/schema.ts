@@ -26,4 +26,24 @@ CREATE INDEX IF NOT EXISTS idx_jobs_score ON jobs(score);
 CREATE INDEX IF NOT EXISTS idx_jobs_review_status ON jobs(review_status);
 CREATE INDEX IF NOT EXISTS idx_jobs_company ON jobs(company);
 CREATE INDEX IF NOT EXISTS idx_jobs_country ON jobs(country);
+
+CREATE TABLE IF NOT EXISTS company_research (
+  company TEXT PRIMARY KEY,
+  website TEXT,
+  main_business TEXT,
+  products_services TEXT,
+  customer_groups TEXT,
+  business_model TEXT,
+  role_relevance TEXT,
+  sources_json TEXT,
+  researched_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS role_interview_prep (
+  job_id INTEGER PRIMARY KEY REFERENCES jobs(id) ON DELETE CASCADE,
+  language TEXT,
+  answer TEXT NOT NULL,
+  sources_json TEXT,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 `;
