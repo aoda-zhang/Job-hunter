@@ -1,6 +1,6 @@
 # Job Hunter
 
-A configurable, AI-assisted job discovery and matching workspace. All runtime settings are maintained in one root file: `job-hunter.config.json`.
+A configurable job discovery workspace. Vacancies are filtered only by **job title**, **job-description language**, and **technical keywords in the JD**.
 
 ## Documentation
 
@@ -10,12 +10,13 @@ A configurable, AI-assisted job discovery and matching workspace. All runtime se
 
 ## Single source of configuration
 
-Edit only `job-hunter.config.json` to configure:
-- **search** — target countries, job titles, locations, work modes, sources and discovery window.
-- **candidate** — professional profile, experience, skills, languages, salary reference and work-authorization context.
-- **matching** — scoring weights, thresholds and analysis rules.
+Edit only `job-hunter.config.json`:
+- **Search scope** — target countries, optional locations, lookback window, result cap and sources.
+- **Job title filter** — accepted title variants.
+- **JD language filter** — accepted job-description languages.
+- **Technical keyword filter** — technology terms and `any` / `all` matching mode.
 
-No separate runtime config files are required. The schema and validation logic live in `src/config.ts`.
+There is no candidate profile, weighted matching score, or score threshold in the discovery configuration. Runtime validation lives in `src/config.ts`.
 
 ## Quick start
 
@@ -33,7 +34,7 @@ npm run dev -- report
 
 ## Project status
 
-Early MVP scaffold. Single-file configuration and runtime validation are implemented. Source adapters, end-to-end collection, scoring execution and report generation still need implementation and validation.
+Early MVP scaffold. Single-file configuration and runtime validation are implemented. Source adapters, end-to-end collection, deterministic three-dimension filtering and report generation still need implementation and validation.
 
 ## Safety
 
