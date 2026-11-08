@@ -9,18 +9,17 @@ This is the primary workflow of Job Hunter. Run it locally in this repository. O
 
 ## 1. Read the only configuration
 
-Read the root file `job-hunter.config.json`. It is the single source of configuration.
+Read the root file `job-hunter.config.json`. It is the single source of configuration. All settings are top-level fields:
 
-Use:
-- `search.countries`, `search.locations`: LinkedIn search scope.
-- `search.lookbackHours`: preferred posting window.
-- `search.maxResultsPerSource`: maximum number of LinkedIn vacancies to inspect.
-- `search.sources`: configured source list; currently LinkedIn.
-- `search.jobTitles.include`: target job-title variants.
-- `search.jdLanguages.include`: accepted JD languages.
-- `search.technicalKeywords.include` and `matchMode`: technology terms and matching mode.
+- `countries`, `locations`: LinkedIn search scope.
+- `lookbackHours`: preferred posting window.
+- `maxResultsPerSource`: maximum number of LinkedIn vacancies to inspect.
+- `sources`: configured source list; currently LinkedIn.
+- `jobTitles.include`: target job-title variants.
+- `jdLanguages.include`: accepted JD languages.
+- `technicalKeywords.include` and `technicalKeywords.matchMode`: technology terms and matching mode.
 
-Do not create another config file or ask the user to duplicate these values elsewhere.
+Do not expect or add a `search` wrapper. Do not create another config file or ask the user to duplicate these values elsewhere.
 
 Only job title, actual JD language and technical keywords are matching filters. Country, location and posting date are search scope, not candidate-fit criteria.
 
@@ -65,7 +64,7 @@ Search the JD text case-insensitively for the configured terms. Recognize clear 
 - NodeJS / Node.js
 - ReactJS / React
 
-Follow `matchMode` exactly:
+Follow `technicalKeywords.matchMode` exactly:
 - `any`: at least one configured keyword must be found.
 - `all`: every configured keyword must be found.
 
