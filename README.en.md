@@ -68,3 +68,9 @@ Do not filter by candidate years of experience, seniority, salary, visa/work aut
 Run `npm run config:check` to validate the configuration. The Zod schema is in `src/config.ts`.
 
 The configuration and filtering policy are defined, but real job-board adapters, vacancy collection and the deterministic filter executor still need implementation. Listing a source in the config does not mean its adapter is available. Respect each source's terms, access controls and rate limits. The project does not automatically submit applications or contact employers.
+
+## 6. Daily result files and company interview preparation
+
+The target output is one Markdown file per day: `reports/daily/YYYY-MM-DD.md`. Group that day's confirmed matches and review-needed vacancies by company. For each company, explain its **main business, core products/services and customer groups**, with reliable source links. For each materially different role, add a tailored spoken answer to **“Why do you want to join our company?”** in the known interview language. Repeated runs on the same day should update the same file rather than create duplicates.
+
+Current limitation: the company-research and daily-report skill requirements are defined, but automated vacancy collection, structured company research and Markdown report generation are not implemented yet. This is the target output contract, not a claim that the CLI can already generate it.
