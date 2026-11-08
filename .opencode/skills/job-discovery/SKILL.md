@@ -91,7 +91,15 @@ Never rank vacancies, calculate weighted scores or produce Strong/Good Match lab
 
 Do not filter by candidate years of experience, seniority, salary, visa or work authorization, candidate language proficiency, industry, architecture, company size or any other candidate-profile criterion.
 
-## 4. Write the daily report
+## 4. Follow the daily report reference
+
+Before writing or updating a daily report, read and follow the canonical format document:
+
+`.opencode/skills/job-discovery/references/daily-report-format.md`
+
+This reference defines the required report sections, vacancy layout, metadata, evidence presentation, run-summary counts and update behavior. Every daily report must follow it consistently. Do not invent a different layout for individual runs.
+
+## 5. Write the daily report
 
 Create or update exactly one report for the current local date:
 
@@ -114,7 +122,7 @@ For each `matched` or `review` vacancy include:
 
 Group entries by company for readability only. Do not sort them by a candidate-fit score. Do not perform company research or prepare interview answers in this phase.
 
-## 5. Report completion accurately
+## 6. Report completion accurately
 
 At the end, state:
 - report path;
