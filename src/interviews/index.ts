@@ -11,7 +11,7 @@ interface InterviewJobRow {
 
 function slugify(value: string): string {
   const slug = value.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
-  return slug || "company";
+  return slug || "company-" + Array.from(value).reduce((hash, char) => ((hash * 31 + (char.codePointAt(0) ?? 0)) >>> 0), 7).toString(36);
 }
 
 function available(value: string | null): string { return value?.trim() || "Not available"; }
@@ -27,7 +27,7 @@ function selectJob(jobId?: number, company?: string): InterviewJobRow {
   if (!jobs.length) throw new Error("No saved vacancies found for company \"" + company + "\". Use the exact company name from a job record.");
   if (jobs.length > 1) {
     const choices = jobs.map((job) => "#" + job.id + " — " + job.title + " (" + (job.location ?? job.country ?? "location unknown") + ")").join("\n");
-    throw new Error("Found multiple vacancies for \"" + company + "\". Select the specific role with --job-id:\\n" + choices);
+    throw new Error("Found multiple vacancies for \"" + company + "\". Select the specific role with --job-id:\n" + choices);
   }
   return jobs[0];
 }
