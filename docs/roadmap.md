@@ -10,8 +10,8 @@
 - [x] Implement daily report generation, focused only on vacancy discovery
 - [x] Keep company research and interview answers out of daily reports
 - [ ] Implement and validate permitted source adapters
-- [ ] Implement deterministic filter evaluation with per-dimension evidence
-- [ ] Add fixture-based language/title/keyword tests
+- [x] Implement deterministic filter evaluation with per-dimension evidence
+- [x] Add fixture-based language/title/keyword tests
 - [ ] Verify canonical URL deduplication and country-aware reports
 - [ ] Add scheduled execution on the user's machine
 
