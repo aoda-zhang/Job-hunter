@@ -1,153 +1,70 @@
 # Job Hunter 配置指南（简体中文）
 
-本项目只使用一个根配置文件：`job-hunter.config.json`。搜索范围、候选人资料和匹配规则全部集中在这里。修改配置即可切换国家、职位和目标市场，无须修改代码。
+Job Hunter 只使用一个根配置文件：`job-hunter.config.json`。它是一个通用、多国家、多职位的职位发现工具。**真正用于筛选职位的只有三个维度：职位名称、JD 使用的语言、JD 中的技术关键词。**
 
-## 1. 配置结构
+国家、地点、发布时间和招聘来源仅用于确定搜索范围，不参与候选人匹配评分。
 
-根配置包含三个顶层对象：
-
-| 对象 | 用途 |
-|---|---|
-| `search` | 要搜索哪些国家、职位、地点和招聘来源 |
-| `candidate` | 候选人的经验、技能、语言、薪资和工作许可背景 |
-| `matching` | 职位匹配评分权重、分数阈值和分析规则 |
-
-## 2. 完整示例
+## 1. 完整配置示例
 
 ```json
 {
   "search": {
-    "countries": ["Germany", "Netherlands"],
-    "roles": ["Senior Frontend Engineer", "React Developer"],
-    "locations": ["Berlin", "Amsterdam", "Remote"],
-    "workModes": ["remote", "hybrid"],
+    "countries": ["Germany"],
+    "locations": ["Munich", "Berlin", "Hamburg", "Remote"],
     "lookbackHours": 72,
     "maxResultsPerSource": 50,
-    "sources": ["company-career-pages", "LinkedIn", "Indeed"],
-    "excludeKeywords": ["intern", "junior"]
-  },
-  "candidate": {
-    "headline": "Senior Frontend Engineer",
-    "experienceYears": 9,
-    "currentCountry": "China",
-    "workAuthorization": {
-      "status": "Assess separately for each target country",
-      "note": "Verify eligibility and sponsorship requirements for each vacancy."
+    "sources": ["company-career-pages", "LinkedIn", "StepStone"],
+    "jobTitles": {
+      "include": ["Senior Frontend Engineer", "Senior Frontend Developer", "Frontend Platform Engineer", "Senior React Engineer", "Senior Full-Stack Engineer"]
     },
-    "languages": {
-      "preferred": ["English"],
-      "additional": [
-        {"language": "German", "level": "B1", "note": "Currently learning"}
-      ]
+    "jdLanguages": {
+      "include": ["English", "German"]
     },
-    "salary": {
-      "preferredMinimum": 65000,
-      "currency": "EUR",
-      "note": "Reference expectation; evaluate against local market."
-    },
-    "coreSkills": ["React", "TypeScript", "JavaScript"],
-    "secondarySkills": ["Node.js", "NestJS"],
-    "experienceEvidence": ["Built enterprise frontend platforms with React and TypeScript."]
-  },
-  "matching": {
-    "weights": {
-      "roleTitle": 20,
-      "coreSkills": 25,
-        "seniority": 10,
-      "domainExperience": 10,
-      "locationAndWorkMode": 8,
-      "language": 7,
-      "salary": 5
-    },
-    "thresholds": {
-      "strongMatch": 85,
-      "goodMatch": 70,
-      "possibleMatch": 55
-    },
-    "rules": [
-      "Score evidence in the job description, not keyword frequency alone.",
-      "Mark unstated requirements as unknown."
-    ]
+    "technicalKeywords": {
+      "include": ["React", "TypeScript", "JavaScript", "HTML", "CSS", "Next.js", "Node.js", "NestJS", "Express", "Redux"],
+      "matchMode": "any"
+    }
   }
 }
 ```
 
-## 3. search：搜索范围
+## 2. 字段说明
 
-| 字段 | 类型 | 必填 | 说明与配置方式 |
+### 搜索范围（不参与匹配评分）
+
+| 字段 | 类型 | 必填 | 说明 |
 |---|---|---:|---|
-| `countries` | string[] | 是 | 国家列表。可填一个或多个国家名称，例如 `["Germany", "Japan", "United States"]`。建议使用英文标准国名。 |
-| `roles` | string[] | 是 | 职位名称列表。每个职位会作为独立搜索目标，例如 `["React Developer", "Frontend Engineer"]`。职位名称应使用招聘市场常见写法。 |
-| `locations` | string[] | 否 | 城市、地区或 Remote，例如 `["Munich", "Tokyo", "Remote"]`。留空或删除该字段表示不额外限定地点；Remote 是否跨境可行需由职位信息确认。 |
-| `workModes` | enum[] | 否 | 工作方式，可选 `remote`、`hybrid`、`onsite`、`flexible`。 |
-| `lookbackHours` | integer | 是 | 搜索最近多少小时发布的职位。72 表示最近三天；必须大于 0。 |
-| `maxResultsPerSource` | integer | 是 | 每个招聘来源最多收集多少条结果，必须大于 0。 |
-| `sources` | string[] | 是 | 搜索来源标识，例如 `company-career-pages`、`LinkedIn`、`StepStone`、`Indeed`。只有已实现且允许访问的适配器才会真正执行。 |
-| `excludeKeywords` | string[] | 否 | 排除职位标题或描述中出现的关键词，例如 `["intern", "working student", "junior"]`。具体匹配方式由发现引擎实现。 |
+| `countries` | string[] | 是 | 搜索国家，可配置多个，例如 `["Germany", "Japan", "United States"]`。 |
+| `locations` | string[] | 否 | 城市、地区或 Remote。未配置时不额外限制地点。 |
+| `lookbackHours` | integer | 是 | 搜索最近多少小时发布的职位，例如 72 表示最近三天。 |
+| `maxResultsPerSource` | integer | 是 | 每个招聘来源最多收集的职位数量。 |
+| `sources` | string[] | 是 | 招聘来源标识。只有已实现且允许访问的来源适配器才会真正执行。 |
 
-**搜索组合：** 设计上会将国家、职位和地点组合成搜索任务。比如 2 个国家 × 3 个职位，就是至少 6 组国家/职位搜索条件；实际抓取范围还取决于来源适配器。
+### 三个职位筛选维度
 
-## 4. candidate：候选人资料
-
-| 字段 | 类型 | 必填 | 说明与配置方式 |
+| 字段 | 类型 | 必填 | 说明 |
 |---|---|---:|---|
-| `headline` | string | 是 | 目标职业标题，用于候选人概况，例如 `Senior Frontend Engineer`。 |
-| `experienceYears` | number | 是 | 总工作年限，可使用小数，例如 8.5；不能为负数。 |
-| `currentCountry` | string | 是 | 当前所在国家，用于判断职位地点和跨境工作背景。 |
-| `workAuthorization.status` | string | 是 | 当前工作许可状态的简要描述。不要把某个国家的许可结论套用到其他国家。 |
-| `workAuthorization.note` | string | 是 | 补充说明。用于提醒分析器逐个职位核实签证、许可和雇主支持要求。 |
-| `languages.preferred` | string[] | 是 | 候选人优先使用的工作语言，例如 `["English"]`。 |
-| `languages.additional` | object[] | 是 | 其他语言。每项包含 `language`、`level`，以及可选的 `note`。等级建议写 CEFR（A1–C2）或当地常见等级。 |
-| `salary.preferredMinimum` | number | 是 | 期望最低薪资数值，不能为负数。必须结合 `currency` 解释；不要把一个国家的数值直接当成另一个国家的市场标准。 |
-| `salary.currency` | string | 是 | 三位货币代码，例如 EUR、USD、GBP、JPY。 |
-| `salary.note` | string | 是 | 薪资期望的补充说明，例如税前年薪、可协商范围或仅作参考。 |
-| `coreSkills` | string[] | 是 | 核心技能，通常是岗位必须具备的技术。 |
-| `secondarySkills` | string[] | 是 | 次要或辅助技能。 |
-| `experienceEvidence` | string[] | 是 | 能证明技能和经验的项目/工作成果摘要。尽量写具体项目、职责、技术和结果，不要只堆关键词。 |
+| `jobTitles.include` | string[] | 是 | 接受的职位名称及常见变体。使用语义近似匹配，不要求标题完全相同。 |
+| `jdLanguages.include` | string[] | 是 | 接受的职位描述语言，例如 English、German、Japanese。识别 JD 的实际主要语言，不根据国家推断。 |
+| `technicalKeywords.include` | string[] | 是 | 关注的技术关键词。建议包含核心技术和常见别名，例如 React、TypeScript、Node.js。 |
+| `technicalKeywords.matchMode` | enum | 是 | `any` 表示命中任意一个关键词即可；`all` 表示必须全部命中。推荐使用 `any`，以减少漏掉潜在职位的风险。 |
 
-## 5. matching：匹配规则
+## 3. 筛选逻辑
 
-### weights
+1. **职位名称：** 忽略大小写，支持常见职位名称变体和语义近似表达，不要求完全一致。
+2. **JD 语言：** 识别招聘描述的主要语言，只接受配置中列出的语言。
+3. **技术关键词：** 在完整 JD 中查找配置的关键词。默认 `any`，命中一个就满足这一维度，不要求所有技术都出现。
 
-每个键对应一个评分维度，数值表示该维度的相对权重：
+只有三个维度全部确认匹配，才标记为 Matched。
 
-| 字段 | 当前权重 | 说明 |
-| `roleTitle` | 25 | 职位名称与目标岗位的相关程度 |
-| `coreSkills` | 35 | 核心技能匹配程度 |
-| `seniority` | 15 | 职级和经验年限 |
-| `domainExperience` | 10 | 行业或业务领域经验 |
-| `locationAndWorkMode` | 5 | 地点和工作方式 |
-| `language` | 5 | 工作语言要求 |
-| `salary` | 5 | 薪资匹配程度 |
+如果标题或 JD 缺失、太短或无法判断，则标记为 Review，保留给人工检查，不要静默删除。任一维度有明确不匹配证据时，才标记为 Not matched。
 
-当前权重合计为 100，配置校验也会强制检查这一点。评分只用于排序和辅助判断，不得因为分数低而自动删除或隐藏职位；低匹配和信息不完整的职位仍应保留给人工查看。
+## 4. 明确不作为筛选条件的内容
 
-### thresholds
+以下内容不参与自动筛选：候选人工作年限、职级、薪资、签证/工作许可、候选人的语言熟练程度、行业背景、架构经验或其他个人画像信息。系统不计算综合匹配分数，也不设置分数淘汰线。
 
-| 字段 | 当前值 | 含义 |
-|---|---:|---|
-| `strongMatch` | 85 | 强匹配分数线 |
-| `goodMatch` | 70 | 良好匹配分数线 |
-| `possibleMatch` | 55 | 值得进一步评估的分数线 |
+## 5. 校验与当前边界
 
-分数低于 `possibleMatch` 可归为低匹配，但不能仅凭分数自动淘汰；阈值应满足 `strongMatch >= goodMatch >= possibleMatch`。
+运行 `npm run config:check` 校验配置。Zod schema 位于 `src/config.ts`。
 
-### rules
-
-字符串数组，用自然语言约束分析过程。例如：区分必需技能和加分项；未说明的薪资或签证信息标记为 unknown；每项评分都要给出职位描述和候选人经历证据。可根据你的评估标准增删规则。
-
-## 6. 常见配置场景
-
-- **换国家：** 修改 `search.countries`。
-- **换岗位：** 修改 `search.roles`。
-- **增加城市：** 修改 `search.locations`。
-- **只看远程：** 将 `workModes` 设置为 `["remote"]`。
-- **不限制工作方式：** 删除 `workModes`。
-- **调整匹配偏好：** 修改 `matching.weights` 和 `matching.thresholds`。
-- **更新个人技能：** 修改 `candidate`，不要把个人技能写进搜索关键词字段。
-
-## 7. 校验与边界
-
-运行 `npm run config:check` 校验配置。配置结构由 `src/config.ts` 中的 Zod schema 定义。
-
-配置校验通过不代表职位来源已经实现。来源适配器仍需单独开发，并遵守对应网站的条款、访问限制和频率要求。本项目不会自动投递简历或联系雇主。
+注意：配置和筛选规则已定义，但真实招聘网站适配器、职位采集和确定性筛选执行器仍需开发。配置中列出某个网站，不代表该网站的抓取功能已经实现。必须遵守来源网站条款、访问限制和频率要求。本项目不会自动投递简历或联系雇主。
