@@ -1,11 +1,13 @@
 ---
 name: daily-report
-description: Produce one dated Markdown report for the final job-search results, with company business profiles and tailored why-join interview answers.
+description: Produce a concise dated Markdown report of job vacancies found during the application-search stage.
 ---
 
-# Daily Job Search Report
+# Daily Job Discovery Report
 
-Read the final results for the current search run, the root `job-hunter.config.json`, and the company-research output.
+This skill belongs exclusively to **Phase 1 — Job Discovery / Application Search**. Read the final discovery results and the root `job-hunter.config.json`.
+
+Do not run company research or interview preparation from this skill. Do not read company-research or interview-preparation records to enrich the daily report.
 
 ## File rule
 
@@ -21,31 +23,37 @@ Include:
 - confirmed matches; and
 - uncertain/incomplete records marked for manual review.
 
-Do not include confirmed non-matches in the main report. Keep them in the database/audit trail. Do not apply any additional candidate-fit, seniority, salary, visa, architecture or experience filters.
-
-Group vacancies by company. If one company has multiple vacancies, show its company profile once and list all its roles underneath.
+Do not include confirmed non-matches in the main report. Keep them in the database/audit trail. Do not apply additional candidate-fit, seniority, salary, visa, architecture or experience filters.
 
 ## Required content
 
-For each company:
-- Company name and verified website.
-- **Main business:** what it sells/provides, its core products/services, customer groups and business model when verifiable.
-- Brief relevance to the vacancy's product, team or business area.
-- Source URLs and publication/access dates for material company claims.
+Start with a concise summary showing the report date, total vacancies, confirmed matches and items requiring review.
 
-For every materially different vacancy:
-- Job title, location, work mode if known, posting date if known, source and canonical job URL.
-- JD language and technical keywords matched.
-- Filter outcome and concise evidence; label unknown dimensions clearly.
-- **Interview answer — “Why do you want to join our company?”** Write a natural first-person spoken answer grounded in verified company facts, the specific role and candidate experience found in supplied candidate materials. Normally target 80–130 words in the known interview language. Do not invent motivations, achievements or company facts. If context is missing, label the answer as a draft and state what needs personalization.
+Group vacancies by company for readability only. Company grouping is not company research. Do not add company profiles, business-model analysis, market analysis or company-culture commentary.
+
+For every vacancy, include:
+- Job title.
+- Company name.
+- Country, city/location and work mode when known.
+- Posting date and discovery date, clearly distinguished.
+- JD language: detected value, or Unknown / Review when it cannot be determined.
+- Technical keywords: configured keywords found in the JD; do not imply that an absent keyword is a rejection unless the configured matching rule says so.
+- Filter outcome and concise evidence for the three dimensions: job title, JD language and technical keywords.
+- Source and canonical job URL.
+- A concise JD summary, plus the original JD in a collapsible section when available.
+
+Do not include:
+- Company deep research or company overview.
+- “Why do you want to join our company?” answers.
+- Interview questions, interview scripts or company-specific preparation.
+- Recommendations to apply or reject based on criteria outside the three configured filters.
 
 ## Quality checks
 
 - Preserve all included results; do not silently omit review items.
 - Deduplicate repeated postings by canonical URL.
-- Verify each company fact against cited sources.
-- Tailor the answer to the company and role; reject generic boilerplate.
+- Mark unavailable or ambiguous fields explicitly; never guess.
 - Distinguish posting date from report date.
-- If research is incomplete, state the gap rather than guessing.
+- Keep the report focused on helping the user review vacancies and decide which applications to submit.
 
-The report is a preparation aid only. Never submit applications or contact employers.
+The report is a discovery aid only. Never submit applications or contact employers.
