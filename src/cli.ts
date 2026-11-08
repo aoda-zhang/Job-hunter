@@ -26,14 +26,14 @@ async function main(): Promise<void> {
       initializeDatabase();
       console.log("Discovery configuration loaded.");
       console.log(`Countries: ${config.search.countries.join(", ")}`);
-      console.log(`Roles: ${config.search.roles.join(" | ")}`);
+      console.log(`Job titles: ${config.search.jobTitles.include.join(" | ")}`);\n      console.log(`JD languages: ${config.search.jdLanguages.include.join(", ")}`);\n      console.log(`Technical keywords: ${config.search.technicalKeywords.include.join(", ")}`);
       console.log("Discovery scaffold ready. Implement and configure permitted source adapters to collect postings.");
       break;
     }
     case "report": {
       initializeDatabase();
       const rows = db.prepare(
-        "SELECT title, company, country, location, url, score, review_status FROM jobs ORDER BY score DESC, discovered_at DESC"
+        "SELECT title, company, country, location, url, review_status, discovered_at FROM jobs ORDER BY discovered_at DESC"
       ).all();
       console.log(JSON.stringify(rows, null, 2));
       break;
