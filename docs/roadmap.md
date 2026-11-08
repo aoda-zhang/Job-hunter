@@ -1,19 +1,22 @@
 # Roadmap
 
 ## Phase 1 — Configurable discovery MVP
-- [x] Repository scaffold and candidate preferences
-- [x] Country- and role-driven root search configuration
-- [x] JSON Schema and runtime config validation
+- [x] Repository scaffold
+- [x] Single root search configuration
+- [x] Three filter dimensions: job title, JD language and technical keywords
+- [x] Runtime config validation
 - [x] SQLite schema and CLI skeleton
 - [ ] Implement and validate permitted source adapters
-- [ ] Add fixture-based parser tests
-- [ ] Verify canonical URL deduplication and country-aware report output
+- [ ] Implement deterministic filter evaluation with per-dimension evidence
+- [ ] Add fixture-based language/title/keyword tests
+- [ ] Verify canonical URL deduplication and country-aware reports
 
-## Phase 2 — Matching and research
-- [ ] JD extraction and evidence-based scoring
-- [ ] OpenCode analysis workflow with structured output
-- [ ] Country-aware company and hiring-context research with citations
-- [ ] Review queue and status updates
+## Phase 2 — Discovery quality
+- [ ] Improve semantic job-title variants by market and language
+- [ ] Add robust JD language detection and short-text handling
+- [ ] Add technical-keyword aliases and boundary-aware matching
+- [ ] Add review queue for incomplete or ambiguous postings
+- [ ] Add company research with citations
 
 ## Phase 3 — Daily operations
 - [ ] Scheduled execution on the user's machine
@@ -21,6 +24,6 @@
 - [ ] Historical trend and application tracker
 - [ ] Optional email delivery of reports
 
-## Non-goal
+## Non-goals
 
-Automatic job applications or automated messages are out of scope unless separately designed with explicit user approval at the point of action.
+No candidate-fit scoring, weighted ranking, automatic application rejection, or automated messages. Automatic applications and employer contact are out of scope unless separately designed with explicit user approval at the point of action.
