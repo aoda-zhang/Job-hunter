@@ -52,8 +52,8 @@ async function main(): Promise<void> {
       console.log(`JD languages: ${config.search.jdLanguages.include.join(", ")}`);
       console.log(`Technical keywords: ${config.search.technicalKeywords.include.join(", ")}`);
       console.log(`Keyword match mode: ${config.search.technicalKeywords.matchMode}`);
-      console.log("Three-dimension filter evaluator is implemented and fixture-tested.");
-      console.log("Discovery is not yet end-to-end: permitted source adapters and persistence wiring are still pending.");
+      console.log("This CLI command is not part of the recommended workflow.");
+      console.log("Open this repository in OpenCode and invoke the job-discovery skill to search vacancies with the browser.");
       break;
     }
     case "report": {
