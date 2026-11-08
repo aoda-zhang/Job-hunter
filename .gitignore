@@ -1,7 +1,6 @@
 # Local secrets and browser session data
 .env
 .env.*
-!.env.example
 .browser/
 .browser-data/
 .playwright/
