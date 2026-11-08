@@ -71,6 +71,6 @@ The configuration and filtering policy are defined, but real job-board adapters,
 
 ## 6. Daily result files and company interview preparation
 
-The target output is one Markdown file per day: `reports/daily/YYYY-MM-DD.md`. Group that day's confirmed matches and review-needed vacancies by company. For each company, explain its **main business, core products/services and customer groups**, with reliable source links. For each materially different role, add a tailored spoken answer to **“Why do you want to join our company?”** in the known interview language. Repeated runs on the same day should update the same file rather than create duplicates.
+Run `npm run report` (or `npm run dev -- report`) to create or replace `reports/daily/YYYY-MM-DD.md` for the current local date. It includes vacancies discovered on that date, grouped by company, with available filter evidence. Two SQLite tables, `company_research` and `role_interview_prep`, store company profiles and role-specific interview answers.
 
-Current limitation: the company-research and daily-report skill requirements are defined, but automated vacancy collection, structured company research and Markdown report generation are not implemented yet. This is the target output contract, not a claim that the CLI can already generate it.
+If those research records have not been populated, the report clearly marks missing company facts and supplies only a generic interview-answer draft that must be personalized. The dated report generator and persistence tables are implemented; job collection, automated company research, the filter executor and fully tailored answer generation remain pending.
