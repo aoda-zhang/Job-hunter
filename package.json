@@ -1,13 +1,14 @@
 {
-  "name": "germany-job-hunter",
-  "version": "0.1.0",
+  "name": "job-hunter",
+  "version": "0.2.0",
   "private": true,
-  "description": "AI-assisted job discovery and matching for software engineers targeting Germany",
+  "description": "Configurable AI-assisted job discovery and matching across countries and roles",
   "type": "module",
   "engines": { "node": ">=22" },
   "scripts": {
     "dev": "tsx src/cli.ts",
     "typecheck": "tsc --noEmit",
+    "config:check": "tsx src/cli.ts config:check",
     "db:init": "tsx src/cli.ts db:init",
     "discover": "tsx src/cli.ts discover",
     "report": "tsx src/cli.ts report"
