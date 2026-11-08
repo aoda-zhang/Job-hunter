@@ -1,5 +1,9 @@
 # Job Hunter
 
+## Personal configuration
+
+Each user has different search preferences, so the personal config is not tracked. First copy `job-hunter.config.example.json` to `job-hunter.config.json`, then customize it. The personal `job-hunter.config.json` is ignored by Git; only the example template is committed.
+
 A lightweight, local-first **LinkedIn job discovery harness powered by OpenCode**.
 
 OpenCode uses browser tools configured in your local environment to search LinkedIn, open real vacancy pages, inspect job descriptions, apply exactly three filters, and save a daily Markdown report.
