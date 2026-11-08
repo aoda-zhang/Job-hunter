@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS jobs (
   url TEXT NOT NULL UNIQUE,
   title TEXT NOT NULL,
   company TEXT NOT NULL,
+  country TEXT,
   location TEXT,
   work_mode TEXT,
   salary_text TEXT,
@@ -24,4 +25,5 @@ CREATE INDEX IF NOT EXISTS idx_jobs_discovered_at ON jobs(discovered_at);
 CREATE INDEX IF NOT EXISTS idx_jobs_score ON jobs(score);
 CREATE INDEX IF NOT EXISTS idx_jobs_review_status ON jobs(review_status);
 CREATE INDEX IF NOT EXISTS idx_jobs_company ON jobs(company);
+CREATE INDEX IF NOT EXISTS idx_jobs_country ON jobs(country);
 `;
