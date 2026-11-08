@@ -103,7 +103,6 @@
 | `salary.note` | string | 是 | 薪资期望的补充说明，例如税前年薪、可协商范围或仅作参考。 |
 | `coreSkills` | string[] | 是 | 核心技能，通常是岗位必须具备的技术。 |
 | `secondarySkills` | string[] | 是 | 次要或辅助技能。 |
-| `architectureSkills` | string[] | 是 | 架构、工程实践和系统设计能力。 |
 | `experienceEvidence` | string[] | 是 | 能证明技能和经验的项目/工作成果摘要。尽量写具体项目、职责、技术和结果，不要只堆关键词。 |
 
 ## 5. matching：匹配规则
@@ -113,14 +112,12 @@
 每个键对应一个评分维度，数值表示该维度的相对权重：
 
 | 字段 | 当前权重 | 说明 |
-|---|---:|---|
-| `roleTitle` | 20 | 职位名称与目标岗位的相关程度 |
-| `coreSkills` | 25 | 核心技能匹配程度 |
-| `architecture` | 15 | 架构、系统设计和工程实践 |
-| `seniority` | 10 | 职级和经验年限 |
+| `roleTitle` | 25 | 职位名称与目标岗位的相关程度 |
+| `coreSkills` | 35 | 核心技能匹配程度 |
+| `seniority` | 15 | 职级和经验年限 |
 | `domainExperience` | 10 | 行业或业务领域经验 |
-| `locationAndWorkMode` | 8 | 地点和工作方式 |
-| `language` | 7 | 工作语言要求 |
+| `locationAndWorkMode` | 5 | 地点和工作方式 |
+| `language` | 5 | 工作语言要求 |
 | `salary` | 5 | 薪资匹配程度 |
 
 当前权重合计为 100，配置校验也会强制检查这一点。评分只用于排序和辅助判断，不得因为分数低而自动删除或隐藏职位；低匹配和信息不完整的职位仍应保留给人工查看。
