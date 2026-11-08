@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { initializeDatabase, db } from "./db/index.js";
 import { loadConfig } from "./config.js";
+import { generateDailyReport } from "./reports/index.js";
 
 const command = process.argv[2];
 
@@ -36,10 +37,8 @@ async function main(): Promise<void> {
     }
     case "report": {
       initializeDatabase();
-      const rows = db.prepare(
-        "SELECT title, company, country, location, url, review_status, discovered_at FROM jobs ORDER BY discovered_at DESC"
-      ).all();
-      console.log(JSON.stringify(rows, null, 2));
+      const outputPath = generateDailyReport();
+      console.log(`Daily report generated: ${outputPath}`);
       break;
     }
     default:
