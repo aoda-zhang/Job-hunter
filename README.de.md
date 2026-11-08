@@ -47,15 +47,13 @@ Die Datei enthält drei Bereiche auf oberster Ebene:
     },
     "coreSkills": ["React", "TypeScript", "JavaScript"],
     "secondarySkills": ["Node.js", "NestJS"],
-    "architectureSkills": ["Microfrontend", "Design Systems"],
     "experienceEvidence": ["Built enterprise frontend platforms with React and TypeScript."]
   },
   "matching": {
     "weights": {
       "roleTitle": 20,
       "coreSkills": 25,
-      "architecture": 15,
-      "seniority": 10,
+        "seniority": 10,
       "domainExperience": 10,
       "locationAndWorkMode": 8,
       "language": 7,
@@ -125,7 +123,7 @@ Jeder Schlüssel steht für eine Bewertungsdimension. Der Zahlenwert gibt deren 
 | `language` | 7 | Anforderungen an Arbeitssprachen |
 | `salary` | 5 | Übereinstimmung der Vergütung |
 
-Die Gewichte sollten normalerweise zusammen 100 ergeben; die aktuellen Werte erfüllen dies. Bei Änderungen sollten sie auf 100 normiert werden, damit der Prozentwert nachvollziehbar bleibt. Die Bewertungslogik soll die Gewichte anwenden und nicht lediglich Schlüsselwörter zählen.
+Die Gewichte ergeben zusammen 100; die Konfigurationsprüfung erzwingt diese Summe. Scores dienen ausschließlich zur Sortierung und Orientierung. Stellen mit niedriger Bewertung oder fehlenden Angaben müssen für die manuelle Prüfung sichtbar bleiben und dürfen niemals automatisch gelöscht oder ausgeblendet werden.
 
 ### thresholds
 
