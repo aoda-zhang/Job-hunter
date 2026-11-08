@@ -11,9 +11,10 @@ async function main(): Promise<void> {
       console.log("Job Hunter configuration is valid.");
       console.log(JSON.stringify({
         countries: config.search.countries,
-        roles: config.search.roles,
-        candidate: config.candidate.headline,
-        matchingWeights: config.matching.weights
+        jobTitles: config.search.jobTitles.include,
+        jdLanguages: config.search.jdLanguages.include,
+        technicalKeywords: config.search.technicalKeywords.include,
+        keywordMatchMode: config.search.technicalKeywords.matchMode
       }, null, 2));
       break;
     }
@@ -26,7 +27,10 @@ async function main(): Promise<void> {
       initializeDatabase();
       console.log("Discovery configuration loaded.");
       console.log(`Countries: ${config.search.countries.join(", ")}`);
-      console.log(`Job titles: ${config.search.jobTitles.include.join(" | ")}`);\n      console.log(`JD languages: ${config.search.jdLanguages.include.join(", ")}`);\n      console.log(`Technical keywords: ${config.search.technicalKeywords.include.join(", ")}`);
+      console.log(`Job titles: ${config.search.jobTitles.include.join(" | ")}`);
+      console.log(`JD languages: ${config.search.jdLanguages.include.join(", ")}`);
+      console.log(`Technical keywords: ${config.search.technicalKeywords.include.join(", ")}`);
+      console.log(`Keyword match mode: ${config.search.technicalKeywords.matchMode}`);
       console.log("Discovery scaffold ready. Implement and configure permitted source adapters to collect postings.");
       break;
     }
