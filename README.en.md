@@ -47,15 +47,13 @@ There are three top-level sections:
     },
     "coreSkills": ["React", "TypeScript", "JavaScript"],
     "secondarySkills": ["Node.js", "NestJS"],
-    "architectureSkills": ["Microfrontend", "Design Systems"],
     "experienceEvidence": ["Built enterprise frontend platforms with React and TypeScript."]
   },
   "matching": {
     "weights": {
       "roleTitle": 20,
       "coreSkills": 25,
-      "architecture": 15,
-      "seniority": 10,
+        "seniority": 10,
       "domainExperience": 10,
       "locationAndWorkMode": 8,
       "language": 7,
@@ -125,7 +123,7 @@ Each key represents a scoring dimension; its number is its relative weight.
 | `language` | 7 | Working-language requirements |
 | `salary` | 5 | Compensation alignment |
 
-Weights should normally sum to 100; the current values do. If you change them, normalize them to 100 for an interpretable percentage score. The scoring implementation should apply weights, not merely count keywords.
+The weights sum to 100, and configuration validation enforces this. Scores are used only to rank and organize vacancies: low-scoring or incomplete matches must remain visible for human review and must never be automatically deleted or hidden.
 
 ### thresholds
 
