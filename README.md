@@ -8,8 +8,9 @@ OpenCode uses browser tools configured in your local environment to search Linke
 
 1. Edit the single configuration file: `job-hunter.config.json`.
 2. Open this repository locally in OpenCode.
-3. Invoke the `job-discovery` skill.
-4. Review `reports/daily/YYYY-MM-DD.md`.
+3. Select the **Job Hunter** primary agent in OpenCode (press `Tab` to switch agents if needed).
+4. Ask it to find jobs. It will load the `job-discovery` skill when appropriate.
+5. Review `reports/daily/YYYY-MM-DD.md`.
 
 No application code, Node.js runtime, backend, database, cloud service, CI pipeline or job-board adapter is required.
 
@@ -25,12 +26,13 @@ Country, location and posting date define the LinkedIn search scope only. They a
 
 Incomplete or ambiguous evidence must be marked for review, not silently rejected.
 
-## Skills
+## Agent and skills
 
+- `.opencode/agents/job-hunter.md` — the **Primary Agent** and the single user-facing entry point. It routes requests, loads the right skill and coordinates the workflow.
 - `.opencode/skills/job-discovery/SKILL.md` — daily LinkedIn search, JD inspection, filtering, deduplication and report generation.
-- `.opencode/skills/company-research/SKILL.md` — optional, manually invoked company and interview research after an interview invitation.
+- `.opencode/skills/company-research/SKILL.md` — company and role research plus interview preparation for a selected vacancy.
 
-Company research is separate from daily job discovery and never runs automatically.
+You normally interact only with the **Job Hunter** agent. It loads `job-discovery` for vacancy discovery and `company-research` for interview preparation. Company research is never triggered during routine discovery.
 
 ## Output
 
