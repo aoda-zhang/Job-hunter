@@ -47,15 +47,13 @@
     },
     "coreSkills": ["React", "TypeScript", "JavaScript"],
     "secondarySkills": ["Node.js", "NestJS"],
-    "architectureSkills": ["Microfrontend", "Design Systems"],
     "experienceEvidence": ["Built enterprise frontend platforms with React and TypeScript."]
   },
   "matching": {
     "weights": {
       "roleTitle": 20,
       "coreSkills": 25,
-      "architecture": 15,
-      "seniority": 10,
+        "seniority": 10,
       "domainExperience": 10,
       "locationAndWorkMode": 8,
       "language": 7,
@@ -125,7 +123,7 @@
 | `language` | 7 | 工作语言要求 |
 | `salary` | 5 | 薪资匹配程度 |
 
-权重建议合计为 100。当前配置中的权重合计为 100。调整权重时，建议同步归一化到 100，便于解释最终百分制分数。评分实现应按权重计算，而不是仅统计关键词。
+当前权重合计为 100，配置校验也会强制检查这一点。评分只用于排序和辅助判断，不得因为分数低而自动删除或隐藏职位；低匹配和信息不完整的职位仍应保留给人工查看。
 
 ### thresholds
 
