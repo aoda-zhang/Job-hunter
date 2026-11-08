@@ -98,7 +98,7 @@ export function evaluateJob(posting: JobPosting, config: JobHunterConfig): JobFi
       ? { status: "match" as const, matchedTitle: titleMatch, reason: `Title matches configured role: "${titleMatch}".` }
       : { status: "no_match" as const, reason: "No configured job title has a sufficiently close role-title match." };
 
-  const languageResult = description ? detectLanguage(description) : {
+  const languageResult: { language?: string; reason: string; uncertain: boolean } = description ? detectLanguage(description) : {
     reason: "Job description is missing.", uncertain: true
   };
   const configuredLanguages = config.search.jdLanguages.include.map((item) => item.toLowerCase());
