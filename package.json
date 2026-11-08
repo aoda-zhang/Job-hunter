@@ -4,7 +4,9 @@
   "private": true,
   "description": "Configurable AI-assisted job discovery and matching across countries and roles",
   "type": "module",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "tsx src/cli.ts",
     "typecheck": "tsc --noEmit",
@@ -12,7 +14,8 @@
     "db:init": "tsx src/cli.ts db:init",
     "discover": "tsx src/cli.ts discover",
     "report": "tsx src/cli.ts report",
-    "interview:prepare": "tsx src/cli.ts interview:prepare"
+    "interview:prepare": "tsx src/cli.ts interview:prepare",
+    "test": "tsx --test test/**/*.test.ts"
   },
   "dependencies": {
     "better-sqlite3": "^12.2.0",
