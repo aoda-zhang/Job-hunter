@@ -1,153 +1,70 @@
 # Job Hunter Configuration Guide
 
-Job Hunter uses **one root configuration file only**: `job-hunter.config.json`. Search scope, candidate profile, and matching policy are configured together. Change this file to target different countries, roles, and markets without editing application code.
+Job Hunter uses one root file, `job-hunter.config.json`, for multi-country, multi-role job discovery. **Vacancies are filtered only by three dimensions: job title, job-description language, and technical keywords in the JD.**
 
-## 1. Configuration layout
+Country, location, posting recency and source define the search scope; they are not candidate-fit scoring criteria.
 
-There are three top-level sections:
-
-| Section | Purpose |
-|---|---|
-| `search` | Countries, job titles, locations, work modes, and discovery sources |
-| `candidate` | Candidate experience, skills, languages, salary reference, and work-authorization context |
-| `matching` | Match-score weights, thresholds, and analysis rules |
-
-## 2. Complete example
+## 1. Complete configuration example
 
 ```json
 {
   "search": {
-    "countries": ["Germany", "Netherlands"],
-    "roles": ["Senior Frontend Engineer", "React Developer"],
-    "locations": ["Berlin", "Amsterdam", "Remote"],
-    "workModes": ["remote", "hybrid"],
+    "countries": ["Germany"],
+    "locations": ["Munich", "Berlin", "Hamburg", "Remote"],
     "lookbackHours": 72,
     "maxResultsPerSource": 50,
-    "sources": ["company-career-pages", "LinkedIn", "Indeed"],
-    "excludeKeywords": ["intern", "junior"]
-  },
-  "candidate": {
-    "headline": "Senior Frontend Engineer",
-    "experienceYears": 9,
-    "currentCountry": "China",
-    "workAuthorization": {
-      "status": "Assess separately for each target country",
-      "note": "Verify eligibility and sponsorship requirements for each vacancy."
+    "sources": ["company-career-pages", "LinkedIn", "StepStone"],
+    "jobTitles": {
+      "include": ["Senior Frontend Engineer", "Senior Frontend Developer", "Frontend Platform Engineer", "Senior React Engineer", "Senior Full-Stack Engineer"]
     },
-    "languages": {
-      "preferred": ["English"],
-      "additional": [
-        {"language": "German", "level": "B1", "note": "Currently learning"}
-      ]
+    "jdLanguages": {
+      "include": ["English", "German"]
     },
-    "salary": {
-      "preferredMinimum": 65000,
-      "currency": "EUR",
-      "note": "Reference expectation; evaluate against local market."
-    },
-    "coreSkills": ["React", "TypeScript", "JavaScript"],
-    "secondarySkills": ["Node.js", "NestJS"],
-    "experienceEvidence": ["Built enterprise frontend platforms with React and TypeScript."]
-  },
-  "matching": {
-    "weights": {
-      "roleTitle": 20,
-      "coreSkills": 25,
-        "seniority": 10,
-      "domainExperience": 10,
-      "locationAndWorkMode": 8,
-      "language": 7,
-      "salary": 5
-    },
-    "thresholds": {
-      "strongMatch": 85,
-      "goodMatch": 70,
-      "possibleMatch": 55
-    },
-    "rules": [
-      "Score evidence in the job description, not keyword frequency alone.",
-      "Mark unstated requirements as unknown."
-    ]
+    "technicalKeywords": {
+      "include": ["React", "TypeScript", "JavaScript", "HTML", "CSS", "Next.js", "Node.js", "NestJS", "Express", "Redux"],
+      "matchMode": "any"
+    }
   }
 }
 ```
 
-## 3. search — discovery scope
+## 2. Field reference
+
+### Search scope (not matching criteria)
 
 | Field | Type | Required | Description |
 |---|---|---:|---|
-| `countries` | string[] | Yes | One or more target countries, e.g. `["Germany", "Japan", "United States"]`. Use consistent, commonly recognized English country names. |
-| `roles` | string[] | Yes | Target job titles and title variants, e.g. `["React Developer", "Frontend Engineer"]`. Use titles commonly found in the target market. |
-| `locations` | string[] | No | Cities, regions, or `Remote`, e.g. `["Munich", "Tokyo", "Remote"]`. Omit or leave empty to avoid an additional location filter. Cross-border remote eligibility must be verified per vacancy. |
-| `workModes` | enum[] | No | Work arrangement: `remote`, `hybrid`, `onsite`, or `flexible`. |
-| `lookbackHours` | integer | Yes | How far back to search, in hours. `72` means postings from the last three days. Must be greater than zero. |
-| `maxResultsPerSource` | integer | Yes | Maximum number of results to collect from each source. Must be greater than zero. |
-| `sources` | string[] | Yes | Source identifiers, e.g. `company-career-pages`, `LinkedIn`, `StepStone`, `Indeed`. A source only runs when a permitted adapter has been implemented. |
-| `excludeKeywords` | string[] | No | Keywords to exclude from job titles or descriptions, e.g. `["intern", "working student", "junior"]`. Exact filtering behavior is implemented by the discovery engine. |
+| `countries` | string[] | Yes | Target countries, e.g. `["Germany", "Japan", "United States"]`. Multiple countries are supported. |
+| `locations` | string[] | No | Cities, regions or Remote. Omit to avoid an additional location restriction. |
+| `lookbackHours` | integer | Yes | How far back to search, in hours; 72 means the last three days. |
+| `maxResultsPerSource` | integer | Yes | Maximum number of vacancies collected per source. |
+| `sources` | string[] | Yes | Source identifiers. A source runs only when a permitted adapter has actually been implemented. |
 
-**Search expansion:** the intended discovery planner combines countries, roles, and locations into individual tasks. Two countries × three roles produce at least six country/role search combinations. Actual collection depends on available source adapters.
-
-## 4. candidate — candidate profile
+### The three vacancy filters
 
 | Field | Type | Required | Description |
 |---|---|---:|---|
-| `headline` | string | Yes | Target professional headline, e.g. `Senior Frontend Engineer`. |
-| `experienceYears` | number | Yes | Total years of experience. Fractions are allowed; negative values are not. |
-| `currentCountry` | string | Yes | Candidate's current country, used to assess location and cross-border context. |
-| `workAuthorization.status` | string | Yes | Short description of current work-authorization status. Never assume it applies to every target country. |
-| `workAuthorization.note` | string | Yes | Additional context instructing the analysis to verify visa, permit, and sponsorship requirements per vacancy. |
-| `languages.preferred` | string[] | Yes | Languages preferred for work, e.g. `["English"]`. |
-| `languages.additional` | object[] | Yes | Other languages. Each item requires `language` and `level`, with optional `note`. CEFR levels (A1–C2) are recommended where applicable. |
-| `salary.preferredMinimum` | number | Yes | Numeric minimum salary expectation. Interpret together with `currency`; do not apply one market's salary threshold universally. |
-| `salary.currency` | string | Yes | Three-letter currency code such as EUR, USD, GBP, or JPY. |
-| `salary.note` | string | Yes | Context such as gross annual salary, negotiability, or whether the amount is indicative only. |
-| `coreSkills` | string[] | Yes | Core skills expected to be central to the target role. |
-| `secondarySkills` | string[] | Yes | Supporting or secondary skills. |
-| `experienceEvidence` | string[] | Yes | Concise evidence from projects and employment. Include project context, responsibilities, technologies, and outcomes rather than keywords alone. |
+| `jobTitles.include` | string[] | Yes | Accepted job titles and common variants. Use semantic matching; exact title equality is not required. |
+| `jdLanguages.include` | string[] | Yes | Accepted JD languages, e.g. English, German or Japanese. Detect the actual primary JD language rather than inferring it from the country. |
+| `technicalKeywords.include` | string[] | Yes | Technologies to look for in the JD. Include core technologies and common aliases where useful. |
+| `technicalKeywords.matchMode` | enum | Yes | `any` means one keyword hit is enough; `all` requires every configured keyword. `any` is recommended to reduce false negatives. |
 
-## 5. matching — evaluation policy
+## 3. Filtering behavior
 
-### weights
+1. **Job title:** use case-insensitive semantic matching and common title variants rather than exact string equality.
+2. **JD language:** detect the primary language of the job description and accept only configured languages.
+3. **Technical keywords:** search the full JD. With the recommended `any` mode, a single matching keyword is sufficient.
 
-Each key represents a scoring dimension; its number is its relative weight.
+A vacancy is marked Matched only when all three dimensions are confirmed matches.
 
-| Key | Current weight | Meaning |
-| `roleTitle` | 25 | Alignment between vacancy title and target role |
-| `coreSkills` | 35 | Core technical-skill alignment |
-| `seniority` | 15 | Seniority and experience level |
-| `domainExperience` | 10 | Industry and domain experience |
-| `locationAndWorkMode` | 5 | Location and work arrangement |
-| `language` | 5 | Working-language requirements |
-| `salary` | 5 | Compensation alignment |
+If the title or JD is missing, too short or ambiguous, mark the vacancy Review and keep it available for manual inspection. Mark Not matched only when there is clear evidence of a mismatch in at least one dimension.
 
-The weights sum to 100, and configuration validation enforces this. Scores are used only to rank and organize vacancies: low-scoring or incomplete matches must remain visible for human review and must never be automatically deleted or hidden.
+## 4. Explicit non-filters
 
-### thresholds
+Do not filter by candidate years of experience, seniority, salary, visa/work authorization, candidate language proficiency, industry background, architecture experience or any other candidate-profile attribute. There is no overall candidate-fit score or score-based rejection threshold.
 
-| Key | Current value | Meaning |
-|---|---:|---|
-| `strongMatch` | 85 | Strong-match threshold |
-| `goodMatch` | 70 | Good-match threshold |
-| `possibleMatch` | 55 | Worth-reviewing threshold |
+## 5. Validation and current limitations
 
-Scores below `possibleMatch` may be classified as low matches, but must not trigger automatic rejection. Keep the ordering `strongMatch >= goodMatch >= possibleMatch`.
+Run `npm run config:check` to validate the configuration. The Zod schema is in `src/config.ts`.
 
-### rules
-
-An array of natural-language instructions for analysis. Examples: distinguish required from preferred skills; mark unstated salary or sponsorship details as unknown; support every major score with evidence from the job description and candidate profile. Add or remove rules to reflect your evaluation policy.
-
-## 6. Common scenarios
-
-- **Change target markets:** edit `search.countries`.
-- **Change job families:** edit `search.roles`.
-- **Add cities:** edit `search.locations`.
-- **Remote-only search:** set `workModes` to `["remote"]`.
-- **No work-mode filter:** omit `workModes`.
-- **Change scoring priorities:** edit `matching.weights` and `matching.thresholds`.
-- **Update your profile:** edit `candidate`; do not put personal skills into search keywords.
-
-## 7. Validation and limitations
-
-Run `npm run config:check` to validate the configuration. The runtime schema is defined with Zod in `src/config.ts`.
-
-A valid configuration does not mean every source is implemented. Source adapters must be developed separately and must respect each platform's terms, access controls, and rate limits. The project does not automatically submit applications or contact employers.
+The configuration and filtering policy are defined, but real job-board adapters, vacancy collection and the deterministic filter executor still need implementation. Listing a source in the config does not mean its adapter is available. Respect each source's terms, access controls and rate limits. The project does not automatically submit applications or contact employers.
