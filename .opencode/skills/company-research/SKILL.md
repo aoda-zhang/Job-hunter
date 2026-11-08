@@ -1,34 +1,69 @@
 ---
 name: company-research
-description: Research shortlisted employers and prepare a fact-based, role-specific answer to why the candidate wants to join.
+description: Independently research a specific employer and prepare role-specific interview materials after the candidate receives an interview invitation.
 ---
 
-# Company Research
+# Company Research — Phase 2
 
-Read the vacancy and the single root `job-hunter.config.json` to identify the employer, target country and role.
+This is an **independent, manually triggered skill** for **Phase 2 — Interview Preparation**. Run it only when the user has received an interview invitation or explicitly asks to prepare for a specific employer and vacancy.
 
-Research official company pages, product pages, annual reports, investor materials, careers pages, engineering blogs and reputable business sources. Prefer primary sources and record source URLs plus access/publication dates.
+Do not run this skill as part of routine job discovery, vacancy filtering or daily report generation. Do not research every company appearing in a daily report.
 
-## Required company profile
+## Required input
 
-For every distinct company represented in the final daily results, provide:
+Use the specific company and vacancy selected by the user. Retrieve the job record and JD when available. Ask one concise clarification only if the company or target role cannot be identified. Use the candidate's supplied resume and interview materials; never assume missing experience.
 
-1. **Main business** — explain in plain language what the company primarily does, its core products or services, who its customers/users are, and how it creates value or earns revenue when this is publicly verifiable.
-2. **Company context** — headquarters/country of origin when verified, major markets, and relevant business units or products connected to the vacancy.
-3. **Role connection** — explain how the advertised team/product/role relates to the company's business. Do not invent an internal team structure.
-4. **Sources and confidence** — cite the exact URLs and dates; clearly label unknown or unverified details.
+## Research workflow
 
-Avoid generic company descriptions. Distinguish the company's main business from secondary products, subsidiaries and experimental initiatives.
+Research official company pages, product pages, annual reports, investor materials, careers pages, engineering blogs and reputable business sources. Prefer primary sources and record source URLs plus publication/access dates.
 
-## Required interview answer: “Why do you want to join our company?”
+### 1. Company profile
 
-Prepare a natural, specific, first-person answer for each company/role combination. It should:
-- connect one or two verified facts about the company's core business, products, customers or market position to a genuine reason for interest;
-- explain why the advertised role is relevant to that business or product;
-- connect the opportunity to relevant experience and strengths found in the candidate materials supplied for interview preparation (do not invent experience);
-- sound like a concise spoken interview answer, normally 80–130 words in the interview language when that language is known;
-- avoid empty praise, unsupported claims, exaggerated enthusiasm and generic statements that could be reused unchanged for any employer.
+For the selected company, provide:
+- **Main business:** what it primarily does, its core products/services, customer groups and how it creates value or earns revenue when publicly verifiable.
+- **Company context:** headquarters/country of origin when verified, major markets, relevant business units and products connected to the vacancy.
+- **Market context:** industry positioning, competitors and recent material business developments when reliable sources are available.
+- **Sources and confidence:** exact URLs and dates; clearly label unknown or unverified details.
 
-If multiple vacancies at the same company are included, research the company once, but tailor the “Why join?” answer separately to each materially different role. If candidate materials or the interview language are unavailable, produce a clearly marked draft with assumptions rather than fabricating details.
+Distinguish the company's core business from secondary products, subsidiaries and experimental initiatives.
 
-Do not use company research or interview answers to add new vacancy filters. Never fabricate headcount, revenue, salary, sponsorship or technology stack. Verify country-specific legal or hiring claims from authoritative sources. Never contact the employer.
+### 2. Role analysis
+
+Analyze the specific vacancy:
+- Main responsibilities and expected outcomes.
+- Required technical stack and engineering practices stated in the JD.
+- Product/team/business context that can be supported by public evidence.
+- Likely engineering challenges implied by the responsibilities; label these as reasoned hypotheses, not confirmed internal facts.
+- Relevant connections to the candidate's actual experience and strengths in supplied materials.
+
+### 3. Interview preparation
+
+Prepare role-specific answers where appropriate, including:
+- “Why do you want to join our company?”
+- “Why are you interested in this position?”
+- “What can you bring to our company?”
+- Likely technical and behavioral questions based on the JD and verified company context.
+
+The “Why join?” answer should:
+- connect one or two verified facts about the company's core business, products, customers or market to a genuine reason for interest;
+- explain why the specific role is relevant to that business or product;
+- connect the opportunity to relevant experience and strengths found in the supplied candidate materials;
+- sound like a concise, natural spoken answer, normally 80–130 words in the interview language when known;
+- avoid empty praise, unsupported claims, exaggerated enthusiasm and generic boilerplate.
+
+If candidate materials or interview language are unavailable, mark the answer as a draft and state the assumptions. Never fabricate motivation, experience, company facts, headcount, revenue, salary, sponsorship, technology stack or internal team structure.
+
+## Output
+
+Save the research independently from daily discovery reports, under:
+
+`reports/interviews/<company-slug>/`
+
+Recommended files:
+- `company-research.md` — verified company profile, business and market context, sources.
+- `role-analysis.md` — analysis of the selected vacancy.
+- `interview-preparation.md` — tailored answers and likely interview questions.
+
+If the user is preparing for another role at the same company, reuse verified company facts where still current, but create or update role-specific analysis and answers for that vacancy. Record research dates and re-verify time-sensitive claims.
+
+Never use company research or interview answers to add new vacancy filters. Never contact the employer or submit applications.
