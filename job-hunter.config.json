@@ -1,6 +1,8 @@
 {
   "search": {
-    "countries": ["Germany"],
+    "countries": [
+      "Germany"
+    ],
     "roles": [
       "Senior Frontend Engineer",
       "Senior Frontend Developer",
@@ -8,12 +10,33 @@
       "Senior React Engineer",
       "Senior Full-Stack Engineer"
     ],
-    "locations": ["Munich", "Berlin", "Hamburg", "Remote"],
-    "workModes": ["remote", "hybrid", "onsite"],
+    "locations": [
+      "Munich",
+      "Berlin",
+      "Hamburg",
+      "Remote"
+    ],
+    "workModes": [
+      "remote",
+      "hybrid",
+      "onsite"
+    ],
     "lookbackHours": 72,
     "maxResultsPerSource": 50,
-    "sources": ["company-career-pages", "LinkedIn", "StepStone", "Indeed", "XING"],
-    "excludeKeywords": ["intern", "working student", "junior", "principal", "staff"]
+    "sources": [
+      "company-career-pages",
+      "LinkedIn",
+      "StepStone",
+      "Indeed",
+      "XING"
+    ],
+    "excludeKeywords": [
+      "intern",
+      "working student",
+      "junior",
+      "principal",
+      "staff"
+    ]
   },
   "candidate": {
     "headline": "Senior Frontend Engineer / Frontend-focused Full-Stack Engineer",
@@ -24,7 +47,9 @@
       "note": "Do not assume work authorization, visa eligibility, or employer sponsorship requirements. Evaluate against the candidate's circumstances and the laws and hiring practices of each target country."
     },
     "languages": {
-      "preferred": ["English"],
+      "preferred": [
+        "English"
+      ],
       "additional": [
         {
           "language": "German",
@@ -38,9 +63,20 @@
       "currency": "EUR",
       "note": "Reference expectation only. Assess compensation in the vacancy's local market and currency."
     },
-    "coreSkills": ["React", "TypeScript", "JavaScript", "HTML", "CSS"],
-    "secondarySkills": ["Node.js", "NestJS", "Express", "REST APIs", "MongoDB"],
-    "architectureSkills": ["Microfrontend", "Design Systems", "Scalability", "Enterprise Architecture"],
+    "coreSkills": [
+      "React",
+      "TypeScript",
+      "JavaScript",
+      "HTML",
+      "CSS"
+    ],
+    "secondarySkills": [
+      "Node.js",
+      "NestJS",
+      "Express",
+      "REST APIs",
+      "MongoDB"
+    ],
     "experienceEvidence": [
       "Manulife: enterprise financial-services platforms, React and TypeScript, microfrontend design tokens, shared component library, backend services",
       "Newegg: e-commerce merchant products, Angular-to-React migration, React Native seller application",
@@ -49,13 +85,12 @@
   },
   "matching": {
     "weights": {
-      "roleTitle": 20,
-      "coreSkills": 25,
-      "architecture": 15,
-      "seniority": 10,
+      "roleTitle": 25,
+      "coreSkills": 35,
+      "seniority": 15,
       "domainExperience": 10,
-      "locationAndWorkMode": 8,
-      "language": 7,
+      "locationAndWorkMode": 5,
+      "language": 5,
       "salary": 5
     },
     "thresholds": {
@@ -64,11 +99,14 @@
       "possibleMatch": 55
     },
     "rules": [
+      "Use scores only to rank and organize vacancies; never automatically reject or hide a vacancy because of its score.",
+      "Keep low-scoring and uncertain matches visible for human review.",
       "Score evidence in the job description, not keyword frequency alone.",
+      "Distinguish mandatory requirements from preferred qualifications.",
+      "Treat missing or unclear information as unknown, not as a confirmed mismatch or an automatic zero.",
       "Interpret location, language, compensation, and work authorization in the context of the vacancy's country.",
       "Do not infer visa sponsorship, salary, language level, or remote eligibility when not stated; mark unknown.",
-      "Distinguish required skills from nice-to-have skills.",
-      "Explain every score with supporting JD evidence and candidate experience evidence.",
+      "Explain every score with supporting job-description evidence and candidate experience evidence.",
       "A score is decision support, not a probability of getting an interview.",
       "Normalize compensation only when reliable exchange-rate and pay-period data are available; otherwise preserve the original value."
     ]
