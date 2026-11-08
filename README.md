@@ -16,11 +16,13 @@ Edit only `job-hunter.config.json`:
 - **JD language filter** — accepted job-description languages.
 - **Technical keyword filter** — technology terms and `any` / `all` matching mode.
 
-There is no candidate profile, weighted matching score, or score threshold in the discovery configuration. Runtime validation lives in `src/config.ts`.
+There is no candidate profile, weighted matching score, or score threshold in the discovery configuration.
 
-## Daily report output
+## Daily report
 
-The target output is one Markdown file per calendar date at `reports/daily/YYYY-MM-DD.md`. Each file groups the final matched and review-needed vacancies by company. Each company section explains its main business, core products/services and customers with source links. Each distinct role also gets a tailored, fact-based spoken answer to **“Why do you want to join our company?”** Multiple runs on the same day update that day's file rather than creating duplicate files.
+Run `npm run report` (or `npm run dev -- report`) after initializing the database. It creates or replaces one local-date Markdown report at `reports/daily/YYYY-MM-DD.md`, containing vacancies discovered on that date. The report groups vacancies by company, includes filter evidence where available, and provides sections for the company's main business and the role-specific **“Why do you want to join our company?”** answer.
+
+Company facts and fully tailored interview answers require verified research. The database has `company_research` and `role_interview_prep` tables for those details. Until those records are populated, the report explicitly marks missing company research and provides only a generic draft that must be personalized; it does not fabricate facts or candidate experience.
 
 ## Quick start
 
@@ -33,12 +35,12 @@ cp .env.example .env
 npm run config:check
 npm run db:init
 npm run dev -- discover
-npm run dev -- report
+npm run report
 ```
 
 ## Project status
 
-Early MVP scaffold. Single-file configuration and runtime validation are implemented. Company-research and daily-report workflows are specified, but source adapters, end-to-end collection, deterministic three-dimension filtering, structured company research and automatic daily Markdown report generation still need implementation and validation. The report format above is the target behavior, not a claim that report generation already works.
+The dated Markdown report generator and database tables for company research and role-specific interview preparation are implemented. Job-board adapters, end-to-end vacancy collection, deterministic three-dimension filtering, automated company research, and automated generation of fully tailored interview answers are still pending. The current `discover` command remains a scaffold.
 
 ## Safety
 
