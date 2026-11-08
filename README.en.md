@@ -1,10 +1,17 @@
 # Job Hunter Configuration Guide
 
-Job Hunter uses one root file, `job-hunter.config.json`, for multi-country, multi-role job discovery. **Vacancies are filtered only by three dimensions: job title, job-description language, and technical keywords in the JD.**
+Job Hunter is a multi-country, multi-role job discovery tool with two independent stages:
 
-Country, location, posting recency and source define the search scope; they are not candidate-fit scoring criteria.
+- **Phase 1 — Job discovery and applications:** search for vacancies based on your target roles, then filter only by job title, JD language and technical keywords. Generate a daily Markdown report.
+- **Phase 2 — Interview preparation:** after receiving an interview invitation, manually invoke an independent company-research skill for the selected employer and role.
 
-## 1. Complete configuration example
+## 1. Single root configuration
+
+All search settings live in `job-hunter.config.json`.
+
+Country, location, posting recency and source define the search scope; they are not candidate-fit scoring criteria. Your resume and technical background help define target job titles and keywords, but do not introduce extra candidate scoring or automatic rejection rules.
+
+## 2. Complete configuration example
 
 ```json
 {
@@ -28,49 +35,68 @@ Country, location, posting recency and source define the search scope; they are 
 }
 ```
 
-## 2. Field reference
+## 3. Phase 1 — Job discovery and application search
 
-### Search scope (not matching criteria)
+Run `npm run report` (or `npm run dev -- report`) to create or replace the daily report:
 
-| Field | Type | Required | Description |
-|---|---|---:|---|
-| `countries` | string[] | Yes | Target countries, e.g. `["Germany", "Japan", "United States"]`. Multiple countries are supported. |
-| `locations` | string[] | No | Cities, regions or Remote. Omit to avoid an additional location restriction. |
-| `lookbackHours` | integer | Yes | How far back to search, in hours; 72 means the last three days. |
-| `maxResultsPerSource` | integer | Yes | Maximum number of vacancies collected per source. |
-| `sources` | string[] | Yes | Source identifiers. A source runs only when a permitted adapter has actually been implemented. |
+`reports/daily/YYYY-MM-DD.md`
 
-### The three vacancy filters
+Vacancies are grouped by company for readability only. Each vacancy includes:
+- Job title and company.
+- Country, location and work mode when known.
+- Detected JD language.
+- Configured technical keywords found in the JD.
+- Filter status and evidence for the three dimensions.
+- Posting date and discovery date.
+- Source and job URL.
+- A concise JD summary and collapsible original description when available.
 
-| Field | Type | Required | Description |
-|---|---|---:|---|
-| `jobTitles.include` | string[] | Yes | Accepted job titles and common variants. Use semantic matching; exact title equality is not required. |
-| `jdLanguages.include` | string[] | Yes | Accepted JD languages, e.g. English, German or Japanese. Detect the actual primary JD language rather than inferring it from the country. |
-| `technicalKeywords.include` | string[] | Yes | Technologies to look for in the JD. Include core technologies and common aliases where useful. |
-| `technicalKeywords.matchMode` | enum | Yes | `any` means one keyword hit is enough; `all` requires every configured keyword. `any` is recommended to reduce false negatives. |
+The report includes confirmed matches and items requiring manual review. Confirmed non-matches are excluded from the report body but retained in the database audit trail. Unknown or incomplete fields are explicitly marked rather than silently discarded.
 
-## 3. Filtering behavior
+**Phase 1 does not perform company deep research or generate interview answers.** Its purpose is to help you find, review and apply for relevant vacancies.
 
-1. **Job title:** use case-insensitive semantic matching and common title variants rather than exact string equality.
-2. **JD language:** detect the primary language of the job description and accept only configured languages.
-3. **Technical keywords:** search the full JD. With the recommended `any` mode, a single matching keyword is sufficient.
+## 4. Phase 2 — Independent company research and interview preparation
 
-A vacancy is marked Matched only when all three dimensions are confirmed matches.
+After receiving an interview invitation, manually invoke:
 
-If the title or JD is missing, too short or ambiguous, mark the vacancy Review and keep it available for manual inspection. Mark Not matched only when there is clear evidence of a mismatch in at least one dimension.
+`.opencode/skills/company-research/SKILL.md`
 
-## 4. Explicit non-filters
+This independent skill covers:
+1. **Company research:** main business, products/services, customer groups, business model, headquarters and major markets.
+2. **Market context:** industry position, competitors and recent material business developments, where reliable sources are available.
+3. **Role analysis:** responsibilities, technical stack, business context and links to your actual project experience.
+4. **Interview preparation:** “Why do you want to join our company?”, “Why this position?”, “What can you bring?”, plus likely technical and behavioral questions.
 
-Do not filter by candidate years of experience, seniority, salary, visa/work authorization, candidate language proficiency, industry background, architecture experience or any other candidate-profile attribute. There is no overall candidate-fit score or score-based rejection threshold.
+Save outputs separately under:
 
-## 5. Validation and current limitations
+`reports/interviews/<company-slug>/`
+
+Recommended files are `company-research.md`, `role-analysis.md` and `interview-preparation.md`. Company facts may be reused for another role at the same employer, but role analysis and answers must be tailored to each vacancy.
+
+This skill is not triggered during routine discovery and does not research every company in the daily report.
+
+## 5. The three vacancy filters
+
+| Dimension | Config field | Behavior |
+|---|---|---|
+| Job title | `jobTitles.include` | Match common title variants and semantic equivalents |
+| JD language | `jdLanguages.include` | Detect the actual primary JD language; do not infer it from country |
+| Technical keywords | `technicalKeywords.include` | Look for configured technologies in the JD |
+
+For `technicalKeywords.matchMode`:
+- `any`: one keyword hit is sufficient; recommended to reduce false negatives.
+- `all`: every configured keyword must be present.
+
+Mark a vacancy Matched only when all three dimensions are confirmed matches. Mark Not matched only when there is clear mismatch evidence. Keep ambiguous or incomplete cases as Review.
+
+## 6. Explicit non-filters
+
+Do not filter by years of experience, seniority, salary, visa/work authorization, candidate language proficiency, industry background or architecture experience. There is no overall candidate-fit score or score-based rejection threshold.
+
+## 7. Validation and current limitations
 
 Run `npm run config:check` to validate the configuration. The Zod schema is in `src/config.ts`.
 
-The configuration and filtering policy are defined, but real job-board adapters, vacancy collection and the deterministic filter executor still need implementation. Listing a source in the config does not mean its adapter is available. Respect each source's terms, access controls and rate limits. The project does not automatically submit applications or contact employers.
+The daily Markdown report generator is implemented. Job-board adapters, end-to-end vacancy collection and deterministic three-dimension filtering remain pending. The independent Phase 2 skill specification and persistence tables are defined, while automated company research, interview-answer generation and interview-material persistence are still pending.
 
-## 6. Daily result files and company interview preparation
-
-Run `npm run report` (or `npm run dev -- report`) to create or replace `reports/daily/YYYY-MM-DD.md` for the current local date. It includes vacancies discovered on that date, grouped by company, with available filter evidence. Two SQLite tables, `company_research` and `role_interview_prep`, store company profiles and role-specific interview answers.
-
-If those research records have not been populated, the report clearly marks missing company facts and supplies only a generic interview-answer draft that must be personalized. The dated report generator and persistence tables are implemented; job collection, automated company research, the filter executor and fully tailored answer generation remain pending.
+The project does not automatically submit applications or contact employers. Respect each source's terms, access controls and rate limits.
