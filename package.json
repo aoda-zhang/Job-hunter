@@ -11,7 +11,8 @@
     "config:check": "tsx src/cli.ts config:check",
     "db:init": "tsx src/cli.ts db:init",
     "discover": "tsx src/cli.ts discover",
-    "report": "tsx src/cli.ts report"
+    "report": "tsx src/cli.ts report",
+    "interview:prepare": "tsx src/cli.ts interview:prepare"
   },
   "dependencies": {
     "better-sqlite3": "^12.2.0",
