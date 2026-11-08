@@ -12,4 +12,11 @@ db.pragma("foreign_keys = ON");
 
 export function initializeDatabase(): void {
   db.exec(schemaSql);
+
+  // Migrate databases created before country-aware search was introduced.
+  const columns = db.pragma("table_info(jobs)") as Array<{ name: string }>;
+  if (!columns.some((column) => column.name === "country")) {
+    db.exec("ALTER TABLE jobs ADD COLUMN country TEXT");
+    db.exec("CREATE INDEX IF NOT EXISTS idx_jobs_country ON jobs(country)");
+  }
 }
