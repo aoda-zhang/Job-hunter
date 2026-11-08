@@ -77,7 +77,7 @@ export function prepareInterviewResearch(input: { jobId?: number; company?: stri
     "",
     "Record research dates and source URLs. Reuse company research for other roles only after checking that facts remain current; keep role analysis and interview answers specific to this job.",
     ""
-  ].join("\\n");
+  ].join("\n");
   writeFileSync(outputPath, content, "utf8");
   return outputPath;
 }
