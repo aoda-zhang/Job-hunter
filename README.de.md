@@ -21,11 +21,9 @@ Land, Standort und Veröffentlichungsdatum bestimmen nur den Suchumfang. Gefilte
 
 ## 2. LinkedIn-Suche mit OpenCode
 
-Öffne dieses Repository lokal in OpenCode und rufe auf:
+Öffne dieses Repository lokal in OpenCode, wähle den **Job Hunter**-Primary-Agent (bei Bedarf mit `Tab` wechseln) und bitte ihn direkt, passende Stellen zu finden.
 
-`job-discovery`
-
-Der Skill liest die einzige Konfigurationsdatei, prüft die tatsächlich verfügbaren Browser-Tools, durchsucht LinkedIn Jobs, öffnet Stellenanzeigen, prüft die JD, wendet die drei Filter an und speichert den Tagesbericht unter:
+Du interagierst nur mit dem Primary Agent. Er erkennt die Aufgabe und lädt `job-discovery` automatisch. Der Skill liest die einzige Konfigurationsdatei, prüft die tatsächlich verfügbaren Browser-Tools, durchsucht LinkedIn Jobs, öffnet Stellenanzeigen, prüft die JD, wendet die drei Filter an und speichert den Tagesbericht unter:
 
 `reports/daily/YYYY-MM-DD.md`
 
@@ -48,11 +46,7 @@ Keine zusätzlichen Filter für Berufsjahre, Seniorität, Gehalt, Visum, Sprachk
 
 ## 4. Phase 2 – Interviewvorbereitung
 
-Nach einer Intervieweinladung das konkrete Unternehmen und die Stelle aus dem Tagesbericht auswählen und manuell aufrufen:
-
-`company-research`
-
-Der Skill recherchiert anhand der Stellenanzeige und des Original-Links das Geschäft, die Produkte, Kunden, Märkte und die ausgewählte Rolle. Die Ergebnisse werden gespeichert unter:
+Nach einer Intervieweinladung teile dem **Job Hunter**-Agenten mit, auf welches Unternehmen und welche Stelle du dich vorbereitest. Der Agent liest den passenden Berichtseintrag und lädt `company-research` automatisch. Der Skill recherchiert anhand der Stellenanzeige und des Original-Links das Geschäft, die Produkte, Kunden, Märkte und die ausgewählte Rolle. Die Ergebnisse werden gespeichert unter:
 
 - `reports/interviews/<company-slug>/company-research.md`
 - `reports/interviews/<company-slug>/role-analysis.md`
@@ -60,7 +54,15 @@ Der Skill recherchiert anhand der Stellenanzeige und des Original-Links das Gesc
 
 Phase 2 ist von der täglichen LinkedIn-Suche getrennt und wird niemals automatisch gestartet.
 
-## 5. Sicherheitsgrenzen
+## 5. Agent und Skills
+
+- `.opencode/agents/job-hunter.md` – der Primary Agent und einzige interaktive Einstiegspunkt. Er ordnet Anfragen zu, lädt den passenden Skill und koordiniert den Ablauf.
+- `.opencode/skills/job-discovery/SKILL.md` – Phase 1: LinkedIn-Stellensuche und Tagesbericht.
+- `.opencode/skills/company-research/SKILL.md` – Phase 2: Unternehmensrecherche, Rollen分析 und Interviewvorbereitung.
+
+Die Skills sind Fachfunktionen des Primary Agents und keine getrennten Abläufe, die du selbst koordinieren musst.
+
+## 6. Sicherheitsgrenzen
 
 - Nur bereits lokal konfigurierte OpenCode-Browser-Tools verwenden.
 - Keine LinkedIn-Login-Schranken, CAPTCHAs, Zugriffskontrollen oder Ratenlimits umgehen.
