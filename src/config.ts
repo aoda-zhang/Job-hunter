@@ -34,11 +34,20 @@ const configSchema = z.object({
     }),
     coreSkills: z.array(z.string()),
     secondarySkills: z.array(z.string()),
-    architectureSkills: z.array(z.string()),
     experienceEvidence: z.array(z.string())
   }).strict(),
   matching: z.object({
-    weights: z.record(z.string(), z.number().nonnegative()),
+    weights: z.object({
+      roleTitle: z.number().nonnegative(),
+      coreSkills: z.number().nonnegative(),
+      seniority: z.number().nonnegative(),
+      domainExperience: z.number().nonnegative(),
+      locationAndWorkMode: z.number().nonnegative(),
+      language: z.number().nonnegative(),
+      salary: z.number().nonnegative()
+    }).strict().refine((weights) => Object.values(weights).reduce((sum, value) => sum + value, 0) === 100, {
+      message: "Matching weights must sum to 100"
+    }),
     thresholds: z.object({
       strongMatch: z.number().min(0).max(100),
       goodMatch: z.number().min(0).max(100),
