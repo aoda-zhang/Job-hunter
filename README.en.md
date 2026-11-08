@@ -1,5 +1,9 @@
 # Job Hunter — Local OpenCode Guide
 
+## Personal configuration
+
+Each user has different search preferences, so the personal config is not tracked. First copy `job-hunter.config.example.json` to `job-hunter.config.json`, then customize it. The personal `job-hunter.config.json` is ignored by Git; only the example template is committed.
+
 Job Hunter is a **local LinkedIn job discovery harness powered by OpenCode**. OpenCode uses browser tools already configured in your local environment to search LinkedIn, inspect real vacancy pages and job descriptions, apply exactly three filters, and save a daily Markdown report.
 
 No application code, backend, database, cloud service, CLI or CI pipeline is required.
