@@ -1,18 +1,30 @@
 import "dotenv/config";
 import { initializeDatabase, db } from "./db/index.js";
+import { loadSearchConfig } from "./config.js";
 
 const command = process.argv[2];
 
 async function main(): Promise<void> {
   switch (command) {
+    case "config:check": {
+      const config = loadSearchConfig();
+      console.log("Search configuration is valid.");
+      console.log(JSON.stringify(config.search, null, 2));
+      break;
+    }
     case "db:init":
       initializeDatabase();
       console.log("Database initialized.");
       break;
-    case "discover":
+    case "discover": {
+      const config = loadSearchConfig();
       initializeDatabase();
-      console.log("Discovery scaffold ready. Configure a permitted source adapter before running collection.");
+      console.log("Discovery configuration loaded.");
+      console.log(`Countries: ${config.search.countries.join(", ")}`);
+      console.log(`Roles: ${config.search.roles.join(" | ")}`);
+      console.log("Discovery scaffold ready. Implement and configure permitted source adapters to collect postings.");
       break;
+    }
     case "report": {
       initializeDatabase();
       const rows = db.prepare(
@@ -22,11 +34,11 @@ async function main(): Promise<void> {
       break;
     }
     default:
-      console.log("Usage: npm run dev -- <db:init|discover|report>");
+      console.log("Usage: npm run dev -- <config:check|db:init|discover|report>");
   }
 }
 
 main().catch((error: unknown) => {
-  console.error(error);
+  console.error(error instanceof Error ? error.message : error);
   process.exitCode = 1;
 });
