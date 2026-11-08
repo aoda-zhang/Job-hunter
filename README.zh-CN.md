@@ -19,11 +19,9 @@ Job Hunter 是一个**本地运行、由 OpenCode 驱动的 LinkedIn 职位搜�
 
 ## 2. 使用 OpenCode 搜索 LinkedIn
 
-在仓库目录中打开 OpenCode，调用：
+在仓库目录中打开 OpenCode，选择 **Job Hunter** Primary Agent（如果当前不是它，可以按 `Tab` 切换），然后直接告诉它你要找什么职位。
 
-`job-discovery`
-
-该 Skill 会：
+**你只需要和 Primary Agent 交互，不需要手动选择 Skill。** 它会根据任务自动加载对应能力。查找职位时，它会加载 `job-discovery`，并执行：
 1. 读取唯一配置文件 `job-hunter.config.json`。
 2. 检查当前 OpenCode 环境实际可用的浏览器工具。
 3. 根据国家、地点、职位名称和发布时间在 LinkedIn Jobs 中搜索。
@@ -56,18 +54,22 @@ JD 缺失、过短、被截断或无法访问时，不要猜测，标记为 Revi
 
 ## 4. 第二阶段：面试准备
 
-收到面试邀请后，选定日报中的具体公司和岗位，再手动调用：
-
-`company-research`
-
-该 Skill 会根据日报中的职位信息和原始职位链接，研究公司业务、产品、客户、市场和岗位背景，并生成：
+收到面试邀请后，告诉 **Job Hunter** 你要准备的具体公司和岗位。Primary Agent 会读取对应日报条目，并自动加载 `company-research`，研究公司业务、产品、客户、市场和岗位背景，生成：
 - `reports/interviews/<company-slug>/company-research.md`
 - `reports/interviews/<company-slug>/role-analysis.md`
 - `reports/interviews/<company-slug>/interview-preparation.md`
 
 Phase 2 与日常 LinkedIn 搜索分离，不会自动运行。
 
-## 5. 安全边界
+## 5. Agent 与 Skills 的职责
+
+- `.opencode/agents/job-hunter.md`：Primary Agent，唯一的日常交互入口，负责理解任务、选择工作流、调用 Skill 和检查结果。
+- `.opencode/skills/job-discovery/SKILL.md`：Phase 1，LinkedIn 职位发现与日报生成。
+- `.opencode/skills/company-research/SKILL.md`：Phase 2，公司调研、岗位分析与面试准备。
+
+两个 Skill 是 Primary Agent 调用的专业能力，不是需要你分别管理的独立入口。
+
+## 6. 安全边界
 
 - 只使用当前 OpenCode 环境中已配置的浏览器工具。
 - 不绕过 LinkedIn 登录限制、CAPTCHA、访问控制或速率限制。
