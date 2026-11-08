@@ -115,6 +115,7 @@ export function generateDailyReport(date = new Date()): string {
         ? analysis.checks as Record<string, unknown> : null;
 
       lines.push(`### ${job.title}`, "");
+      lines.push(`- Job ID: ${job.id}`);
       lines.push(`- Filter status: **${status === "matched" ? "Matched" : "Review"}**`);
       lines.push(`- Country: ${escapeCell(job.country)}`);
       lines.push(`- Location: ${escapeCell(job.location)}`);
