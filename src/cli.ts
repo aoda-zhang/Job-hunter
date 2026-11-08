@@ -1,15 +1,20 @@
 import "dotenv/config";
 import { initializeDatabase, db } from "./db/index.js";
-import { loadSearchConfig } from "./config.js";
+import { loadConfig } from "./config.js";
 
 const command = process.argv[2];
 
 async function main(): Promise<void> {
   switch (command) {
     case "config:check": {
-      const config = loadSearchConfig();
-      console.log("Search configuration is valid.");
-      console.log(JSON.stringify(config.search, null, 2));
+      const config = loadConfig();
+      console.log("Job Hunter configuration is valid.");
+      console.log(JSON.stringify({
+        countries: config.search.countries,
+        roles: config.search.roles,
+        candidate: config.candidate.headline,
+        matchingWeights: config.matching.weights
+      }, null, 2));
       break;
     }
     case "db:init":
@@ -17,7 +22,7 @@ async function main(): Promise<void> {
       console.log("Database initialized.");
       break;
     case "discover": {
-      const config = loadSearchConfig();
+      const config = loadConfig();
       initializeDatabase();
       console.log("Discovery configuration loaded.");
       console.log(`Countries: ${config.search.countries.join(", ")}`);
