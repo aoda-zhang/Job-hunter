@@ -6,9 +6,9 @@
 
 Job Hunter 是一个**本地运行、由 OpenCode 驱动的 LinkedIn 职位搜索 Harness**。OpenCode 使用你本地已配置的浏览器工具搜索 LinkedIn、打开真实职位页面、检查 JD、按三个条件筛选，并将结果保存到本地 Markdown 日报。不需要应用后端、云端服务、数据库、CLI 或 CI。
 
-## 1. 唯一配置文件
+## 1. 创建个人配置文件
 
-只需要编辑根目录的 `job-hunter.config.json`。
+首次使用时，先将 `job-hunter.config.example.json` 复制为 `job-hunter.config.json`，然后编辑个人配置。个人配置已加入 `.gitignore`，不会提交到仓库。
 
 - `countries`、`locations`：LinkedIn 搜索范围。
 - `lookbackHours`：优先查找最近发布的职位。
