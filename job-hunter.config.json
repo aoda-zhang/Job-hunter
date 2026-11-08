@@ -1,48 +1,46 @@
 {
-  "search": {
-    "countries": [
-      "Germany"
+  "countries": [
+    "Germany"
+  ],
+  "locations": [
+    "Munich",
+    "Berlin",
+    "Hamburg",
+    "Remote"
+  ],
+  "lookbackHours": 72,
+  "maxResultsPerSource": 50,
+  "sources": [
+    "LinkedIn"
+  ],
+  "jobTitles": {
+    "include": [
+      "Senior Frontend Engineer",
+      "Senior Frontend Developer",
+      "Frontend Platform Engineer",
+      "Senior React Engineer",
+      "Senior Full-Stack Engineer"
+    ]
+  },
+  "jdLanguages": {
+    "include": [
+      "English",
+      "German"
+    ]
+  },
+  "technicalKeywords": {
+    "include": [
+      "React",
+      "TypeScript",
+      "JavaScript",
+      "HTML",
+      "CSS",
+      "Next.js",
+      "Node.js",
+      "NestJS",
+      "Express",
+      "Redux"
     ],
-    "locations": [
-      "Munich",
-      "Berlin",
-      "Hamburg",
-      "Remote"
-    ],
-    "lookbackHours": 72,
-    "maxResultsPerSource": 50,
-    "sources": [
-      "LinkedIn"
-    ],
-    "jobTitles": {
-      "include": [
-        "Senior Frontend Engineer",
-        "Senior Frontend Developer",
-        "Frontend Platform Engineer",
-        "Senior React Engineer",
-        "Senior Full-Stack Engineer"
-      ]
-    },
-    "jdLanguages": {
-      "include": [
-        "English",
-        "German"
-      ]
-    },
-    "technicalKeywords": {
-      "include": [
-        "React",
-        "TypeScript",
-        "JavaScript",
-        "HTML",
-        "CSS",
-        "Next.js",
-        "Node.js",
-        "NestJS",
-        "Express",
-        "Redux"
-      ],
-      "matchMode": "any"
-    }
+    "matchMode": "any"
   }
 }
