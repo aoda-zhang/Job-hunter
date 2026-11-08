@@ -52,7 +52,8 @@ async function main(): Promise<void> {
       console.log(`JD languages: ${config.search.jdLanguages.include.join(", ")}`);
       console.log(`Technical keywords: ${config.search.technicalKeywords.include.join(", ")}`);
       console.log(`Keyword match mode: ${config.search.technicalKeywords.matchMode}`);
-      console.log("Discovery scaffold ready. Implement and configure permitted source adapters to collect postings.");
+      console.log("Three-dimension filter evaluator is implemented and fixture-tested.");
+      console.log("Discovery is not yet end-to-end: permitted source adapters and persistence wiring are still pending.");
       break;
     }
     case "report": {
