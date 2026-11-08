@@ -1,24 +1,29 @@
 ---
 name: job-analysis
-description: Evaluate job descriptions in any configured market against the candidate and matching settings in the single root config.
+description: Apply the three configured vacancy filters: job title, job-description language, and technical keywords.
 ---
 
-# Job Analysis
+# Job Filtering
 
-Read `job-hunter.config.json`. Use:
-- `candidate` for skills, experience, languages, compensation reference and work-authorization context.
-- `matching` for scoring weights, thresholds and analysis rules.
-- `search` only for the user's configured target markets and role scope.
+Read `job-hunter.config.json`. This workflow is a filter, not a candidate-fit or ranking engine.
 
-For each vacancy:
-- Identify its country and distinguish it from the candidate's current country.
-- Separate mandatory requirements from preferred qualifications.
-- Compare role scope, core and secondary skills, domain experience, seniority, location, work mode, language, compensation and work authorization. Do not create a separate architecture or engineering-practices scoring dimension.
-- Interpret country-specific requirements in the context of the vacancy's country; verify legal claims from authoritative sources.
-- If sponsorship, language, salary or remote eligibility is unstated, mark it unknown rather than assuming a mismatch.
-- Calculate the score using only the configured matching weights. The weights must sum to 100.
-- Use the score only to rank and organize vacancies. Never automatically reject, delete, or hide a vacancy because of its score.
-- Keep low-scoring and uncertain matches visible for human review. Missing information must not be treated as a confirmed mismatch or automatic zero.
-- Return a 0–100 score with evidence, strengths, gaps, unknowns and recommendation.
-- A score is decision support, not interview probability.
-- Never apply or contact the employer.
+Evaluate only:
+1. Job title against `search.jobTitles.include`.
+2. Primary JD language against `search.jdLanguages.include`.
+3. Technical keywords in the JD against `search.technicalKeywords.include`, using the configured `matchMode` (`any` or `all`).
+
+Use semantic title matching and common title variants rather than exact string matching. Detect the JD's actual language; do not assume it from the country. For technical terms, use case-insensitive matching and unambiguous aliases (for example, JS for JavaScript and TS for TypeScript).
+
+Return a structured result with a status for each dimension:
+- `match`: evidence confirms the configured condition.
+- `no_match`: available evidence confirms it does not match.
+- `unknown`: the title or JD is missing, too short, or ambiguous.
+
+Overall status:
+- `matched`: all three dimensions are `match`.
+- `not_matched`: at least one dimension is a confirmed `no_match`.
+- `review`: no confirmed mismatch exists, but at least one dimension is `unknown`.
+
+Always include evidence: detected language, matched title variant, matched technical keywords, and reasons for unknown or no-match results. Keep unknown results visible for manual review.
+
+Do not score or filter by candidate experience, seniority, salary, visa/work authorization, candidate language proficiency, industry, architecture, or any other profile-based criterion. Never apply or contact the employer.
