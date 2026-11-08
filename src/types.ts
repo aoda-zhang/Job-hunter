@@ -1,43 +1,18 @@
 export type ReviewStatus = "pending" | "apply" | "skip" | "saved";
-export type WorkMode = "remote" | "hybrid" | "onsite" | "flexible";
 
 export interface JobHunterConfig {
   search: {
     countries: string[];
-    roles: string[];
     locations?: string[];
-    workModes?: WorkMode[];
     lookbackHours: number;
     maxResultsPerSource: number;
     sources: string[];
-    excludeKeywords?: string[];
-  };
-  candidate: {
-    headline: string;
-    experienceYears: number;
-    currentCountry: string;
-    workAuthorization: { status: string; note: string };
-    languages: {
-      preferred: string[];
-      additional: Array<{ language: string; level: string; note?: string }>;
+    jobTitles: { include: string[] };
+    jdLanguages: { include: string[] };
+    technicalKeywords: {
+      include: string[];
+      matchMode: "any" | "all";
     };
-    salary: { preferredMinimum: number; currency: string; note: string };
-    coreSkills: string[];
-    secondarySkills: string[];
-    experienceEvidence: string[];
-  };
-  matching: {
-    weights: {
-      roleTitle: number;
-      coreSkills: number;
-      seniority: number;
-      domainExperience: number;
-      locationAndWorkMode: number;
-      language: number;
-      salary: number;
-    };
-    thresholds: { strongMatch: number; goodMatch: number; possibleMatch: number };
-    rules: string[];
   };
 }
 
@@ -56,14 +31,13 @@ export interface JobPosting {
   discoveredAt: string;
 }
 
-export interface JobAnalysis {
-  score: number;
-  summary: string;
-  strengths: string[];
-  gaps: string[];
-  unknowns: string[];
-  languageRequirement: string;
-  workAuthorization: string;
-  salaryAssessment: string;
-  recommendation: string;
+export type FilterDimensionStatus = "match" | "no_match" | "unknown";
+
+export interface JobFilterResult {
+  status: "matched" | "review" | "not_matched";
+  checks: {
+    jobTitle: { status: FilterDimensionStatus; matchedTitle?: string; reason: string };
+    jdLanguage: { status: FilterDimensionStatus; detectedLanguage?: string; reason: string };
+    technicalKeywords: { status: FilterDimensionStatus; matchedKeywords: string[]; reason: string };
+  };
 }
