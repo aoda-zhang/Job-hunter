@@ -1,31 +1,25 @@
 ---
 name: job-analysis
-description: Apply the three configured vacancy filters: job title, job-description language, and technical keywords.
+description: Apply the three configured vacancy filters to a vacancy found during local browser-based job discovery.
 ---
 
 # Job Filtering
 
-The deterministic implementation is exported from `src/filters/index.ts` as `evaluateJob(posting, config)`. Keep the skill guidance and implementation behavior aligned. Fixture tests live in `test/filters.test.ts` and run with `npm test`.
+This skill is used by `job-discovery` while reviewing vacancies in the browser. Read `job-hunter.config.json` and evaluate only:
 
-Read `job-hunter.config.json`. This workflow is a filter, not a candidate-fit or ranking engine.
-
-Evaluate only:
 1. Job title against `search.jobTitles.include`.
-2. Primary JD language against `search.jdLanguages.include`.
-3. Technical keywords in the JD against `search.technicalKeywords.include`, using the configured `matchMode` (`any` or `all`).
+2. Actual JD language against `search.jdLanguages.include`.
+3. Technical keywords in the JD against `search.technicalKeywords.include`, using `matchMode` (`any` or `all`).
 
-Use semantic title matching and common title variants rather than exact string matching. Detect the JD's actual language; do not assume it from the country. For technical terms, use case-insensitive matching and unambiguous aliases (for example, JS for JavaScript and TS for TypeScript).
+Use semantic title matching and common title variants. Ignore seniority wording when determining the role family. Detect language from the JD, not the country or website. Match keywords case-insensitively and recognize clear aliases such as JS / JavaScript and TS / TypeScript.
 
-Return a structured result with a status for each dimension:
-- `match`: evidence confirms the configured condition.
-- `no_match`: available evidence confirms it does not match.
-- `unknown`: the title or JD is missing, too short, or ambiguous.
+For every dimension return `match`, `no_match` or `unknown`, with a short evidence-based reason.
 
-Overall status:
-- `matched`: all three dimensions are `match`.
-- `not_matched`: at least one dimension is a confirmed `no_match`.
-- `review`: no confirmed mismatch exists, but at least one dimension is `unknown`.
+Overall:
+- `matched`: all three dimensions match.
+- `not_matched`: at least one dimension is a confirmed mismatch.
+- `review`: no confirmed mismatch exists, but at least one dimension is unknown.
 
-Always include evidence: detected language, matched title variant, matched technical keywords, and reasons for unknown or no-match results. Keep unknown results visible for manual review.
+Short, missing, mixed, inaccessible or truncated JD content must produce `unknown`, not a guessed mismatch. Keep unknown jobs in the report for manual review.
 
-Do not score or filter by candidate experience, seniority, salary, visa/work authorization, candidate language proficiency, industry, architecture, or any other profile-based criterion. Never apply or contact the employer.
+Never calculate candidate-fit scores. Never filter by years of experience, seniority, salary, visa/work authorization, candidate language proficiency, industry, architecture or any other candidate-profile criterion. Do not apply or contact employers.
