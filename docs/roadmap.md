@@ -15,14 +15,15 @@
 - [x] Define company research requirements
 - [x] Require a plain-language explanation of each company's main business
 - [x] Require a source-backed, role-specific answer to “Why do you want to join our company?”
-- [ ] Implement structured company research persistence
-- [ ] Validate company facts and interview answers against source links and candidate materials
+- [x] Add SQLite persistence tables for company research and role-specific interview preparation
+- [ ] Implement automated, source-backed company research
+- [ ] Implement generation and validation of tailored interview answers using verified company facts and candidate materials
 
 ## Phase 3 — Daily reporting and operations
 - [x] Define one Markdown report per calendar date
 - [x] Define report content and company grouping
-- [ ] Implement `reports/daily/YYYY-MM-DD.md` generation
-- [ ] Update the same date's report when another run occurs that day
+- [x] Implement `reports/daily/YYYY-MM-DD.md` generation
+- [x] Update the same date's report when another run occurs that day
 - [ ] Add scheduled execution on the user's machine
 - [ ] Add failure alerts and run summaries
 - [ ] Add historical trend and application tracker
