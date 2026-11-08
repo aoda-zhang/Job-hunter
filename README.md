@@ -1,34 +1,21 @@
 # Job Hunter
 
-A configurable, AI-assisted job discovery and matching workspace. Search for any role in one or many countries by editing **one root configuration file**: `job-hunter.config.json`.
+A configurable, AI-assisted job discovery and matching workspace. All runtime settings are maintained in one root file: `job-hunter.config.json`.
 
-## Single configuration
+## Documentation
 
-All user-editable project settings live in the root `job-hunter.config.json`:
-- `search`: countries, role titles, locations, work modes, sources, time window and exclusions.
-- `candidate`: experience, skills, languages, salary reference and work-authorization context.
-- `matching`: scoring weights, match thresholds and analysis rules.
+- [简体中文配置说明](README.zh-CN.md)
+- [English configuration guide](README.en.md)
+- [Deutsche Konfigurationsanleitung](README.de.md)
 
-There are no separate runtime config files. The Zod schema is defined in `src/config.ts`; edit the root JSON only.
+## Single source of configuration
 
-Example search scope:
+Edit only `job-hunter.config.json` to configure:
+- **search** — target countries, job titles, locations, work modes, sources and discovery window.
+- **candidate** — professional profile, experience, skills, languages, salary reference and work-authorization context.
+- **matching** — scoring weights, thresholds and analysis rules.
 
-```json
-{
-  "search": {
-    "countries": ["Germany", "Netherlands", "United States"],
-    "roles": ["Senior Frontend Engineer", "React Developer", "Full-Stack Engineer"],
-    "locations": ["Berlin", "Amsterdam", "Remote"],
-    "workModes": ["remote", "hybrid", "onsite"],
-    "lookbackHours": 72,
-    "maxResultsPerSource": 50,
-    "sources": ["company-career-pages", "LinkedIn", "Indeed"],
-    "excludeKeywords": ["intern", "junior"]
-  }
-}
-```
-
-Change `countries` and `roles` to search other markets and job families. No source code changes are needed for changing the search scope. A source must still have an implemented, permitted adapter before it can collect postings.
+No separate runtime config files are required. The schema and validation logic live in `src/config.ts`.
 
 ## Quick start
 
@@ -43,8 +30,6 @@ npm run db:init
 npm run dev -- discover
 npm run dev -- report
 ```
-
-Keep credentials, browser profiles, cookies, personal CV files and collected personal data out of Git.
 
 ## Project status
 
