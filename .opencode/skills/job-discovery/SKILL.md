@@ -1,96 +1,119 @@
 ---
 name: job-discovery
-description: Use the configured browser workflow to find live vacancies locally, filter only by job title, JD language and technical keywords, and save a daily Markdown report.
+description: Search LinkedIn vacancies with the local OpenCode browser, inspect real job descriptions, filter only by job title, JD language and technical keywords, and save a daily Markdown report.
 ---
 
-# Job Discovery — Local Browser Workflow
+# LinkedIn Job Discovery
 
-This skill is the main entry point for Phase 1. Work locally in the current repository. The user expects OpenCode to operate the browser, inspect real job pages, and save a Markdown report. Do not ask the user to run a backend, database, CI pipeline, or source-adapter setup.
+This is the primary workflow of Job Hunter. Run it locally in this repository. OpenCode operates the browser tools already configured in the user's environment. This repository is an instruction harness, not an application: do not introduce a backend, database, CLI, CI pipeline, source adapters or extra configuration.
 
-## 1. Read the single configuration
+## 1. Read the only configuration
 
-Read `job-hunter.config.json`. Use its search scope:
-- `countries`
-- `locations`
-- `lookbackHours`
-- `maxResultsPerSource`
-- `sources`
+Read the root file `job-hunter.config.json`. It is the single source of configuration.
 
-Use exactly these three filters:
-1. `jobTitles.include`
-2. `jdLanguages.include`
-3. `technicalKeywords.include` with `matchMode`
+Use:
+- `search.countries`, `search.locations`: LinkedIn search scope.
+- `search.lookbackHours`: preferred posting window.
+- `search.maxResultsPerSource`: maximum number of LinkedIn vacancies to inspect.
+- `search.sources`: configured source list; currently LinkedIn.
+- `search.jobTitles.include`: target job-title variants.
+- `search.jdLanguages.include`: accepted JD languages.
+- `search.technicalKeywords.include` and `matchMode`: technology terms and matching mode.
 
-Country, location, date range and source are search scope only. They are not candidate-fit criteria.
+Do not create another config file or ask the user to duplicate these values elsewhere.
 
-## 2. Operate the browser
+Only job title, actual JD language and technical keywords are matching filters. Country, location and posting date are search scope, not candidate-fit criteria.
 
-Use the browser-control tools available in this OpenCode environment (for example, its configured browser or Playwright MCP tools). Inspect the available browser tools before starting; do not assume a particular tool name.
+## 2. Search LinkedIn using the available browser
 
-- Search the configured job sites and public company career pages in the browser.
-- Use the configured country, location, title variants and lookback window to form searches.
-- Open promising result pages and inspect the actual job description, not just search-result snippets.
-- Prefer the employer's own career page when the same vacancy is available there.
-- Collect no more than `maxResultsPerSource` useful results from each configured source.
-- If a page is inaccessible, record that limitation and continue with other sources.
-- Do not bypass login controls, CAPTCHAs, paywalls, rate limits or other access restrictions. Do not scrape behind access controls. Never ask the user to share passwords or session tokens.
-- Do not submit applications, send messages, create accounts or change account settings.
+First inspect which browser-control tools are actually available in this OpenCode session. Use the available configured browser integration; do not assume a tool name or claim browser access that is not present.
 
-If no browser-control tool is available, explain that browser automation is not configured in this OpenCode environment. Do not pretend to have searched. You may provide browser search queries for the user to run manually.
+- Search LinkedIn Jobs using the configured countries, locations, title variants and posting window.
+- Search title variants separately when needed so that one broad query does not hide relevant roles.
+- Apply LinkedIn location and date-posted filters where the interface supports them. Treat these as search refinements, not additional match criteria.
+- Open each potentially relevant vacancy and inspect the actual job description. Search-result snippets alone are insufficient to confirm a match.
+- Inspect no more than `maxResultsPerSource` distinct LinkedIn vacancies in one run.
+- Record the direct LinkedIn job URL and prefer its canonical job page.
+- If the same vacancy appears more than once, keep one record and note alternate URLs only when useful.
+- If LinkedIn requires login and the current browser session is not authenticated, stop at that access boundary and report it. Never ask the user for passwords, cookies or session tokens.
+- Do not bypass login controls, CAPTCHAs, rate limits or other access restrictions.
+- Do not apply for jobs, message recruiters, save jobs, follow companies, create accounts or change account settings.
 
-## 3. Apply only the three filters
+If no browser-control tool is available, say clearly that browser automation is not configured in this OpenCode environment. Do not pretend to have searched LinkedIn. You may provide the user with search queries to run manually, but do not create a report containing fabricated results.
 
-For each vacancy, inspect the full JD where possible.
+## 3. Inspect and classify each vacancy
 
-### Job title
-Compare the title with `jobTitles.include` using sensible semantic matching and common variants (for example, Frontend Developer and Frontend Engineer). Ignore seniority modifiers such as Senior, Mid-level or Junior when deciding whether the role family matches. Do not require exact string equality.
+Inspect the full JD whenever accessible. Evaluate the following dimensions independently and record concise evidence for each.
 
-### JD language
-Identify the language actually used in the JD. Do not infer it from the country, company or website interface. If the JD is missing, short, mixed or ambiguous, mark it `unknown` and keep the vacancy for review.
+### A. Job title
 
-### Technical keywords
-Search the JD text for configured keywords, case-insensitively. Recognize obvious spelling variants and aliases such as JS / JavaScript, TS / TypeScript, NodeJS / Node.js and ReactJS / React. Respect `matchMode`:
-- `any`: at least one configured keyword is sufficient.
+Compare the vacancy title with `jobTitles.include` using semantic role-family matching and common wording variants (for example, Frontend Developer and Frontend Engineer).
+
+Seniority wording such as Senior, Mid-level or Junior is not an additional rejection rule. Do not require exact title equality. A clearly different role family is a mismatch.
+
+### B. JD language
+
+Identify the language actually used in the job description. Do not infer it from the country, company headquarters or LinkedIn interface language.
+
+Compare it with `jdLanguages.include`. If the JD is missing, too short, mixed, truncated or ambiguous, mark the language check `unknown`; do not guess.
+
+### C. Technical keywords
+
+Search the JD text case-insensitively for the configured terms. Recognize clear aliases and spelling variants, for example:
+- JS / JavaScript
+- TS / TypeScript
+- NodeJS / Node.js
+- ReactJS / React
+
+Follow `matchMode` exactly:
+- `any`: at least one configured keyword must be found.
 - `all`: every configured keyword must be found.
 
-If the JD is truncated or inaccessible, do not interpret missing keywords as confirmed absence; mark the keyword check `unknown`.
+Do not add unconfigured technologies as mandatory filters. If the JD is inaccessible or truncated such that absence cannot be established, mark this check `unknown`, not mismatch.
 
-### Overall result
-- `matched`: all three dimensions match.
-- `not_matched`: at least one dimension is a confirmed mismatch.
-- `review`: no confirmed mismatch exists, but at least one dimension is unknown.
+### Overall classification
 
-Keep every `matched` and `review` vacancy in the daily report. Do not rank jobs or calculate candidate-fit scores.
+- `matched`: all three checks are confirmed matches.
+- `review`: no check is a confirmed mismatch, but at least one check is unknown.
+- `not_matched`: at least one check is a confirmed mismatch.
 
-Do not filter by years of experience, seniority, salary, visa/work authorization, candidate language proficiency, industry, architecture, company size or any other candidate-profile criterion.
+Keep all `matched` and `review` vacancies in the report. Exclude confirmed `not_matched` vacancies from the main report, but include their count in the run summary.
 
-## 4. Save the local report
+Never rank vacancies, calculate weighted scores or produce Strong/Good Match labels.
 
-Create or update exactly one file for the current local date:
+Do not filter by candidate years of experience, seniority, salary, visa or work authorization, candidate language proficiency, industry, architecture, company size or any other candidate-profile criterion.
+
+## 4. Write the daily report
+
+Create or update exactly one report for the current local date:
 
 `reports/daily/YYYY-MM-DD.md`
 
-Create the parent directory if it does not exist. If the file already exists, merge new results and deduplicate by canonical job URL; do not erase useful entries already collected that day.
+Create the parent directory if needed. If today's report already exists, merge new findings rather than overwriting useful entries. Deduplicate by canonical LinkedIn job URL; when no canonical URL is available, use a cautious combination of company, title and location and flag possible duplicates for review.
 
-For each included vacancy record:
+For each `matched` or `review` vacancy include:
 - Job title and company.
-- Country, location and work mode when available.
-- Posting date (if shown) and date discovered.
-- Detected JD language and evidence.
-- Configured technical keywords found in the JD.
-- The three filter outcomes and short reasons.
-- Source name and direct job URL.
-- A concise JD summary.
-- The full JD text when it is reasonably short; otherwise save a useful excerpt and note that the source page contains the full description.
+- Country, city/location and work mode, if shown.
+- Posting date, if shown, and date discovered.
+- JD language and brief evidence.
+- Configured technical keywords found.
+- Separate outcomes and short evidence for all three checks.
+- Overall status: `matched` or `review`.
+- Source: LinkedIn.
+- Direct job URL.
+- Concise summary of responsibilities and required technologies.
+- Full JD text when reasonably short; otherwise a useful excerpt and a note that the original page contains the full JD.
 
-Group by company for readability only. Keep the report focused on helping the user decide which jobs to apply for. Do not research companies or prepare interview answers in this phase.
+Group entries by company for readability only. Do not sort them by a candidate-fit score. Do not perform company research or prepare interview answers in this phase.
 
-## 5. Final response
+## 5. Report completion accurately
 
-State the report path and a concise count of:
-- vacancies inspected;
+At the end, state:
+- report path;
+- number of distinct LinkedIn vacancies inspected;
 - confirmed matches;
-- items requiring review;
-- confirmed non-matches excluded from the main report.
+- items requiring manual review;
+- confirmed non-matches excluded;
+- any LinkedIn access or browser limitations.
 
-Mention any sources that could not be accessed. Never claim a source was searched if it was not.
+Only count pages actually opened and inspected. Clearly distinguish search results seen from job descriptions successfully reviewed. Never claim a search or inspection that did not happen.
