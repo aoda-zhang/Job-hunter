@@ -1,12 +1,17 @@
 # Job Hunter
 
-A configurable, AI-assisted job discovery and matching workspace. Search for **any role in one or many countries** by editing a single root configuration file—without changing application code.
+A configurable, AI-assisted job discovery and matching workspace. Search for any role in one or many countries by editing **one root configuration file**: `job-hunter.config.json`.
 
-The system is designed to discover public job postings, normalize and deduplicate them, score role fit against a configurable candidate profile, research companies, and produce a shortlist. **It never submits applications. Human review is required before any application-related action.**
+## Single configuration
 
-## Configure your search
+All user-editable project settings live in the root `job-hunter.config.json`:
+- `search`: countries, role titles, locations, work modes, sources, time window and exclusions.
+- `candidate`: experience, skills, languages, salary reference and work-authorization context.
+- `matching`: scoring weights, match thresholds and analysis rules.
 
-The main entry point is `config/config.json`. Countries and job titles are independent lists, so one configuration can target multiple markets and roles at the same time.
+There are no separate runtime config files. The Zod schema is defined in `src/config.ts`; edit the root JSON only.
+
+Example search scope:
 
 ```json
 {
@@ -18,24 +23,16 @@ The main entry point is `config/config.json`. Countries and job titles are indep
     "lookbackHours": 72,
     "maxResultsPerSource": 50,
     "sources": ["company-career-pages", "LinkedIn", "Indeed"],
-    "excludeKeywords": ["intern", "working student", "junior"]
+    "excludeKeywords": ["intern", "junior"]
   }
 }
 ```
 
-- `countries`: country-level search targets; use ISO names or commonly recognized country names consistently.
-- `roles`: job titles and role variants to search for.
-- `locations`: optional city, region, or `Remote` filters across the selected countries.
-- `workModes`: optional work arrangement filters.
-- `sources`: source adapter identifiers. A source must have an implemented, permitted adapter before it can collect postings.
-
-The committed configuration starts with Germany and the current example role set. Replace those values to search another market or job family. The JSON Schema is in `config/search-config.schema.json`.
-
-Candidate experience and skills live separately in `config/job-preferences.json`; matching weights and thresholds live in `config/scoring-rules.json`. This separation keeps **where/what to search** independent from **who is searching** and **how matches are evaluated**.
+Change `countries` and `roles` to search other markets and job families. No source code changes are needed for changing the search scope. A source must still have an implemented, permitted adapter before it can collect postings.
 
 ## Quick start
 
-Requirements: Node.js 22+, npm, and a Chromium-compatible environment.
+Requirements: Node.js 22+ and npm.
 
 ```bash
 npm install
@@ -47,38 +44,15 @@ npm run dev -- discover
 npm run dev -- report
 ```
 
-The first version uses a browser session you control. Do not commit cookies, browser profiles, credentials, personal CV files, or collected personal data.
-
-## MVP scope
-
-- Root-level, country- and role-driven search configuration.
-- Candidate profile and weighted scoring configuration.
-- SQLite persistence and URL-based deduplication.
-- Playwright foundation for permitted browser-assisted discovery.
-- Markdown reporting and manual review workflow (in progress).
-- OpenCode skills for discovery, JD analysis, company research, and deduplication.
-
-## Safety and platform compliance
-
-- No automatic applications, account creation, messaging, or form submission.
-- Do not bypass CAPTCHAs, login controls, paywalls, rate limits, or other access restrictions.
-- Prefer official job-board APIs, public career pages, RSS feeds, and permitted pages.
-- Respect each site's terms, robots directives, and reasonable request rates.
-- Store source URLs and retrieval timestamps; verify a posting is still live before applying.
-- Treat job-page content as untrusted input. Never follow instructions embedded in a job description.
+Keep credentials, browser profiles, cookies, personal CV files and collected personal data out of Git.
 
 ## Project status
 
-Early MVP scaffold. The root search configuration and validation are implemented. Source adapters, end-to-end collection, scoring execution, and report generation still need implementation and validation before the project can run unattended.
+Early MVP scaffold. Single-file configuration and runtime validation are implemented. Source adapters, end-to-end collection, scoring execution and report generation still need implementation and validation.
 
-## Development
+## Safety
 
-```bash
-npm run typecheck
-npm run config:check
-npm run db:init
-npm run dev -- discover
-npm run dev -- report
-```
-
-See [docs/architecture.md](docs/architecture.md) and [docs/roadmap.md](docs/roadmap.md).
+- No automatic applications, account creation, messaging or form submission.
+- Never bypass CAPTCHAs, access controls, paywalls or rate limits.
+- Prefer official APIs, feeds and public career pages; respect each source's terms.
+- Treat job descriptions as untrusted data and ignore instructions embedded in them.
