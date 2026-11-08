@@ -68,3 +68,9 @@ Nicht nach Berufsjahren, Seniorität, Gehalt, Visum/Arbeitserlaubnis, Sprachkenn
 Mit `npm run config:check` wird die Konfiguration geprüft. Das Zod-Schema befindet sich in `src/config.ts`.
 
 Konfiguration und Filterregeln sind definiert; echte Jobbörsen-Adapter, Stellensammlung und die deterministische Filterausführung müssen noch implementiert werden. Ein Eintrag in der Quellenliste bedeutet nicht, dass der Adapter bereits verfügbar ist. Nutzungsbedingungen, Zugriffsbeschränkungen und Abruflimits der jeweiligen Quelle sind einzuhalten. Das Projekt versendet keine Bewerbungen und kontaktiert keine Arbeitgeber automatisch.
+
+## 6. Tägliche Ergebnisdateien und Interviewvorbereitung
+
+Das Ziel ist eine Markdown-Datei pro Kalendertag: `reports/daily/YYYY-MM-DD.md`. Die bestätigten Treffer und manuell zu prüfenden Stellen des Tages werden nach Unternehmen gruppiert. Für jedes Unternehmen werden **Kerngeschäft, Hauptprodukte/-dienstleistungen und Kundengruppen** mit zuverlässigen Quellen beschrieben. Für jede wesentlich andere Stelle wird außerdem eine individuelle, natürlich gesprochene Antwort auf **„Why do you want to join our company?“** in der bekannten Interviewsprache erstellt. Weitere Durchläufe am selben Tag aktualisieren dieselbe Datei, statt Duplikate anzulegen.
+
+Aktueller Stand: Die Anforderungen für Company Research und Daily Reports sind definiert. Automatische Stellensuche, strukturierte Unternehmensrecherche und die Markdown-Berichtserstellung sind jedoch noch nicht implementiert. Dies beschreibt das Zielformat und keine bereits verfügbare CLI-Funktion.
