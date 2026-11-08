@@ -103,7 +103,6 @@ There are three top-level sections:
 | `salary.note` | string | Yes | Context such as gross annual salary, negotiability, or whether the amount is indicative only. |
 | `coreSkills` | string[] | Yes | Core skills expected to be central to the target role. |
 | `secondarySkills` | string[] | Yes | Supporting or secondary skills. |
-| `architectureSkills` | string[] | Yes | Architecture, system design, and engineering-practice skills. |
 | `experienceEvidence` | string[] | Yes | Concise evidence from projects and employment. Include project context, responsibilities, technologies, and outcomes rather than keywords alone. |
 
 ## 5. matching — evaluation policy
@@ -113,14 +112,12 @@ There are three top-level sections:
 Each key represents a scoring dimension; its number is its relative weight.
 
 | Key | Current weight | Meaning |
-|---|---:|---|
-| `roleTitle` | 20 | Alignment between vacancy title and target role |
-| `coreSkills` | 25 | Core technical-skill alignment |
-| `architecture` | 15 | Architecture, system design, and engineering practices |
-| `seniority` | 10 | Seniority and experience level |
+| `roleTitle` | 25 | Alignment between vacancy title and target role |
+| `coreSkills` | 35 | Core technical-skill alignment |
+| `seniority` | 15 | Seniority and experience level |
 | `domainExperience` | 10 | Industry and domain experience |
-| `locationAndWorkMode` | 8 | Location and work arrangement |
-| `language` | 7 | Working-language requirements |
+| `locationAndWorkMode` | 5 | Location and work arrangement |
+| `language` | 5 | Working-language requirements |
 | `salary` | 5 | Compensation alignment |
 
 The weights sum to 100, and configuration validation enforces this. Scores are used only to rank and organize vacancies: low-scoring or incomplete matches must remain visible for human review and must never be automatically deleted or hidden.
