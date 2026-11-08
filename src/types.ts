@@ -24,11 +24,18 @@ export interface JobHunterConfig {
     salary: { preferredMinimum: number; currency: string; note: string };
     coreSkills: string[];
     secondarySkills: string[];
-    architectureSkills: string[];
     experienceEvidence: string[];
   };
   matching: {
-    weights: Record<string, number>;
+    weights: {
+      roleTitle: number;
+      coreSkills: number;
+      seniority: number;
+      domainExperience: number;
+      locationAndWorkMode: number;
+      language: number;
+      salary: number;
+    };
     thresholds: { strongMatch: number; goodMatch: number; possibleMatch: number };
     rules: string[];
   };
