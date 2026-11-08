@@ -10,7 +10,6 @@ const TITLE_TOKEN_ALIASES: Record<string, string> = {
   "programmer": "engineer",
   "fullstack": "full-stack",
   "full stack": "full-stack",
-  "software": "software"
 };
 
 const KEYWORD_ALIASES: Record<string, string[]> = {
@@ -44,7 +43,7 @@ function escapeRegExp(value: string): string {
 function normalizeTitle(value: string): string {
   let normalized = value.toLowerCase().replace(/[’']/g, "").replace(/[^a-z0-9.+#-]+/g, " ").trim();
   for (const [from, to] of Object.entries(TITLE_TOKEN_ALIASES)) {
-    normalized = normalized.replace(new RegExp(escapeRegExp(from), "g"), to);
+    normalized = normalized.replace(new RegExp(`\\b${escapeRegExp(from)}\\b`, "g"), to);
   }
   return normalized.replace(/\s+/g, " ").trim();
 }
