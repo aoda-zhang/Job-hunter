@@ -1,3 +1,6 @@
+# Personal Job Hunter configuration (copy the example for your local setup)
+job-hunter.config.json
+
 # Local secrets and browser session data
 .env
 .env.*
