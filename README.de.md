@@ -8,9 +8,9 @@ Job Hunter ist ein **lokaler LinkedIn-Stellensuche-Harness mit OpenCode**. OpenC
 
 Es sind weder Anwendungscode noch Backend, Datenbank, Cloud-Dienst, CLI oder CI-Pipeline erforderlich.
 
-## 1. Eine zentrale Konfigurationsdatei
+## 1. Persönliche Konfiguration erstellen
 
-Bearbeite nur `job-hunter.config.json`.
+Kopiere zuerst `job-hunter.config.example.json` nach `job-hunter.config.json` und passe anschließend deine lokale Datei an. Die persönliche Konfiguration wird von Git ignoriert.
 
 - `countries`, `locations`: Suchgebiet auf LinkedIn.
 - `lookbackHours`: bevorzugter Veröffentlichungszeitraum.
