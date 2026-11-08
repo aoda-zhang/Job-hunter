@@ -28,7 +28,7 @@ async function main(): Promise<void> {
     case "report": {
       initializeDatabase();
       const rows = db.prepare(
-        "SELECT title, company, location, url, score, review_status FROM jobs ORDER BY score DESC, discovered_at DESC"
+        "SELECT title, company, country, location, url, score, review_status FROM jobs ORDER BY score DESC, discovered_at DESC"
       ).all();
       console.log(JSON.stringify(rows, null, 2));
       break;
