@@ -103,7 +103,7 @@ export function generateDailyReport(date = new Date()): string {
     SELECT id, source, url, title, company, country, location, work_mode,
            description, posted_at, discovered_at, analysis_json
     FROM jobs
-    WHERE date(discovered_at) = ?
+    WHERE date(discovered_at, 'localtime') = ?
     ORDER BY company COLLATE NOCASE, discovered_at DESC
   `).all(dateKey) as JobRow[];
 
