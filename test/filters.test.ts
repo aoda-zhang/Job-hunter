@@ -27,6 +27,11 @@ test("matches equivalent frontend title, supported JD language and any technical
   assert.deepEqual(result.checks.technicalKeywords.matchedKeywords, ["React", "TypeScript"]);
 });
 
+test("does not treat seniority wording as a separate rejection criterion", () => {
+  const result = evaluateJob(posting({ title: "Frontend Engineer" }), config);
+  assert.equal(result.checks.jobTitle.status, "match");
+});
+
 test("detects German JD language without inferring from country", () => {
   const result = evaluateJob(posting({ description: germanJD }), config);
   assert.equal(result.checks.jdLanguage.status, "match");
