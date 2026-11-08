@@ -7,9 +7,18 @@ description: Search LinkedIn vacancies with the local OpenCode browser, inspect 
 
 This is the primary workflow of Job Hunter. Run it locally in this repository. OpenCode operates the browser tools already configured in the user's environment. This repository is an instruction harness, not an application: do not introduce a backend, database, CLI, CI pipeline, source adapters or extra configuration.
 
-## 1. Read the only configuration
+## 1. Read the user's local configuration
 
-Read the root file `job-hunter.config.json`. It is the single source of configuration. All settings are top-level fields:
+Read the root file `job-hunter.config.json`. This is a personal, Git-ignored file and is the single source of runtime configuration.
+
+The repository provides `job-hunter.config.example.json` only as a template. Never treat the example as the user's active preferences when their personal config is missing.
+
+If `job-hunter.config.json` does not exist:
+1. Tell the user to copy `job-hunter.config.example.json` to `job-hunter.config.json`.
+2. Ask them to customize it for their own search.
+3. Stop the discovery run until the personal config exists. Do not silently use the example.
+
+All settings are top-level fields:
 
 - `countries`, `locations`: LinkedIn search scope.
 - `lookbackHours`: preferred posting window.
