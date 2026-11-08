@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { SearchConfig } from "./types.js";
 
 const searchConfigSchema = z.object({
+  $schema: z.string().optional(),
   search: z.object({
     countries: z.array(z.string().min(2)).min(1),
     roles: z.array(z.string().min(2)).min(1),
