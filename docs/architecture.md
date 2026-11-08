@@ -15,8 +15,8 @@ The resume helps define target job titles and technical keywords. It does not in
 3. Source adapters retrieve permitted postings.
 4. Normalize source records into the common Job model.
 5. Deduplicate by canonical URL and source identifiers.
-6. Evaluate each vacancy only against job title, JD language and technical keywords.
-7. Mark each dimension as `match`, `no_match` or `unknown`; retain unknown results for manual review.
+6. Evaluate each vacancy with `evaluateJob` from `src/filters/index.ts`, using only job title, JD language and technical keywords.
+7. Record per-dimension status and evidence. Missing, short or ambiguous JD text is `unknown` and remains in Review; title matching ignores seniority modifiers.
 8. Generate one date-stamped Markdown report for the local calendar date.
 
 Phase 1 is optimized for reviewing vacancies and submitting applications. It does not research employers, analyze company business models or prepare interview answers.
