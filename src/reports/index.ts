@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { db } from "../db/index.js";
 
@@ -103,8 +103,9 @@ export function generateDailyReport(date = new Date()): string {
     SELECT id, source, url, title, company, country, location, work_mode,
            description, posted_at, discovered_at, analysis_json
     FROM jobs
+    WHERE date(discovered_at) = ?
     ORDER BY company COLLATE NOCASE, discovered_at DESC
-  `).all() as JobRow[];
+  `).all(dateKey) as JobRow[];
 
   const visibleJobs = jobs.filter((job) => resultStatus(job.analysis_json) !== "not_matched");
   const companies = new Map<string, JobRow[]>();
