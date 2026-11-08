@@ -1,6 +1,6 @@
 # Job Hunter
 
-A configurable job discovery workspace. Vacancies are filtered only by **job title**, **job-description language**, and **technical keywords in the JD**.
+A configurable job discovery workspace with two separate stages. Phase 1 finds vacancies for the application process using only **job title**, **job-description language**, and **technical keywords in the JD**. Phase 2 is an independent company-research and interview-preparation skill, used only after an interview invitation or an explicit request.
 
 ## Documentation
 
@@ -16,13 +16,21 @@ Edit only `job-hunter.config.json`:
 - **JD language filter** — accepted job-description languages.
 - **Technical keyword filter** — technology terms and `any` / `all` matching mode.
 
-There is no candidate profile, weighted matching score, or score threshold in the discovery configuration.
+Your resume helps define target roles and technical keywords; it does not add candidate-fit scoring or extra automatic rejection criteria.
 
-## Daily report
+## Phase 1 — Daily job discovery report
 
-Run `npm run report` (or `npm run dev -- report`) after initializing the database. It creates or replaces one local-date Markdown report at `reports/daily/YYYY-MM-DD.md`, containing vacancies discovered on that date. The report groups vacancies by company, includes filter evidence where available, and provides sections for the company's main business and the role-specific **“Why do you want to join our company?”** answer.
+Run `npm run report` (or `npm run dev -- report`) after initializing the database. It creates or replaces one local-date Markdown report at `reports/daily/YYYY-MM-DD.md`, containing vacancies discovered on that date.
 
-Company facts and fully tailored interview answers require verified research. The database has `company_research` and `role_interview_prep` tables for those details. Until those records are populated, the report explicitly marks missing company research and provides only a generic draft that must be personalized; it does not fabricate facts or candidate experience.
+The report groups vacancies by company for readability and shows each role's title, location, JD language, technical keywords, filter evidence, source, URL, posting/discovery dates and JD summary. It includes confirmed matches and items requiring review, but excludes confirmed non-matches from the main report.
+
+**No company deep research or interview answers are generated in Phase 1.**
+
+## Phase 2 — Independent company research and interview preparation
+
+After receiving an interview invitation, invoke `.opencode/skills/company-research/SKILL.md` for the specific company and vacancy. This skill researches the company's main business, products, customers and market context; analyzes the selected role; and prepares tailored interview answers, including **“Why do you want to join our company?”**
+
+Outputs are kept separately under `reports/interviews/<company-slug>/`. This skill is not triggered by routine job discovery and does not research every company in the daily report.
 
 ## Quick start
 
@@ -40,7 +48,7 @@ npm run report
 
 ## Project status
 
-The dated Markdown report generator and database tables for company research and role-specific interview preparation are implemented. Job-board adapters, end-to-end vacancy collection, deterministic three-dimension filtering, automated company research, and automated generation of fully tailored interview answers are still pending. The current `discover` command remains a scaffold.
+The Phase 1 dated Markdown report generator and Phase 2 persistence tables are implemented. Job-board adapters, end-to-end vacancy collection and deterministic three-dimension filtering are still pending. Automated company research and interview-answer generation for a user-selected employer are also pending. The current `discover` command remains a scaffold.
 
 ## Safety
 
