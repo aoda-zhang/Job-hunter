@@ -14,12 +14,12 @@ const TITLE_TOKEN_ALIASES: Record<string, string> = {
 };
 
 const KEYWORD_ALIASES: Record<string, string[]> = {
-  javascript: ["javascript", "\bjs\b", "ecmascript"],
-  typescript: ["typescript", "\bts\b"],
-  "node.js": ["node\\.js", "\bnodejs\b"],
-  "next.js": ["next\\.js", "\bnextjs\b"],
-  react: ["react", "\breactjs\b"],
-  redux: ["redux", "redux toolkit", "\brtk\b"],
+  javascript: ["javascript", "\\bjs\\b", "ecmascript"],
+  typescript: ["typescript", "\\bts\\b"],
+  "node.js": ["node\\\\.js", "\\bnodejs\\b"],
+  "next.js": ["next\\\\.js", "\\bnextjs\\b"],
+  react: ["react", "\\breactjs\\b"],
+  redux: ["redux", "redux toolkit", "\\brtk\\b"],
   express: ["express", "expressjs"],
   nestjs: ["nestjs", "nest\\.js"],
   html: ["html", "html5"],
@@ -46,7 +46,7 @@ function normalizeTitle(value: string): string {
   for (const [from, to] of Object.entries(TITLE_TOKEN_ALIASES)) {
     normalized = normalized.replace(new RegExp(escapeRegExp(from), "g"), to);
   }
-  return normalized.replace(/\\b(front-end|front end)\\b/g, "frontend")
+  return normalized.replace(/\\s+/g, " ").trim();
     .replace(/\\b(fullstack|full stack)\\b/g, "full-stack")
     .replace(/\\s+/g, " ").trim();
 }
