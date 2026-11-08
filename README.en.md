@@ -21,11 +21,9 @@ Country, location and posting date define search scope only. Vacancy filtering u
 
 ## 2. Search LinkedIn with OpenCode
 
-Open this repository locally in OpenCode and invoke:
+Open this repository locally in OpenCode, select the **Job Hunter** primary agent (press `Tab` to switch agents if needed), and simply ask it to find suitable jobs.
 
-`job-discovery`
-
-The skill reads the single config, checks which browser tools are actually available, searches LinkedIn Jobs, opens vacancy pages, inspects the JD, applies the three filters and saves the daily report to:
+You interact with the Primary Agent only. It routes the request and loads `job-discovery` automatically. The skill reads the single config, checks which browser tools are actually available, searches LinkedIn Jobs, opens vacancy pages, inspects the JD, applies the three filters and saves the daily report to:
 
 `reports/daily/YYYY-MM-DD.md`
 
@@ -48,11 +46,7 @@ Do not filter by years of experience, seniority, salary, visa/work authorization
 
 ## 4. Phase 2 — Interview preparation
 
-After receiving an interview invitation, select the specific company and vacancy from a daily report, then manually invoke:
-
-`company-research`
-
-The skill uses the vacancy details and original job URL to research the company's business, products, customers, markets and selected role. It saves:
+After receiving an interview invitation, tell the **Job Hunter** agent which company and vacancy you are preparing for. The agent reads the relevant report entry and loads `company-research` automatically. The skill uses the vacancy details and original job URL to research the company's business, products, customers, markets and selected role. It saves:
 
 - `reports/interviews/<company-slug>/company-research.md`
 - `reports/interviews/<company-slug>/role-analysis.md`
@@ -60,7 +54,15 @@ The skill uses the vacancy details and original job URL to research the company'
 
 Phase 2 is separate from daily LinkedIn discovery and never runs automatically.
 
-## 5. Safety boundaries
+## 5. Agent and skills
+
+- `.opencode/agents/job-hunter.md` — the Primary Agent and the single user-facing entry point. It routes requests, loads the appropriate skill and coordinates the workflow.
+- `.opencode/skills/job-discovery/SKILL.md` — Phase 1: LinkedIn vacancy discovery and daily reporting.
+- `.opencode/skills/company-research/SKILL.md` — Phase 2: company research, role analysis and interview preparation.
+
+The skills are capabilities used by the Primary Agent, not separate workflows you need to coordinate manually.
+
+## 6. Safety boundaries
 
 - Use only browser tools already configured in the local OpenCode environment.
 - Never bypass LinkedIn login controls, CAPTCHAs, access restrictions or rate limits.
