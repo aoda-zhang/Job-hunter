@@ -17,13 +17,14 @@
 
 ## Phase 2 — Interview preparation (independent skill)
 - [x] Define company research as an independent, manually triggered skill
+- [x] Define a CLI handoff that loads a selected vacancy and its stored JD by job ID or exact company name
+- [x] Generate a role-specific research-input.md file without running research during discovery
+- [x] Define separate shared company research and per-role interview output locations
 - [x] Require source-backed research into the selected company's main business
-- [x] Define role-specific analysis based on the selected vacancy
-- [x] Define tailored “Why do you want to join our company?” answer requirements
-- [x] Reserve company research and interview-preparation database tables for this phase
-- [ ] Implement automated, source-backed research for a user-selected company
+- [x] Define role-specific analysis and tailored interview-answer requirements
+- [ ] Implement automated, source-backed research for a user-selected company through the agent runtime
 - [ ] Implement generation and validation of interview answers using verified company facts and candidate materials
-- [ ] Persist company research and role-specific interview materials
+- [ ] Persist completed company research and role-specific interview materials
 - [ ] Add interview-stage report generation under `reports/interviews/<company-slug>/`
 
 ## Future improvements
