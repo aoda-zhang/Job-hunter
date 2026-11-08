@@ -1,17 +1,15 @@
 # Job Hunter – Konfigurationshandbuch
 
-Job Hunter ist ein länder- und rollenübergreifendes Tool zur Stellensuche mit zwei getrennten Phasen:
+Job Hunter besteht aus zwei unabhängigen Phasen:
 
-- **Phase 1 – Stellensuche und Bewerbung:** Stellen anhand der Zielrollen suchen und ausschließlich nach Stellentitel, Sprache der Stellenbeschreibung (JD) und technischen Schlüsselwörtern filtern. Anschließend einen täglichen Markdown-Bericht erstellen.
-- **Phase 2 – Interviewvorbereitung:** Nach einer Intervieweinladung ein unabhängiges Skill zur Recherche des ausgewählten Unternehmens und der konkreten Stelle manuell aufrufen.
+- **Phase 1 – Stellensuche und Bewerbungen:** Stellen ausschließlich anhand von Stellentitel, Sprache der Stellenbeschreibung (JD) und technischen Schlüsselwörtern suchen und filtern. Täglichen Markdown-Bericht erstellen.
+- **Phase 2 – Interviewvorbereitung:** Nach einer Intervieweinladung das ausgewählte Unternehmen und die konkrete Stelle mit einem separaten Skill recherchieren.
 
 ## 1. Eine zentrale Konfigurationsdatei
 
-Alle Sucheinstellungen befinden sich in `job-hunter.config.json`.
+Alle Sucheinstellungen befinden sich in `job-hunter.config.json`. Land, Standort, Veröffentlichungszeitraum und Quelle bestimmen nur den Suchumfang und sind keine Bewertungskriterien. Der Lebenslauf hilft bei der Definition von Zielrollen und technischen Schlüsselwörtern, führt aber nicht zu zusätzlichen automatischen Ausschlussregeln.
 
-Land, Standort, Veröffentlichungszeitraum und Quelle bestimmen nur den Suchumfang. Sie sind keine Kriterien für eine Bewerberbewertung. Lebenslauf und technischer Hintergrund helfen bei der Definition von Zielrollen und Schlüsselwörtern, führen aber nicht zu zusätzlichen Bewertungspunkten oder automatischen Ausschlussregeln.
-
-## 2. Vollständiges Konfigurationsbeispiel
+## 2. Konfigurationsbeispiel
 
 ```json
 {
@@ -24,9 +22,7 @@ Land, Standort, Veröffentlichungszeitraum und Quelle bestimmen nur den Suchumfa
     "jobTitles": {
       "include": ["Senior Frontend Engineer", "Senior Frontend Developer", "Frontend Platform Engineer", "Senior React Engineer", "Senior Full-Stack Engineer"]
     },
-    "jdLanguages": {
-      "include": ["English", "German"]
-    },
+    "jdLanguages": { "include": ["English", "German"] },
     "technicalKeywords": {
       "include": ["React", "TypeScript", "JavaScript", "HTML", "CSS", "Next.js", "Node.js", "NestJS", "Express", "Redux"],
       "matchMode": "any"
@@ -35,68 +31,46 @@ Land, Standort, Veröffentlichungszeitraum und Quelle bestimmen nur den Suchumfa
 }
 ```
 
-## 3. Phase 1 – Stellensuche und Bewerbung
+## 3. Phase 1 – Stellensuche und Bewerbungen
 
-Mit `npm run report` (oder `npm run dev -- report`) wird der Tagesbericht erstellt oder überschrieben:
+Mit `npm run report` wird der Tagesbericht unter `reports/daily/YYYY-MM-DD.md` erstellt.
 
-`reports/daily/YYYY-MM-DD.md`
+Jede Stelle enthält ihre Datenbank-Job-ID, Stellentitel, Unternehmen, Land/Standort, Arbeitsmodell, JD-Sprache, gefundene technische Schlüsselwörter, Filterstatus und Belege, Veröffentlichungs- und Entdeckungsdatum, Quelle, Stellenlink und JD-Zusammenfassung. Bestätigte Treffer und Fälle zur manuellen Prüfung werden angezeigt; eindeutige Nicht-Treffer bleiben im Datenbank-Audit, erscheinen aber nicht im Bericht.
 
-Die Stellen werden nur zur besseren Lesbarkeit nach Unternehmen gruppiert. Jede Stelle enthält:
-- Stellentitel und Unternehmen.
-- Land, Standort und Arbeitsmodell, sofern bekannt.
-- Erkannte Sprache der Stellenbeschreibung.
-- In der JD gefundene konfigurierte technische Schlüsselwörter.
-- Filterstatus und Belege für die drei Kriterien.
-- Veröffentlichungsdatum und Entdeckungsdatum.
-- Quelle und Stellenlink.
-- Kurze JD-Zusammenfassung und einklappbare Originalbeschreibung, sofern verfügbar.
+**In Phase 1 gibt es keine Unternehmensrecherche und keine Interviewantworten.** Berufsjahre, Gehalt, Visum, Seniorität, Branche und Architekturkenntnisse sind keine zusätzlichen Filter.
 
-Der Bericht enthält bestätigte Treffer und Einträge zur manuellen Prüfung. Eindeutig nicht passende Stellen werden aus dem Bericht ausgeschlossen, bleiben aber für die Datenbankprüfung gespeichert. Unbekannte oder unvollständige Angaben werden ausdrücklich gekennzeichnet.
+## 4. Phase 2 – Interviewvorbereitung
 
-**In Phase 1 gibt es keine ausführliche Unternehmensrecherche und keine Interviewantworten.** Ziel ist es, passende Stellen zu finden, zu prüfen und Bewerbungen vorzubereiten.
+Nach einer Intervieweinladung den Recherchekontext für eine gespeicherte Stelle erstellen:
 
-## 4. Phase 2 – Unabhängige Unternehmensrecherche und Interviewvorbereitung
+```bash
+npm run interview:prepare -- --job-id 123
+```
 
-Nach einer Intervieweinladung das folgende Skill manuell aufrufen:
+Alternativ kann ein exakter Unternehmensname verwendet werden:
 
-`.opencode/skills/company-research/SKILL.md`
+```bash
+npm run interview:prepare -- --company "Exact Company Name"
+```
 
-Dieses unabhängige Skill umfasst:
-1. **Unternehmensprofil:** Kerngeschäft, Produkte/Dienstleistungen, Kundengruppen, Geschäftsmodell, Hauptsitz und wichtige Märkte.
-2. **Marktumfeld:** Branchenposition, Wettbewerber und aktuelle wichtige Geschäftsentwicklungen, sofern zuverlässige Quellen verfügbar sind.
-3. **Stellenanalyse:** Aufgaben, Technologie-Stack, Geschäftskontext und Bezug zu den tatsächlichen Projekterfahrungen des Bewerbers.
-4. **Interviewvorbereitung:** „Why do you want to join our company?“, „Why this position?“, „What can you bring?“ sowie wahrscheinliche technische und verhaltensbezogene Fragen.
+Wenn mehrere Stellen dieses Unternehmens gespeichert sind, zeigt der Befehl die Job-IDs an und verlangt die Auswahl einer konkreten Stelle. Er liest die gespeicherten Stellendaten und die JD und erstellt `research-input.md` unter `reports/interviews/<company-slug>/roles/job-<id>/`.
 
-Die Ergebnisse werden getrennt gespeichert unter:
+Anschließend das unabhängige Skill `.opencode/skills/company-research/SKILL.md` mit dieser Eingabe manuell aufrufen. Das Skill recherchiert Kerngeschäft und Markt des Unternehmens, analysiert die ausgewählte Stelle und erstellt individuelle Interviewantworten wie „Why do you want to join our company?“.
 
-`reports/interviews/<company-slug>/`
+Die Unternehmensrecherche wird auf Unternehmensebene gespeichert. Stellenanalyse und Interviewvorbereitung werden getrennt nach Job-ID gespeichert. Der CLI-Befehl erstellt nur den Recherchekontext; er recherchiert nicht selbst im Web und generiert keine Antworten. Phase 2 wird niemals automatisch während der Stellensuche gestartet.
 
-Empfohlene Dateien: `company-research.md`, `role-analysis.md` und `interview-preparation.md`. Unternehmensinformationen können bei mehreren Stellen desselben Unternehmens wiederverwendet werden; Stellenanalyse und Antworten müssen jedoch auf die jeweilige Rolle zugeschnitten sein.
-
-Das Skill wird nicht während der regulären Stellensuche gestartet und recherchiert nicht automatisch alle Unternehmen im Tagesbericht.
-
-## 5. Die drei Stellenfilter
+## 5. Die drei Filter
 
 | Kriterium | Konfigurationsfeld | Verhalten |
 |---|---|---|
-| Stellentitel | `jobTitles.include` | Übliche Titelvarianten und semantisch ähnliche Bezeichnungen erkennen |
-| JD-Sprache | `jdLanguages.include` | Tatsächliche Hauptsprache erkennen, nicht aus dem Land ableiten |
+| Stellentitel | `jobTitles.include` | Übliche Titelvarianten erkennen |
+| JD-Sprache | `jdLanguages.include` | Tatsächliche Hauptsprache erkennen |
 | Technische Schlüsselwörter | `technicalKeywords.include` | Konfigurierte Technologien in der JD suchen |
 
-Für `technicalKeywords.matchMode`:
-- `any`: Ein einziger Treffer genügt; empfohlen, um mögliche Stellen nicht unnötig zu übersehen.
-- `all`: Alle konfigurierten Begriffe müssen vorkommen.
+Mit `matchMode: "any"` genügt ein Treffer (empfohlen); `all` verlangt alle konfigurierten Begriffe. Unklare oder unvollständige Fälle bleiben zur manuellen Prüfung erhalten.
 
-Eine Stelle wird nur dann als Matched markiert, wenn alle drei Kriterien eindeutig erfüllt sind. Not matched ist nur bei klaren Gegenbelegen zulässig. Unklare oder unvollständige Fälle bleiben als Review erhalten.
+## 6. Aktueller Implementierungsstand
 
-## 6. Ausdrücklich keine Filterkriterien
+Der Generator für tägliche Markdown-Berichte und der Phase-2-Kontextgenerator für ausgewählte Stellen sind implementiert. Jobbörsen-Adapter, vollständige Stellensammlung und deterministische Filterausführung anhand der drei Kriterien müssen noch entwickelt werden. Das Unternehmensrecherche-Skill ist spezifiziert; automatisierte Webrecherche, Interviewantworten und Speicherung der fertigen Recherche stehen noch aus.
 
-Nicht nach Berufsjahren, Seniorität, Gehalt, Visum/Arbeitserlaubnis, Sprachkenntnissen des Bewerbers, Branche oder Architekturkenntnissen filtern. Es gibt weder einen allgemeinen Bewerber-Matching-Score noch eine automatische Ablehnung anhand eines Scores.
-
-## 7. Validierung und aktuelle Grenzen
-
-Mit `npm run config:check` wird die Konfiguration geprüft. Das Zod-Schema befindet sich in `src/config.ts`.
-
-Der Generator für tägliche Markdown-Berichte ist implementiert. Jobbörsen-Adapter, vollständige Stellensammlung und deterministische Filterausführung anhand der drei Kriterien müssen noch entwickelt werden. Die Spezifikation des unabhängigen Phase-2-Skills und die Datenbanktabellen sind definiert; automatische Unternehmensrecherche, Interviewantworten und Speicherung der Interviewunterlagen stehen noch aus.
-
-Das Projekt versendet keine Bewerbungen und kontaktiert keine Arbeitgeber automatisch. Nutzungsbedingungen, Zugriffsbeschränkungen und Abruflimits der jeweiligen Quelle sind einzuhalten.
+Das Projekt versendet keine Bewerbungen und kontaktiert keine Arbeitgeber automatisch.
