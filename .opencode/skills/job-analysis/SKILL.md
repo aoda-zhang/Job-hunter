@@ -5,6 +5,8 @@ description: Apply the three configured vacancy filters: job title, job-descript
 
 # Job Filtering
 
+The deterministic implementation is exported from `src/filters/index.ts` as `evaluateJob(posting, config)`. Keep the skill guidance and implementation behavior aligned. Fixture tests live in `test/filters.test.ts` and run with `npm test`.
+
 Read `job-hunter.config.json`. This workflow is a filter, not a candidate-fit or ranking engine.
 
 Evaluate only:
