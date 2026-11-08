@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "weights": {
+    "roleTitle": 20,
+    "coreSkills": 25,
+    "architecture": 15,
+    "seniority": 10,
+    "domainExperience": 10,
+    "locationAndWorkMode": 8,
+    "language": 7,
+    "salary": 5
+  },
+  "thresholds": {
+    "strongMatch": 85,
+    "goodMatch": 70,
+    "possibleMatch": 55
+  },
+  "rules": [
+    "Score evidence in the job description, not keyword frequency alone.",
+    "Do not infer visa sponsorship, salary, language level, or remote eligibility when not stated; mark unknown.",
+    "Penalize mandatory German fluency when the candidate profile does not support it.",
+    "Distinguish required skills from nice-to-have skills.",
+    "Explain every score with supporting JD evidence and candidate experience evidence.",
+    "A score is decision support, not a probability of getting an interview."
+  ]
+}
