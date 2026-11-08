@@ -45,7 +45,8 @@ function normalizeTitle(value: string): string {
   for (const [from, to] of Object.entries(TITLE_TOKEN_ALIASES)) {
     normalized = normalized.replace(new RegExp(`\\b${escapeRegExp(from)}\\b`, "g"), to);
   }
-  return normalized.replace(/\s+/g, " ").trim();
+  const seniorityTerms = new Set(["senior", "junior", "staff", "principal", "mid", "mid-level"]);
+  return normalized.split(/\s+/).filter((token) => !seniorityTerms.has(token)).join(" ").trim();
 }
 
 function titleMatches(actual: string, configured: string): boolean {
