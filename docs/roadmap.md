@@ -1,33 +1,35 @@
 # Roadmap
 
-## Phase 1 — Configurable discovery MVP
+## Phase 1 — Job discovery and application search
 - [x] Repository scaffold
 - [x] Single root search configuration
 - [x] Three filter dimensions: job title, JD language and technical keywords
 - [x] Runtime config validation
 - [x] SQLite schema and CLI skeleton
+- [x] Define one Markdown report per calendar date
+- [x] Implement daily report generation, focused only on vacancy discovery
+- [x] Keep company research and interview answers out of daily reports
 - [ ] Implement and validate permitted source adapters
 - [ ] Implement deterministic filter evaluation with per-dimension evidence
 - [ ] Add fixture-based language/title/keyword tests
 - [ ] Verify canonical URL deduplication and country-aware reports
-
-## Phase 2 — Company research and interview preparation
-- [x] Define company research requirements
-- [x] Require a plain-language explanation of each company's main business
-- [x] Require a source-backed, role-specific answer to “Why do you want to join our company?”
-- [x] Add SQLite persistence tables for company research and role-specific interview preparation
-- [ ] Implement automated, source-backed company research
-- [ ] Implement generation and validation of tailored interview answers using verified company facts and candidate materials
-
-## Phase 3 — Daily reporting and operations
-- [x] Define one Markdown report per calendar date
-- [x] Define report content and company grouping
-- [x] Implement `reports/daily/YYYY-MM-DD.md` generation
-- [x] Update the same date's report when another run occurs that day
 - [ ] Add scheduled execution on the user's machine
+
+## Phase 2 — Interview preparation (independent skill)
+- [x] Define company research as an independent, manually triggered skill
+- [x] Require source-backed research into the selected company's main business
+- [x] Define role-specific analysis based on the selected vacancy
+- [x] Define tailored “Why do you want to join our company?” answer requirements
+- [x] Reserve company research and interview-preparation database tables for this phase
+- [ ] Implement automated, source-backed research for a user-selected company
+- [ ] Implement generation and validation of interview answers using verified company facts and candidate materials
+- [ ] Persist company research and role-specific interview materials
+- [ ] Add interview-stage report generation under `reports/interviews/<company-slug>/`
+
+## Future improvements
 - [ ] Add failure alerts and run summaries
 - [ ] Add historical trend and application tracker
-- [ ] Add optional email delivery of reports
+- [ ] Add optional email delivery of daily discovery reports
 
 ## Non-goals
 
