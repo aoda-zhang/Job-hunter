@@ -17,10 +17,11 @@
   },
   "rules": [
     "Score evidence in the job description, not keyword frequency alone.",
+    "Interpret location, language, compensation, and work authorization in the context of the vacancy's country; do not apply one country's assumptions globally.",
     "Do not infer visa sponsorship, salary, language level, or remote eligibility when not stated; mark unknown.",
-    "Penalize mandatory German fluency when the candidate profile does not support it.",
     "Distinguish required skills from nice-to-have skills.",
     "Explain every score with supporting JD evidence and candidate experience evidence.",
-    "A score is decision support, not a probability of getting an interview."
+    "A score is decision support, not a probability of getting an interview.",
+    "Normalize compensation to a comparable annual gross amount and currency only when reliable exchange-rate and pay-period data are available; otherwise preserve the original value."
   ]
 }
