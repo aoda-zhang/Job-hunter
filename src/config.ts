@@ -6,54 +6,20 @@ import type { JobHunterConfig } from "./types.js";
 const configSchema = z.object({
   search: z.object({
     countries: z.array(z.string().min(2)).min(1),
-    roles: z.array(z.string().min(2)).min(1),
-    locations: z.array(z.string()).optional(),
-    workModes: z.array(z.enum(["remote", "hybrid", "onsite", "flexible"])).optional(),
+    locations: z.array(z.string().min(1)).optional(),
     lookbackHours: z.number().int().positive(),
     maxResultsPerSource: z.number().int().positive(),
     sources: z.array(z.string().min(2)).min(1),
-    excludeKeywords: z.array(z.string()).optional()
-  }).strict(),
-  candidate: z.object({
-    headline: z.string(),
-    experienceYears: z.number().nonnegative(),
-    currentCountry: z.string(),
-    workAuthorization: z.object({ status: z.string(), note: z.string() }),
-    languages: z.object({
-      preferred: z.array(z.string()),
-      additional: z.array(z.object({
-        language: z.string(),
-        level: z.string(),
-        note: z.string().optional()
-      }))
-    }),
-    salary: z.object({
-      preferredMinimum: z.number().nonnegative(),
-      currency: z.string().length(3),
-      note: z.string()
-    }),
-    coreSkills: z.array(z.string()),
-    secondarySkills: z.array(z.string()),
-    experienceEvidence: z.array(z.string())
-  }).strict(),
-  matching: z.object({
-    weights: z.object({
-      roleTitle: z.number().nonnegative(),
-      coreSkills: z.number().nonnegative(),
-      seniority: z.number().nonnegative(),
-      domainExperience: z.number().nonnegative(),
-      locationAndWorkMode: z.number().nonnegative(),
-      language: z.number().nonnegative(),
-      salary: z.number().nonnegative()
-    }).strict().refine((weights) => Object.values(weights).reduce((sum, value) => sum + value, 0) === 100, {
-      message: "Matching weights must sum to 100"
-    }),
-    thresholds: z.object({
-      strongMatch: z.number().min(0).max(100),
-      goodMatch: z.number().min(0).max(100),
-      possibleMatch: z.number().min(0).max(100)
-    }),
-    rules: z.array(z.string())
+    jobTitles: z.object({
+      include: z.array(z.string().min(2)).min(1)
+    }).strict(),
+    jdLanguages: z.object({
+      include: z.array(z.string().min(2)).min(1)
+    }).strict(),
+    technicalKeywords: z.object({
+      include: z.array(z.string().min(1)).min(1),
+      matchMode: z.enum(["any", "all"]).default("any")
+    }).strict()
   }).strict()
 }).strict();
 
