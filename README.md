@@ -10,7 +10,7 @@ OpenCode uses browser tools configured in your local environment to search Linke
 
 ## Start
 
-1. Edit the single configuration file: `job-hunter.config.json`.
+1. Copy `job-hunter.config.example.json` to `job-hunter.config.json`, then customize your local file.
 2. Open this repository locally in OpenCode.
 3. Select the **Job Hunter** primary agent in OpenCode (press `Tab` to switch agents if needed).
 4. Ask it to find jobs. It will load the `job-discovery` skill when appropriate.
