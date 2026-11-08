@@ -26,7 +26,7 @@ function selectJob(jobId?: number, company?: string): InterviewJobRow {
   const jobs = db.prepare("SELECT id, source, url, title, company, country, location, work_mode, description, posted_at, discovered_at, analysis_json FROM jobs WHERE company = ? COLLATE NOCASE ORDER BY discovered_at DESC").all((company as string).trim()) as InterviewJobRow[];
   if (!jobs.length) throw new Error("No saved vacancies found for company \"" + company + "\". Use the exact company name from a job record.");
   if (jobs.length > 1) {
-    const choices = jobs.map((job) => "#" + job.id + " — " + job.title + " (" + (job.location ?? job.country ?? "location unknown") + ")").join("\\n");
+    const choices = jobs.map((job) => "#" + job.id + " — " + job.title + " (" + (job.location ?? job.country ?? "location unknown") + ")").join("\n");
     throw new Error("Found multiple vacancies for \"" + company + "\". Select the specific role with --job-id:\\n" + choices);
   }
   return jobs[0];
