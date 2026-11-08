@@ -11,18 +11,22 @@
 - [ ] Add fixture-based language/title/keyword tests
 - [ ] Verify canonical URL deduplication and country-aware reports
 
-## Phase 2 — Discovery quality
-- [ ] Improve semantic job-title variants by market and language
-- [ ] Add robust JD language detection and short-text handling
-- [ ] Add technical-keyword aliases and boundary-aware matching
-- [ ] Add review queue for incomplete or ambiguous postings
-- [ ] Add company research with citations
+## Phase 2 — Company research and interview preparation
+- [x] Define company research requirements
+- [x] Require a plain-language explanation of each company's main business
+- [x] Require a source-backed, role-specific answer to “Why do you want to join our company?”
+- [ ] Implement structured company research persistence
+- [ ] Validate company facts and interview answers against source links and candidate materials
 
-## Phase 3 — Daily operations
-- [ ] Scheduled execution on the user's machine
-- [ ] Failure alerts and run summaries
-- [ ] Historical trend and application tracker
-- [ ] Optional email delivery of reports
+## Phase 3 — Daily reporting and operations
+- [x] Define one Markdown report per calendar date
+- [x] Define report content and company grouping
+- [ ] Implement `reports/daily/YYYY-MM-DD.md` generation
+- [ ] Update the same date's report when another run occurs that day
+- [ ] Add scheduled execution on the user's machine
+- [ ] Add failure alerts and run summaries
+- [ ] Add historical trend and application tracker
+- [ ] Add optional email delivery of reports
 
 ## Non-goals
 
