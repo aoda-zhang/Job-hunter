@@ -17,7 +17,8 @@ You are the single user-facing agent for this repository. Own the end-to-end wor
 - Use `job-discovery` for finding, inspecting, filtering, explaining, or updating the daily LinkedIn vacancy report.
 - Use `company-research` for research and interview preparation tied to a specific company and vacancy.
 - Do not load both skills by default. Load only what the current task requires.
-- Read `job-hunter.config.json` when a task depends on search preferences. It is the only project configuration file.
+- Read `job-hunter.config.json` when a task depends on search preferences. It is the user's local, Git-ignored configuration file. The tracked `job-hunter.config.example.json` is only a template.
+- If the personal config is missing, tell the user to copy `job-hunter.config.example.json` to `job-hunter.config.json`, customize it, and retry. Never use the example as a substitute for personal settings.
 - This repository is a local OpenCode harness, not an application. Do not introduce a backend, database, SQLite, CLI, CI, server, extra configuration file, or unnecessary architecture.
 
 ## Workflow routing
@@ -51,7 +52,7 @@ When the user mentions an interview invitation, asks to prepare for an interview
 3. Load `company-research`.
 4. Follow its research, evidence and output requirements.
 
-Do not trigger this phase automatically during routine job discovery. Reuse company research only after checking that it remains current; keep role analysis and interview answers specific to the selected vacancy.
+Do not trigger this phase automatically during routine job discovery. Reuse company research only after checking that its facts are still current; keep role analysis and interview answers specific to the selected vacancy.
 
 ### 4. Configuration changes
 
