@@ -1,19 +1,15 @@
 {
-  "countries": ["America"],
-  "locations": [
-    "Munich",
-    "Berlin",
-    "Hamburg",
-    "Frankfurt am Main",
-    "Stuttgart",
-    "Cologne"
-  ],
+  "countries": ["Germany"],
+  "locations": [],
   "lookbackHours": 48,
   "workModes": ["Remote", "Hybrid", "On-site"],
   "employmentTypes": ["Full-time"],
+  "seniority": { "include": [] },
+  "excludeRecruiters": false,
   "sources": ["LinkedIn"],
   "sortBy": "companySize",
-  "sortDirection": "dec",
+  "sortDirection": "desc",
+  "jobSearchPrompt": "Find English-speaking software engineering jobs across all of Germany, posted in the last 48 hours.",
   "jobTitles": {
     "include": [
       "Frontend Engineer",
@@ -40,7 +36,8 @@
     ]
   },
   "jdLanguages": {
-    "include": ["English"]
+    "include": ["English"],
+    "acceptGermanJdWithEnglishWorkingLanguage": false
   },
   "technicalKeywords": {
     "include": [

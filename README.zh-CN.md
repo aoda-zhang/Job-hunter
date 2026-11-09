@@ -10,18 +10,21 @@ Job Hunter 是一个**本地运行、由 OpenCode 驱动的 LinkedIn 职位搜�
 
 首次使用时，先将 `job-hunter.config.example.json` 复制为 `job-hunter.config.json`，然后编辑个人配置。个人配置已加入 `.gitignore`，不会提交到仓库。
 
-- `countries`、`locations`：LinkedIn 搜索范围。
+- `countries`：必填的国家级范围边界，用于校验结果和说明搜索范围，不用于拼接查询。`locations`：可选的城市范围；缺失或为空时覆盖整个国家。
+- `jobSearchPrompt`：必填的 LinkedIn AI 搜索自然语言请求（建议一句话）。整段原样作为唯一检索语句；为空时停止并提示你补全。
 - `workModes`：接受的工作模式（`Remote`、`Hybrid`、`On-site`）；三项全配等于不过滤。
 - `lookbackHours`：优先查找最近发布的职位。
 - `employmentTypes`：接受的雇佣类型（`Full-time`、`Part-time`、`Contract`、`Temporary`、`Internship`、`Volunteer`）；全部列出等于不过滤。
+- `seniority.include`：接受的职级（`Junior`、`Mid-level`、`Senior`、`Lead`）；缺失、为空或全部列出等于不过滤。
+- `excludeRecruiters`：为 `true` 时排除为第三方客户招聘的猎头/人力中介职位；证据不足时进复核，不直接排除。
 - `sources`：搜索来源，目前使用 LinkedIn。
 - `jobTitles.include`：目标职位名称及常见变体。
 - `sortBy`：命中岗位在城市内的排序依据（目前支持 `companySize`）；`sortDirection`：`asc` / `desc`。
-- `jdLanguages.include`：接受的 JD 语言。
+- `jdLanguages.include`：接受的 JD 语言。`jdLanguages.acceptGermanJdWithEnglishWorkingLanguage`：为 `true` 时，德语 JD 只要明确写明英语是工作语言/团队语言/公司语言，也算命中。
 - `technicalKeywords.include`：JD 中希望命中的技术关键词。
 - `technicalKeywords.matchMode`：`any` 表示任意关键词命中即可；`all` 表示全部命中。
 
-国家、地点和发布时间只决定搜索范围，不参与职位匹配。职位筛选只看职位名称、JD 实际语言和技术关键词。
+国家、地点和发布时间只决定搜索范围，不参与职位匹配。没有 `locations` 时，搜索范围是整个配置国家；日报按职位页面实际出现的城市分组。职位筛选只使用已配置的维度：职位名称、JD 语言、技术关键词、工作模式、雇佣类型、职级（启用时）和直招要求（启用时）。
 
 ## 2. 使用 OpenCode 搜索 LinkedIn
 
@@ -30,10 +33,11 @@ Job Hunter 是一个**本地运行、由 OpenCode 驱动的 LinkedIn 职位搜�
 **你只需要和 Primary Agent 交互，不需要手动选择 Skill。** 它会根据任务自动加载对应能力。查找职位时，它会加载 `job-discovery`，并执行：
 1. 读取唯一配置文件 `job-hunter.config.json`。
 2. 检查当前 OpenCode 环境实际可用的浏览器工具。
-3. 根据国家、地点、职位名称和发布时间在 LinkedIn Jobs 中搜索。
-4. 打开职位详情并检查 JD，不只依赖搜索结果摘要。
-5. 按配置的维度筛选职位。
-6. 将匹配和需要复核的职位保存到当天的 Markdown 日报。
+3. 在 LinkedIn Jobs 的 AI 搜索中直接使用 `jobSearchPrompt`（原样，不改写）作为唯一检索语句。
+4. 在 LinkedIn 筛选栏中主动应用配置：发布日期（由 `lookbackHours` 换算）、雇佣类型、工作模式、职级（启用时），并确认已生效；不会只依赖 prompt 文字。
+5. 打开职位详情并检查 JD，不只依赖搜索结果摘要。
+6. 按配置的维度筛选职位。
+7. 将匹配和需要复核的职位保存到当天的 Markdown 日报。
 
 日报位置：
 
@@ -45,11 +49,16 @@ Job Hunter 是一个**本地运行、由 OpenCode 驱动的 LinkedIn 职位搜�
 
 | 维度 | 规则 |
 |---|---|
-| Job Title | 支持常见职位名称变体；Senior、Mid-level、Junior 等级别不作为额外淘汰条件 |
+| Job Title | 支持常见职位名称变体；只有配置了 `seniority.include` 时职级词才参与筛选 |
 | JD Language | 识别 JD 实际使用的语言，不根据国家或网页界面语言推断 |
 | Technical Keywords | 在 JD 中查找配置关键词，支持常见大小写和明确别名 |
 | Work Mode | 与 `workModes` 比对；该字段缺失、为空或三种全配时不生效 |
 | Employment Type | 与 `employmentTypes` 比对；该字段缺失、为空或全部列出时不生效 |
+| Seniority | 与 `seniority.include` 比对；缺失、为空或全部列出时不生效 |
+| Direct Employer | `excludeRecruiters` 为 `true` 时排除确认的猎头/中介职位；证据不足进复核 |
+| Posting Validity | 打开页面后的有效性校验：跳过 404、已关闭或“不再接受申请”的职位并单独计数 |
+
+运行时会先在结果卡片上做一次快速预筛：标题明显不属于目标岗位族、或明显超出配置地理范围的职位不打开详情页；标题模糊、被截断、多岗位或不确定时仍会打开。预筛只在运行汇总中计数，不进入排除表。
 
 结果分为：
 - `matched`：所有生效维度均确认匹配。
@@ -58,7 +67,7 @@ Job Hunter 是一个**本地运行、由 OpenCode 驱动的 LinkedIn 职位搜�
 
 JD 缺失、过短、被截断或无法访问时，不要猜测，标记为 Review。
 
-不按工作年限、职级、薪资、签证、候选人语言能力、行业或架构经验额外过滤职位。不计算加权分数，也不对职位进行候选人匹配排名。
+不按工作年限、薪资、签证、候选人语言能力、行业或架构经验额外过滤职位；职级只有在 `seniority.include` 配置后才参与筛选。不计算加权分数，也不对职位进行候选人匹配排名。
 
 ## 4. 第二阶段：面试准备
 

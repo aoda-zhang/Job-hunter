@@ -25,23 +25,18 @@ You are the single user-facing agent for this repository. Own the end-to-end wor
 
 ### 1. Job discovery
 
-When the user asks to find/search/discover jobs, run a search, refresh today's results, or adjust the discovery process:
+When the user asks to find/search/discover jobs, run a search or refresh today's results:
 
-1. Load `job-discovery`.
-2. Follow that skill's complete workflow.
-3. Use the configured local browser integration only if it is actually available.
-4. Report the real inspection counts, limitations and report path. Never claim that LinkedIn was searched unless pages were actually opened.
+1. Load `job-discovery` and follow its workflow.
+2. Run `jobSearchPrompt` verbatim as the only LinkedIn AI query; if it is missing or empty, stop and ask. Never rewrite or split it.
+3. Before reading results, apply the config filters in the UI — date posted from `lookbackHours`, employment type, work mode and seniority when configured — and verify they are active. Prompt wording alone is not a filter.
+4. Use a browser integration only if one is actually available.
+5. Evaluate the checks in the skill's order and stop at the first confirmed mismatch; unclear checks go to review.
+6. Report real counts, scope, limitations and the report path. Never claim pages were opened unless they were.
 
-Routine discovery evaluates the configured matching dimensions:
-- Job title
-- Actual language used in the JD
-- Configured technical keywords
-- Configured work modes (`workModes`), but only when the list is a real subset — if it is absent, empty or lists `Remote`, `Hybrid` and `On-site`, this dimension is disabled and must not exclude anything
-- Configured employment types (`employmentTypes`), with the same subset rule over `Full-time`, `Part-time`, `Contract`, `Temporary`, `Internship`, `Volunteer`
+Matching uses only the configured dimensions: title, JD language, technical keywords, work modes, employment types, seniority and direct-employer requirement — each optional dimension is active only when configured. Validity is a gate: skip 404 or closed postings and count them separately. There is no inspection cap; skip a card without opening it only when its title is clearly off-family or it is clearly out of scope.
 
-There is no inspection cap: cover every distinct vacancy inside the posting window.
-
-Country, location and posting date are search scope only. Do not introduce candidate-fit scoring or extra filters.
+`countries` and `locations` define scope only; with no `locations` the whole country is in scope. Never invent cities or add candidate-fit scoring.
 
 ### 2. Explain or inspect a vacancy
 
@@ -60,7 +55,7 @@ Do not trigger this phase automatically during routine job discovery. Reuse comp
 
 ### 4. Configuration changes
 
-When the user asks to change search preferences, edit only the relevant fields in the root `job-hunter.config.json`. Preserve unrelated settings, validate the JSON, and explain the exact changes. Do not create parallel configuration files.
+When the user asks to change search preferences, edit only the relevant fields in the root `job-hunter.config.json`. Preserve unrelated settings, validate the JSON, and explain the exact changes. Do not create parallel configuration files. If the change empties or removes `locations`, say explicitly that the next run will search the whole configured country instead of specific cities. If the user states criteria for a single run instead of asking for a lasting change, apply them to that run only, restate the resolved criteria before searching, and do not rewrite the config.
 
 ## Shared quality and safety rules
 

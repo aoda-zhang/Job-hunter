@@ -1,6 +1,6 @@
 ---
 name: job-discovery
-description: Search LinkedIn vacancies with the local OpenCode browser, inspect real job descriptions, filter only by job title, JD language, technical keywords and configured work modes, and save a daily Markdown report.
+description: Search LinkedIn vacancies with the local OpenCode browser, inspect real job descriptions, filter only by job title, JD language, technical keywords, configured work modes, employment types, optional seniority and direct-employer requirement, verify each posting is still open, and save a daily Markdown report.
 ---
 
 # LinkedIn Job Discovery
@@ -20,97 +20,81 @@ If `job-hunter.config.json` does not exist:
 
 All settings are top-level fields:
 
-- `countries`, `locations`: LinkedIn search scope.
+- `countries`: country-level scope boundary for the run. Required. Used to validate results and describe the scope; it does not build the search query.
+- `locations`: optional city-level refinement of `countries`; when absent or empty the whole country is in scope.
 - `workModes`: accepted workplace types (`Remote`, `Hybrid`, `On-site`). Optional.
 - `employmentTypes`: accepted employment types (`Full-time`, `Part-time`, `Contract`, `Temporary`, `Internship`, `Volunteer`). Optional.
+- `seniority.include`: accepted levels (`Junior`, `Mid-level`, `Senior`, `Lead`). Optional; disabled when absent, empty or listing every level.
+- `excludeRecruiters`: when `true`, exclude postings from staffing and recruiting agencies that hire for a third-party client. Optional; absent or `false` disables it.
 - `lookbackHours`: posting window that defines the search scope.
 - `sources`: configured source list; currently LinkedIn.
 - `sortBy`: how to order matched rows inside each city — currently `companySize`; omit for discovery order.
 - `sortDirection`: `asc` (default) or `desc`.
-- `jobTitles.include`: target job-title variants.
+- `jobSearchPrompt`: **required** natural-language search request for LinkedIn's AI job search. It is the only search query and is used verbatim.
+- `jobTitles.include`: target job-title variants. Used for matching and the card-level skip, never for building the query.
 - `jdLanguages.include`: accepted JD languages.
+- `jdLanguages.acceptGermanJdWithEnglishWorkingLanguage`: optional boolean. When `true`, a German-language JD still matches if it explicitly states that English is the working, team or company language.
 - `technicalKeywords.include` and `technicalKeywords.matchMode`: technology terms and matching mode.
 
 Do not expect or add a `search` wrapper. Do not create another config file or ask the user to duplicate these values elsewhere.
 
-Only job title, actual JD language, technical keywords and the configured work modes are matching filters. Country, location and posting date are search scope, not candidate-fit criteria.
+If `jobSearchPrompt` is missing, empty or whitespace, stop and ask the user to write one natural-language search request. Do not build a query from `countries`, `locations` or `jobTitles.include`.
 
-## 2. Search LinkedIn using the available browser
+### Search scope resolution
 
-First inspect which browser-control tools are actually available in this OpenCode session. Use the available configured browser integration; do not assume a tool name or claim browser access that is not present.
+Resolve the location scope before searching:
 
-- Search LinkedIn Jobs using the configured countries, locations, title variants and posting window.
-- Search title variants separately when needed so that one broad query does not hide relevant roles.
-- Apply LinkedIn location and date-posted filters where the interface supports them. Treat these as search refinements, not additional match criteria.
-- Read the workplace type from the result card or the vacancy page (LinkedIn renders it as `Remote`, `Hybrid` or `On-site`). Do not try to encode work mode in the search URL: the legacy `f_WT` parameter is dropped by the current AI search page, and clicking the `Remote` filter chip replaces the city scope with a country-wide remote search.
-- Employment type is not shown on result cards, and the legacy `f_JT` parameter is dropped as well. Read it from the vacancy page after opening it.
-- Open each potentially relevant vacancy and inspect the actual job description. Search-result snippets alone are insufficient to confirm a match.
-- Inspect **every** distinct vacancy inside the configured posting window. There is no inspection cap: keep paginating each query until LinkedIn returns no further results within the window, and deduplicate collected URLs before opening pages so nothing is inspected twice.
-- Record the direct LinkedIn job URL and prefer its canonical job page.
-- If the same vacancy appears more than once, keep one record and note alternate URLs only when useful.
-- If LinkedIn requires login and the current browser session is not authenticated, stop at that access boundary and report it. Never ask the user for passwords, cookies or session tokens.
-- Do not bypass login controls, CAPTCHAs, rate limits or other access restrictions.
-- Do not apply for jobs, message recruiters, save jobs, follow companies, create accounts or change account settings.
+1. `countries` must contain at least one non-empty entry. If it is missing, empty or contains only blank strings, stop and ask the user to add a country. Do not guess one.
+2. If `locations` contains at least one non-empty entry, the run's scope is limited to those country × city combinations; results clearly elsewhere are out of scope.
+3. If `locations` is absent, empty or contains only blank strings, the scope is the **entire configured country**. For example, `countries: ["Germany"]` without `locations` means all of Germany — not a default city and not a silent narrowing.
+4. Never silently narrow or widen the resolved scope. State the resolved scope in the final chat summary when it is nationwide, and say plainly that the whole country was in scope.
 
-If no browser-control tool is available, say clearly that browser automation is not configured in this OpenCode environment. Do not pretend to have searched LinkedIn. You may provide the user with search queries to run manually, but do not create a report containing fabricated results.
+Only job title, actual JD language, technical keywords, configured work modes, employment types, optional seniority and the optional direct-employer requirement are matching filters. Country, location and posting date are search scope, not candidate-fit criteria. Posting validity is a gate, not a match dimension.
 
-## 3. Inspect and classify each vacancy
+If the user states search criteria in the chat for one run, restate the effective criteria before searching and apply them to that run only. Do not silently persist chat-level criteria into the config; write a setting to `job-hunter.config.json` only when the user asks for a lasting change.
 
-Inspect the full JD whenever accessible. Evaluate the following dimensions independently and record concise evidence for each.
+## 2. Search LinkedIn
 
-### A. Job title
+Check which browser-control tools exist. If none are available, stop and say so; never pretend to have searched.
 
-Compare the vacancy title with `jobTitles.include` using semantic role-family matching and common wording variants (for example, Frontend Developer and Frontend Engineer).
+1. Open LinkedIn Jobs' AI search, enter `jobSearchPrompt` **verbatim** and submit it once. Do not rewrite, split, translate or append cities. If the prompt is missing or empty, stop and ask for it.
+2. Apply the config filters in the UI using the rules below, then verify they are active.
+3. Paginate until results fall outside `lookbackHours`. Deduplicate canonical URLs before opening pages; there is no inspection cap.
+4. Skip a card without opening it only when its title clearly names a different function (for example sales, marketing, finance, HR, design or data analysis) and contains none of the configured role nouns or clear synonyms, or when the card is clearly outside the configured `countries`/`locations`. Everything ambiguous, truncated, localized or generic gets opened. This is the only allowed skip.
+5. Open the remaining vacancies, prefer the canonical job URL, and keep one record per vacancy.
 
-Seniority wording such as Senior, Mid-level or Junior is not an additional rejection rule. Do not require exact title equality. A clearly different role family is a mismatch.
+### Apply config filters in the UI
 
-### B. JD language
+Text inside `jobSearchPrompt` is not a filter: LinkedIn does not reliably enforce "24 hours", "full-time" or similar wording written in the prompt. After submitting the prompt and before paginating, set the filters in LinkedIn's filter bar:
 
-Identify the language actually used in the job description. Do not infer it from the country, company headquarters or LinkedIn interface language.
+1. **Date posted** — map `lookbackHours`: ≤24 → `Past 24 hours`; ≤168 → `Past week`; ≤720 → `Past month`; larger → no date filter. Pick the closest bucket that fully covers the window, never a narrower one. Still check each posting's date against `lookbackHours` when opening it.
+2. **Employment type** — when `employmentTypes` is a real subset, open the Employment type filter and check exactly those labels (`Full-time`, `Part-time`, `Contract`, `Temporary`, `Internship`, `Volunteer`).
+3. **Work mode** — when `workModes` is a real subset of `Remote` / `Hybrid` / `On-site`, select the matching filter.
+4. **Seniority** — only when `seniority.include` is configured and the UI labels map unambiguously; otherwise skip the UI filter and judge on the page.
+5. **Location** — set the configured country, and cities only when `locations` is non-empty, if a location filter is available.
 
-Compare it with `jdLanguages.include`. If the JD is missing, too short, mixed, truncated or ambiguous, mark the language check `unknown`; do not guess.
+Do not add filters that are not in the config, such as salary, company, Easy Apply or applicant count. Use the visible filter controls; URL parameters like `f_TPR` and `f_JT` may be dropped by the AI search page.
 
-### C. Technical keywords
+Verify the filters show as checked or active before reading results. If the page resets them after a re-submit, apply them again. If a filter cannot be applied, say so and fall back to reading that field on each posting; never assume the prompt filtered it.
 
-Search the JD text case-insensitively for the configured terms. Recognize clear aliases and spelling variants, for example:
-- JS / JavaScript
-- TS / TypeScript
-- NodeJS / Node.js
-- ReactJS / React
+If LinkedIn requires login, shows a CAPTCHA or blocks the run, stop at that boundary and report it. Never ask for credentials, never bypass access controls, and never apply, message, save or follow anything.
 
-Follow `technicalKeywords.matchMode` exactly:
-- `any`: at least one configured keyword must be found.
-- `all`: every configured keyword must be found.
+## 3. Inspect and classify
 
-Do not add unconfigured technologies as mandatory filters. If the JD is inaccessible or truncated such that absence cannot be established, mark this check `unknown`, not mismatch.
+Open the page and confirm the posting is still open. Then evaluate the checks below **in order and stop at the first confirmed mismatch**; do not keep reading a vacancy that already fails. If a check is unclear after a quick look, mark it `unknown` and move on — do not re-open the page or browse elsewhere to resolve it.
 
-### D. Work mode
+0. **Posting validity** — 404, redirect away from the job, or `No longer accepting applications` / `This job is no longer available` / `Bewerbung nicht mehr möglich` → skip, count as expired or closed, do not classify.
+1. **Job title** — same role family as `jobTitles.include`. The page title wins over the card title.
+2. **Poster type** — active only when `excludeRecruiters` is `true`. Judge from the posting page only: a known staffing firm, `our client` / `im Auftrag unseres Kunden`, or an agency apply portal. A consultancy hiring for its own projects is an employer. Do not open the company page just for this; unclear → `unknown`.
+3. **JD language** — in `jdLanguages.include`. If `jdLanguages.acceptGermanJdWithEnglishWorkingLanguage` is `true` and a German JD explicitly names English as the working, team or company language → match; record that phrase. Mixed, short or truncated → `unknown`.
+4. **Technical keywords** — follow `technicalKeywords.matchMode` (`any` / `all`) and accept common aliases (JS/JavaScript, TS/TypeScript, NodeJS/Node.js, ReactJS/React); with `any`, stop scanning once one keyword is found.
+5. **Work mode** — only when `workModes` is a real subset of `Remote` / `Hybrid` / `On-site`. Missing → `unknown`.
+6. **Employment type** — only when `employmentTypes` is a real subset. Missing → `unknown`.
+7. **Seniority** — only when `seniority.include` is a real subset of `Junior` / `Mid-level` / `Senior` / `Lead`. Use the title or explicit level wording, never a bare "5+ years". Missing → `unknown`.
 
-Read the workplace type shown on the result card or vacancy page (`Remote`, `Hybrid`, `On-site`). Compare it with `workModes`:
+Disabled checks are skipped. Confirmed mismatch → `not_matched`, stop. No mismatch but any `unknown` → `review`. Otherwise `matched`.
 
-- If `workModes` is absent, empty, or lists all three types, there is **no work-mode constraint** — this dimension never excludes anything.
-- Otherwise only the listed types are accepted. A vacancy whose workplace type is not listed is a confirmed mismatch.
-- If neither the card nor the page states a workplace type, mark this check `unknown`; never guess from the JD wording alone unless the JD states it explicitly.
-
-### E. Employment type
-
-Read the employment type from the vacancy page (`Full-time`, `Part-time`, `Contract`, `Temporary`, `Internship`, `Volunteer`). It is not shown on the result cards and the legacy `f_JT` URL parameter is dropped by the current AI search page, so this can only be decided after opening the vacancy.
-
-- If `employmentTypes` is absent, empty, or lists every known type, there is **no employment-type constraint** — this dimension never excludes anything.
-- Otherwise only the listed types are accepted. A vacancy whose employment type is not listed is a confirmed mismatch.
-- If the page states no employment type, mark this check `unknown`; do not infer it from the title or the JD wording.
-
-### Overall classification
-
-- `matched`: all applicable checks are confirmed matches. A check that is disabled by configuration (see D) is not counted.
-- `review`: no check is a confirmed mismatch, but at least one check is unknown.
-- `not_matched`: at least one check is a confirmed mismatch.
-
-Keep all `matched` and `review` vacancies in the report. Exclude confirmed `not_matched` vacancies from the main report, but include their count in the run summary.
-
-Never rank vacancies, calculate weighted scores or produce Strong/Good Match labels.
-
-Do not filter by candidate years of experience, seniority, salary, visa or work authorization, candidate language proficiency, industry, architecture, company size or any other candidate-profile criterion.
+Keep `matched` and `review` in the report; exclude `not_matched` from the main report. Never rank, score or label fit. Do not filter on years, salary, visa, candidate language proficiency, industry, architecture or company size. Record only facts visible on the page; never infer a missing field.
 
 ## 4. Follow the daily report reference
 
@@ -130,19 +114,7 @@ Create the parent directory if needed. If today's report already exists, merge n
 
 ### Cross-day repeats
 
-Repeating vacancies are expected, especially when `lookbackHours` exceeds 24. Before writing today's report, read the existing files in `reports/daily/` for the previous 7 local dates and build:
-
-- the set of canonical URLs that appeared in a `matched` or `review` row;
-- the set of company + normalised title + city triples from those rows.
-
-Then:
-
-- A vacancy whose URL already appeared is **still included** in today's report. Append `[已报 MM-DD]` to its note, using the earliest date found. Never drop the row, never move it to the excluded table, and never change its classification.
-- A vacancy whose company + normalised title + city matches a previous row but whose URL differs is treated as a possible repost. Keep it as its own row and append `[疑似重发 MM-DD]`. Do not merge or suppress it.
-- Never deduplicate against previously excluded vacancies: a vacancy rejected earlier must be re-evaluated if the configuration or the posting changed. Excluded rows therefore need no history.
-- If no earlier reports exist, or a file is unreadable, skip that source silently.
-
-This is annotation only. It must never reduce the number of inspected vacancies or hide a posting the current run actually found.
+Before writing today's report, read the previous 7 daily reports and collect the canonical URLs that appeared in `matched` or `review` rows. If a URL already appeared, keep the row and append `[已报 MM-DD]` using the earliest date. Excluded rows are not used for this check. This is annotation only; it never reduces inspected vacancies.
 
 For each `matched` or `review` vacancy the reference format requires a single table row containing:
 - company (as shown on LinkedIn) and job title as posted;
@@ -154,7 +126,7 @@ For each `matched` or `review` vacancy the reference format requires a single ta
 
 Do not restate the configured checks as prose, do not paste long JD text, and do not describe responsibilities in narrative form. Brief evidence belongs in the excluded table's reason column or in the note column.
 
-Group matched entries by city. Within each city, order rows by company size using `sortBy` / `sortDirection`:
+Group matched entries by city. When the run is nationwide (no `locations`), the city comes from each vacancy page, so group by the cities actually found and follow the format reference for country-level or remote-only postings. Within each city, order rows by company size using `sortBy` / `sortDirection`:
 
 - `sortBy: "companySize"` sorts by the lower bound of the size range shown on the page (`11-50` → 11, `10001+` → 10001).
 - `sortDirection` defaults to `asc`; use `desc` for largest first.
@@ -167,7 +139,11 @@ Never sort by a candidate-fit score. Do not perform company research or prepare 
 
 At the end, state:
 - report path;
+- the resolved search scope, explicitly noting when it was nationwide (for example `全德国`) because `locations` was empty;
+- the exact `jobSearchPrompt` used;
 - number of distinct LinkedIn vacancies inspected;
+- number of result cards skipped before opening (off-family title or out of scope);
+- number of expired or closed postings skipped by the validity check;
 - confirmed matches;
 - items requiring manual review;
 - confirmed non-matches excluded;
