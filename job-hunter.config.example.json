@@ -1,42 +1,46 @@
 {
-  "countries": [
-    "Germany"
-  ],
+  "countries": ["America"],
   "locations": [
     "Munich",
     "Berlin",
     "Hamburg",
-    "Remote"
+    "Frankfurt am Main",
+    "Stuttgart",
+    "Cologne"
   ],
-  "lookbackHours": 72,
-  "workModes": [
-    "Remote",
-    "Hybrid",
-    "On-site"
-  ],
-  "employmentTypes": [
-    "Full-time",
-    "Part-time"
-  ],
-  "sources": [
-    "LinkedIn"
-  ],
+  "lookbackHours": 48,
+  "workModes": ["Remote", "Hybrid", "On-site"],
+  "employmentTypes": ["Full-time"],
+  "sources": ["LinkedIn"],
   "sortBy": "companySize",
-  "sortDirection": "asc",
+  "sortDirection": "dec",
   "jobTitles": {
     "include": [
+      "Frontend Engineer",
       "Senior Frontend Engineer",
+      "Frontend Developer",
       "Senior Frontend Developer",
-      "Frontend Platform Engineer",
+      "React Developer",
+      "Senior React Developer",
+      "web Developer",
+      "Senior web Developer",
+      "Senior Typescript Developer",
+      "Typescript Developer",
+      "Javascript Developer",
+      "Senior Javascript Developer",
+      "Software Engineer",
+      "Senior Software Engineer",
+      "React Engineer",
       "Senior React Engineer",
-      "Senior Full-Stack Engineer"
+      "Full-Stack Engineer",
+      "Full-Stack Developer",
+      "Full Stack Developer",
+      "Fullstack Developer",
+      "Fullstack Engineer"
     ]
   },
   "jdLanguages": {
-    "include": [
-      "English",
-      "German"
-    ]
+    "include": ["English"]
   },
   "technicalKeywords": {
     "include": [
@@ -45,7 +49,6 @@
       "JavaScript",
       "HTML",
       "CSS",
-      "Next.js",
       "Node.js",
       "NestJS",
       "Express",
