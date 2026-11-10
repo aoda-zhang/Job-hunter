@@ -5,7 +5,7 @@ description: Send the Job Hunter run summary or a manual email through the SMTP 
 
 # Email Notifications
 
-Use this skill only to send email. It never searches LinkedIn, rewrites the report, or edits the job index.
+Use this skill only to send email. It never searches job platforms, rewrites the report, or edits the job index.
 
 Before composing any email, read `.opencode/skills/email-notify/references/email-template.md`. It is the single source of truth for the subject, body layout, required counters and forbidden content. Do not invent extra fields.
 
@@ -62,13 +62,13 @@ The demo domain can send **only to the email address registered with the Mailtra
 ## Workflow
 
 1. Read `notifications.email`; stop silently when disabled and tell the user only if they asked for an email.
-2. Read `references/email-template.md` before composing anything.
+2. Read `references/email-template.md` and `preferredReportLanguage` from the config before composing anything.
 3. Collect the facts from the run:
    - report path `reports/daily/YYYY-MM-DD.md`;
-   - the report's `运行汇总` table for **day totals** (检查 = `成功读取 JD`, 可投递 = `命中`, 复核 = `需人工复核`, 排除 = `确认不符（已排除）`);
+   - the report's `Run summary` table for **day totals** (inspected = `JDs read successfully`, matched = `Matched`, review = `Needs manual review`, excluded = `Confirmed non-match (excluded)`);
    - the last entry of `reports/runs/YYYY-MM-DD.jsonl` for **this run's new counts** and timing (`runAt`, `finishedAt`, `durationSeconds`, `postingsInspected`, `matched`, `review`, `excluded`, `appliedSkipped`, `stopReason`);
    - scope and limitations.
-4. Compose the summary exactly as the template defines. Subject uses the **day** matched count. Body uses day totals plus this run's new counts. Summary only.
+4. Compose the summary exactly as the template defines, with the body in `preferredReportLanguage` (default `English`) and the subject ASCII. Subject uses the **day** matched count. Body uses day totals plus this run's new counts. Summary only.
 5. Send through the helper, passing the body on stdin:
 
 ```bash

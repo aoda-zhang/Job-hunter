@@ -1,32 +1,20 @@
 {
-  "countries": [
-    "Germany"
-  ],
+  "countries": ["Germany"],
   "locations": [],
   "lookbackHours": 48,
-  "workModes": [
-    "Remote",
-    "Hybrid",
-    "On-site"
-  ],
-  "employmentTypes": [
-    "Full-time"
-  ],
+  "workModes": ["Remote", "Hybrid", "On-site"],
+  "employmentTypes": ["Full-time"],
   "seniority": {
     "include": []
   },
   "excludeRecruiters": false,
-  "sources": [
-    "LinkedIn"
-  ],
+  "sources": ["LinkedIn"],
   "reportRepo": "",
   "notifications": {
     "email": {
       "enabled": false,
       "backend": "smtp",
-      "to": [
-        "you@example.com"
-      ],
+      "to": ["you@example.com"],
       "from": "you@example.com",
       "smtp": {
         "host": "smtp.gmail.com",
@@ -38,6 +26,7 @@
     }
   },
   "sortBy": "companySize",
+  "preferredReportLanguage": "English",
   "sortDirection": "desc",
   "jobSearchPrompt": "Find English-speaking software engineering jobs across all of Germany, posted in the last 48 hours.",
   "jobTitles": {
@@ -47,28 +36,11 @@
       "Frontend Developer",
       "Senior Frontend Developer",
       "React Developer",
-      "Senior React Developer",
-      "web Developer",
-      "Senior web Developer",
-      "Senior Typescript Developer",
-      "Typescript Developer",
-      "Javascript Developer",
-      "Senior Javascript Developer",
-      "Software Engineer",
-      "Senior Software Engineer",
-      "React Engineer",
-      "Senior React Engineer",
-      "Full-Stack Engineer",
-      "Full-Stack Developer",
-      "Full Stack Developer",
-      "Fullstack Developer",
-      "Fullstack Engineer"
+      "Senior React Developer"
     ]
   },
   "jdLanguages": {
-    "include": [
-      "English"
-    ],
+    "include": ["English"],
     "acceptGermanJdWithEnglishWorkingLanguage": false
   },
   "technicalKeywords": {

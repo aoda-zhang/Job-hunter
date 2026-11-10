@@ -32,7 +32,7 @@ opencode run \
   --auto \
   --archived \
   --title "Job Hunter $(date +%F)" \
-  "运行今天的职位搜索：严格按 job-hunter.config.json 执行 job-discovery 流程；完成后更新 reports/job-index.json 和 reports/runs/$(date +%F).jsonl；如果 notifications.email.enabled 为 true，加载 email-notify 技能并发送运行摘要；最后报告日报路径、命中数、复核数、已投递跳过数、疑似重复数，以及 LinkedIn 结果数、翻页数和停止原因。" \
+  "Run today's job search: follow the job-discovery flow exactly as job-hunter.config.json specifies; when finished update reports/job-index.json and reports/runs/$(date +%F).jsonl; if notifications.email.enabled is true, load the email-notify skill and send the run summary; finally report the report path, matched count, review count, applied-skipped count, possible-duplicate count, and per-source result counts, pages opened and stop reason." \
   >> "$LOG" 2>&1
 exit_code=$?
 print -r -- "=== $(date) exit $exit_code ===" >> "$LOG"

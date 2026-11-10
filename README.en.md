@@ -4,7 +4,7 @@
 
 Each user has different search preferences, so the personal config is not tracked. First copy `job-hunter.config.example.json` to `job-hunter.config.json`, then customize it. The personal `job-hunter.config.json` is ignored by Git; only the example template is committed.
 
-Job Hunter is a **local LinkedIn job discovery harness powered by OpenCode**. OpenCode uses browser tools already configured in your local environment to search LinkedIn, inspect real vacancy pages and job descriptions, apply the configured filters, and save a daily Markdown report.
+Job Hunter is a **local job discovery harness powered by OpenCode**. OpenCode uses browser tools already configured in your local environment to search the platforms in `sources`, inspect real vacancy pages and job descriptions, apply the configured filters, and save a daily Markdown report.
 
 No application code, backend, database, cloud service, CLI or CI pipeline is required.
 
@@ -19,25 +19,26 @@ First copy `job-hunter.config.example.json` to `job-hunter.config.json`, then cu
 - `employmentTypes`: accepted employment types (`Full-time`, `Part-time`, `Contract`, `Temporary`, `Internship`, `Volunteer`); listing all of them disables this filter.
 - `seniority.include`: accepted levels (`Junior`, `Mid-level`, `Senior`, `Lead`); absent, empty or listing every level disables this filter.
 - `excludeRecruiters`: when `true`, exclude postings from staffing or recruiting agencies that hire for a third-party client; unclear cases go to review instead of being excluded.
-- `sources`: configured source; currently LinkedIn.
+- `sources`: job platforms to search, in order. Dedicated references ship for `LinkedIn`, `Indeed` and `Glassdoor`; a platform without a reference is skipped, not guessed — add one from `references/_template.md`.
 - `reportRepo`: optional Git URL where the daily report is pushed after each run.
 - `jobTitles.include`: target job-title variants.
 - `sortBy`: how matched rows are ordered inside each city (currently `companySize`); `sortDirection`: `asc` / `desc`.
+- `preferredReportLanguage`: language of the daily report, e.g. `English`, `German`, `Chinese`; defaults to `English`.
 - `jdLanguages.include`: accepted JD languages. `jdLanguages.acceptGermanJdWithEnglishWorkingLanguage`: when `true`, a German-language JD still matches if it explicitly states that English is the working, team or company language.
 - `technicalKeywords.include`: technologies to find in the JD.
 - `technicalKeywords.matchMode`: `any` means at least one keyword; `all` means every keyword.
 
 Country, location and posting date define search scope only. Without `locations`, the scope is the whole configured country and the report groups matched rows by the cities shown on the vacancy pages. Vacancy filtering uses exactly job title, actual JD language and technical keywords.
 
-## 2. Search LinkedIn with OpenCode
+## 2. Search with OpenCode
 
 Open this repository locally in OpenCode, select the **Job Hunter** primary agent (press `Tab` to switch agents if needed), and simply ask it to find suitable jobs.
 
-You interact with the Primary Agent only. It routes the request and loads `job-discovery` automatically. The skill reads the single config, checks which browser tools are actually available, searches LinkedIn Jobs with `jobSearchPrompt` verbatim, applies the configured LinkedIn UI filters (date posted from `lookbackHours`, employment type, work mode, seniority when configured), opens vacancy pages, inspects the JD, applies the configured matching filters and saves the daily report to:
+You interact with the Primary Agent only. It routes the request and loads `job-discovery` automatically. The skill reads the single config, checks which browser tools are actually available, searches each configured platform with `jobSearchPrompt` verbatim, applies that platform's configured UI filters (date posted from `lookbackHours`, employment type, work mode, seniority when configured), opens vacancy pages, inspects the JD, applies the configured matching filters and saves the daily report to:
 
 `reports/daily/YYYY-MM-DD.md`
 
-You do not need to run an npm command, initialize a database or configure CI. If browser automation is unavailable in the current OpenCode environment, the skill must say so rather than pretend it searched LinkedIn.
+You do not need to run an npm command, initialize a database or configure CI. If browser automation is unavailable in the current OpenCode environment, the skill must say so rather than pretend it searched.
 
 ## 3. Matching filters
 
@@ -74,7 +75,7 @@ Phase 2 is separate from daily LinkedIn discovery and never runs automatically.
 ## 5. Agent and skills
 
 - `.opencode/agents/job-hunter.md` — the Primary Agent and the single user-facing entry point. It routes requests, loads the appropriate skill and coordinates the workflow.
-- `.opencode/skills/job-discovery/SKILL.md` — Phase 1: LinkedIn vacancy discovery and daily reporting.
+- `.opencode/skills/job-discovery/SKILL.md` — Phase 1: vacancy discovery and daily reporting.
 - `.opencode/skills/company-research/SKILL.md` — Phase 2: company research, role analysis and interview preparation.
 
 The skills are capabilities used by the Primary Agent, not separate workflows you need to coordinate manually.

@@ -1,29 +1,30 @@
-# 职位索引、去重与运行审计
+# Job index, deduplication and run audit
 
-本文档定义 Job Hunter 的本地记忆层。`job-discovery` skill 每次运行都必须遵守；日报结构仍以 `daily-report-format.md` 为准。
+This document defines Job Hunter's local memory layer. The `job-discovery` skill must follow it on every run; the daily report structure still follows `daily-report-format.md`.
 
-## 1. 文件
+## 1. Files
 
-| 文件 | 作用 | 是否提交 |
+| File | Purpose | Committed |
 |---|---|---|
-| `reports/job-index.json` | 跨日职位索引与投递记录 | 否，Git 忽略，只留本地 |
-| `reports/runs/YYYY-MM-DD.jsonl` | 每次运行的审计日志，一个运行一行 | 否，Git 忽略，只留本地 |
+| `reports/job-index.json` | Cross-day job index and application record | No — Git-ignored, local only |
+| `reports/runs/YYYY-MM-DD.jsonl` | Run audit log, one line per run | No — Git-ignored, local only |
 
-不要把这两个文件推送到 `reportRepo`。`reportRepo` 只接收当天日报。
+Never push these two files to `reportRepo`. `reportRepo` receives only the day's daily report.
 
-## 2. 职位索引 schema
+## 2. Job index schema
 
 ```json
 {
   "version": 1,
   "updatedAt": "2026-11-10",
   "jobs": {
-    "4487182341": {
+    "LinkedIn:4487182341": {
       "jobId": "4487182341",
+      "source": "LinkedIn",
       "url": "https://www.linkedin.com/jobs/view/4487182341/",
       "company": "immobilien.de",
       "title": "Senior Software Engineer",
-      "city": "柏林",
+      "city": "Berlin",
       "firstSeen": "2026-11-08",
       "lastSeen": "2026-11-10",
       "firstReportedOn": "2026-11-08",
@@ -35,54 +36,57 @@
 }
 ```
 
-字段规则：
+Field rules:
 
-- 键必须是 LinkedIn job ID（canonical URL 里的数字）。拿不到 job ID 时，才退回 canonical URL 作为键。
-- `status`：`matched` / `review` / `excluded` / `expired`，记录**最近一次**判定。
-- `firstSeen`：第一次打开该职位的日期。
-- `lastSeen`：最近一次打开或重新确认的日期。
-- `firstReportedOn`：第一次进入**命中表或复核表**的日期；从未进入过为 `null`。被排除的日期不算。
-- `appliedOn`：用户确认已投递的日期；未投递为 `null`。
-- `note`：可选，只写页面上可核实的事实，不写评价。
-- 更新时只改相关字段，保留未知字段；不要整体重写对象，不要改变其它条目。
+- Keys use `<source>:<jobId>`, e.g. `LinkedIn:4487182341`, `Indeed:7f3c9a1b2d4e5f60`. `source` must match the platform name in `sources`.
+- When the platform exposes no job ID, fall back to `source + canonical URL` as the key; one URL yields exactly one entry.
+- Bare job IDs in an older index are treated as LinkedIn. Keep their keys as they are; do not rewrite them in bulk.
+- `source`: the canonical platform name (`LinkedIn`, `Indeed`, `Glassdoor`), not a configured domain alias; this keeps `glassdoor.de` and `Glassdoor` from creating two entries.
+- `status`: `matched` / `review` / `excluded` / `expired`, recording the **most recent** decision.
+- `firstSeen`: the date the job was first opened.
+- `lastSeen`: the date it was most recently opened or re-confirmed.
+- `firstReportedOn`: the date it first entered the **matched or review table**; `null` if it never did. Excluded days do not count.
+- `appliedOn`: the date the user confirmed an application; `null` otherwise.
+- `note`: optional, verifiable facts from the page only, no judgment.
+- Update only the relevant fields and preserve unknown fields; never rewrite the whole object or touch other entries.
 
-索引不存在时创建；无法解析时先备份为 `reports/job-index.json.bak`，再重建空索引，并在本次运行的对话里说明。
+Create the index when missing. When it cannot be parsed, back it up to `reports/job-index.json.bak`, rebuild an empty index, and say so in the run's chat output.
 
-## 3. 读取顺序
+## 3. Read order
 
-1. 优先读 `reports/job-index.json`，它覆盖全部历史。
-2. 索引不存在时，读 `reports/daily/` 下此前 7 个本地日期的报告作为一次性 bootstrap，只恢复 URL、状态和首次出现日期。
-3. 两者都没有时，从空索引开始。
+1. Prefer `reports/job-index.json`; it covers all history.
+2. When the index is missing, read the previous 7 local dates under `reports/daily/` as a one-time bootstrap and recover only URLs, status and first-seen dates.
+3. When neither exists, start from an empty index.
 
-## 4. 去重与复用规则
+## 4. Deduplication and reuse rules
 
-**硬去重**：job ID 或 canonical URL 相同，视为同一职位。
+**Hard dedup**: the same job ID or canonical URL on one platform is the same job; an identical canonical URL across platforms is also treated as the same job.
 
-- 索引里 `appliedOn` 非空 → **不打开、不判定、不进入任何职位表**，只在运行汇总里计入「已投递（跳过）」。
-- 已存在且最近状态为 `matched` / `review` → 今天仍重新打开并判定（职位可能已关闭或要求变化），备注追加 `[已报 MM-DD]`，日期取 `firstReportedOn`。
-- 已存在但最近状态为 `excluded` / `expired` → 今天照常重新评估，不加 `[已报]`；若今天命中，把 `firstReportedOn` 设为今天。
+- `appliedOn` is set in the index → **do not open, do not judge, do not list in any job table**; count it only as "Already applied (skipped)".
+- Entry exists with latest status `matched` / `review` → still reopen and judge it today (it may have closed or changed), and append `[reported MM-DD]` to Notes using `firstReportedOn`.
+- Entry exists with latest status `excluded` / `expired` → re-evaluate today as usual, add no `[reported]` marker; if it matches today, set `firstReportedOn` to today.
 
-**软去重（疑似同岗不同 ID）**：同一岗位在 LinkedIn 上常有多个 job ID、多城市版本或双语版本。
+**Soft dedup (likely same role, different ID)**: the same role often has multiple job IDs, multi-city versions or bilingual versions on one platform, and is often listed on several platforms.
 
-- 比较键：`归一化公司名 + 归一化职位名 + 城市`。
-- 归一化：转小写；去掉标点、多余空格、`(m/w/d)`、`(f/m/d)`、`(all genders)` 一类性别标记；去掉公司法律后缀（GmbH、AG、SE、Inc、Ltd、LLC、GmbH & Co. KG）。
-- 不要删除 Senior / Junior / Lead 等职级词，也不要合并不同城市。
-- 命中软去重且 job ID 不同 → 在备注写 `⚠️ 疑似重复`；若对方 `appliedOn` 非空，写 `⚠️ 疑似已投 MM-DD`。
-- 只标注，不删除、不改判、不合并计数。
+- Comparison key: `normalized company + normalized title + city`. When comparing across platforms, **do not** include the platform name in the key.
+- Normalization: lowercase; strip punctuation, extra spaces and gender markers such as `(m/w/d)`, `(f/m/d)`, `(all genders)`; strip legal suffixes (GmbH, AG, SE, Inc, Ltd, LLC, GmbH & Co. KG).
+- Do not strip level words such as Senior / Junior / Lead, and do not merge different cities.
+- On a soft-dedup hit with a different job ID → write `⚠️ possible duplicate` in Notes; when the other posting has `appliedOn`, write `⚠️ possibly applied MM-DD`.
+- Annotate only — never delete, reclassify or merge counts.
 
-## 5. 投递登记
+## 5. Application recording
 
-触发：用户说「我投了 X」「这几个标记为已投递」，或明确给出已投递的职位。
+Trigger: the user says "I applied to X", "mark these as applied", or names the jobs explicitly.
 
-1. 定位职位：优先当天日报，其次历史报告，最后用 URL 或「公司 + 职位」匹配索引。
-2. 设置 `appliedOn` 为今天，保持 `status` 不变。
-3. 若该职位已出现在今天的日报里，在备注追加 `[已投 MM-DD]`；否则只更新索引。
-4. 无法唯一定位时只问一个澄清问题，不猜测、不批量标记。
-5. 不改变日报的计数与判定。
+1. Locate the job: prefer today's report, then historical reports, then the index by URL or "company + title".
+2. Set `appliedOn` to today and keep `status` unchanged.
+3. If the job already appears in today's report, append `[applied MM-DD]` to Notes; otherwise update the index only.
+4. When it cannot be identified uniquely, ask one clarifying question. Never guess and never mark a batch.
+5. Do not change the daily report's counts or decisions.
 
-## 6. 运行审计 schema
+## 6. Run audit schema
 
-路径：`reports/runs/YYYY-MM-DD.jsonl`（按本地日期分文件，一天多次运行就多行，只追加不覆盖）。
+Path: `reports/runs/YYYY-MM-DD.jsonl` (split by local date; several runs in one day append several lines, never overwrite).
 
 ```json
 {
@@ -90,15 +94,21 @@
   "finishedAt": "2026-11-10T10:02:00+01:00",
   "durationSeconds": 1920,
   "scope": { "countries": ["Germany"], "locations": [] },
+  "sources": ["LinkedIn"],
   "uiFilters": {
-    "datePosted": "Past 24 hours",
-    "employmentTypes": ["Full-time"],
-    "workModes": ["Remote", "Hybrid", "On-site"],
-    "seniority": null
+    "LinkedIn": {
+      "datePosted": "Past 24 hours",
+      "employmentTypes": ["Full-time"],
+      "workModes": ["Remote", "Hybrid", "On-site"],
+      "seniority": null
+    }
   },
-  "prompt": "…jobSearchPrompt 原文…",
-  "linkedinResultCount": 300,
+  "prompt": "…verbatim jobSearchPrompt…",
+  "resultsBySource": { "LinkedIn": 300 },
+  "resultCount": 300,
   "resultPagesOpened": 5,
+  "resultPagesBySource": { "LinkedIn": 5 },
+  "searchedBySource": { "LinkedIn": "completed" },
   "cardsSkipped": 0,
   "postingsInspected": 120,
   "expired": 0,
@@ -113,18 +123,20 @@
 }
 ```
 
-规则：
+Rules:
 
-- `runAt` 是**开始搜索**的时间，不是写报告的时间；`finishedAt` 是写完报告、索引和审计的时间；`durationSeconds` 是两者的整数秒差。
-- 三者都使用本地时区并带 UTC 偏移（如 `+08:00`）。无法确认时写 `null`，不估算。
-- 只记录浏览器会话能支撑的数字；无法确认写 `null`，不估算。
-- `linkedinResultCount` 取结果页显示的总数；页面不显示时写 `null`。
-- `stopReason` 用一句短语说明为什么停止翻页，例如 `results older than lookbackHours`、`no more pages`、`login required`、`cap reached`。
-- `limitations` 只写实际发生的限制（验证码、限流、筛选无法应用等），正常运行为空数组。
-- 同一天多次运行追加多行，不合并成一行。
-- 审计里的 `postingsInspected` / `matched` / `review` / `excluded` 都是**本次运行**的计数；日报「运行汇总」表是**当日累计**。发摘要邮件时两者都要用，不能混为一谈。
+- `runAt` is when the search **started**, not when the report was written; `finishedAt` is when the report, index and audit were finished; `durationSeconds` is their integer difference.
+- All three use the local time zone with a UTC offset (e.g. `+08:00`). Write `null` when unknown; never estimate.
+- Record only numbers the browser session can support; write `null` when unknown, never estimate.
+- `sources` records the platforms actually attempted, in configured order; `searchedBySource` marks each platform `completed` / `failed` / `skipped` (with the reason).
+- `uiFilters` is grouped by platform and records only the filters that platform actually offered; a platform without UI filters gets an empty object.
+- `resultsBySource` and `resultCount` come from the count the results page displays; write `null` when it shows none. Page counts go into `resultPagesBySource`; `resultPagesOpened` is the total. Older logs used `linkedinResultCount`, which equals today's `resultsBySource.LinkedIn` — read old data compatibly and never rewrite old lines.
+- `stopReason` is a short phrase explaining why paging stopped, e.g. `results older than lookbackHours`, `no more pages`, `login required`, `cap reached`.
+- `limitations` lists only limitations that actually occurred (CAPTCHA, rate limit, filter that could not be applied, …); empty on a normal run.
+- Several runs on one day append several lines; never merge them.
+- `postingsInspected` / `matched` / `review` / `excluded` are **this run's** counts; the daily report's run-summary table is the **day total**. The summary email needs both; never conflate them.
 
-## 7. 保留与清理
+## 7. Retention and cleanup
 
-- 不要自动删除索引条目或审计日志。
-- 用户要求导出、清理或重建时再操作，并先确认范围。
+- Never delete index entries or audit logs automatically.
+- Only export, clean or rebuild when the user asks, and confirm the scope first.

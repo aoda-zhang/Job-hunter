@@ -1,189 +1,197 @@
-# 每日报告格式规范
+# Daily report format
 
-本文档是 `reports/daily/` 下所有报告的**唯一格式基准**。`job-discovery` skill 在创建或更新任何日报前必须先读本文档；若本文档与 skill 正文或其它说明冲突，以本文档的结构为准，匹配逻辑仍以 skill 为准。
+This document is the **single format baseline** for every report under `reports/daily/`. The `job-discovery` skill must read it before creating or updating any daily report. If this document conflicts with the skill body or another note, this document wins on structure; the skill still wins on matching logic.
 
-## 文件位置与更新
+## File location and updates
 
-- 每个本地日历日一个文件：`reports/daily/YYYY-MM-DD.md`
-- 目录不存在时先创建
-- 当日文件已存在时**保留已有内容**，只追加新发现或补充新证据；不得覆盖、删除或悄悄降级此前已确认的条目
-- 去重键：LinkedIn 职位的 canonical URL
+- One file per local calendar day: `reports/daily/YYYY-MM-DD.md`
+- Create the directory if it does not exist
+- When today's file already exists, **keep existing content** and only append new findings or new evidence; never overwrite, delete or silently downgrade an entry that was already confirmed
+- Deduplication key: the job's canonical URL (within a platform and across platforms); when no canonical URL exists, fall back to `source + company + title + location` and flag a possible duplicate
 
-跨日记忆、投递记录和运行审计分别位于 `reports/job-index.json` 与 `reports/runs/YYYY-MM-DD.jsonl`，规则见 `job-index-and-audit.md`。它们不是日报的一部分，也不推送到 `reportRepo`。
+Cross-day memory, application records and the run audit live in `reports/job-index.json` and `reports/runs/YYYY-MM-DD.jsonl`; their rules are in `job-index-and-audit.md`. They are not part of the daily report and are never pushed to `reportRepo`.
 
-## 语言与呈现
+## Language and presentation
 
-- 全文使用**中文**（公司名、职位名、技术名词保留原文，不翻译）
-- 以**表格**为主要呈现形式，便于扫读
-- 不使用长段落复述 JD；不逐条贴 JD 全文
-- 不加匹配分数、排名、推荐等级、星级，也不做候选人画像评估
+- Write all human-readable text in `preferredReportLanguage` from `job-hunter.config.json`. Default to **English** when the field is absent, empty or unsupported, and say so in the final summary.
+- Translate the human-readable layer only: title, section headings, table headers, labels (e.g. `Not specified`, `All Germany`, `Exception note`), relative times (e.g. `2 days ago`) and annotation markers (e.g. `[reported MM-DD]`, `[applied MM-DD]`, `⚠️ possible duplicate`, `⚠️ possibly applied MM-DD`).
+- Do not translate company names, job titles, technical terms, posted keywords, URLs, dates in `YYYY-MM-DD` or `MM-DD`, or any key/field name from the job index and audit log.
+- The structure is fixed regardless of language: the same section order, table columns, column order and counts.
+- Use **tables** as the main presentation so the report is scannable
+- Do not restate long JD passages; do not paste full JDs
+- Do not add match scores, rankings, recommendation levels or star ratings, and do not evaluate the candidate profile
 
-## 章节顺序
+## Section order
 
-正文从标题行开始，直接进入表格，不设元数据表和搜索范围表：
+The body starts at the title line and goes straight into tables; no metadata table and no search-scope table:
 
 ```markdown
-# LinkedIn 每日职位发现 — YYYY-MM-DD
+# Daily Job Findings — YYYY-MM-DD
 ```
 
-1. 运行汇总
-2. 命中岗位
-3. 被排除岗位
-4. 待人工复核 —— **仅当有条目时输出，位于所有职位表之后**
-5. 异常说明 —— **仅当运行失败或大面积异常时输出，位于全篇最末**
+The title is part of the human-readable layer: translate `Daily Job Findings` into `preferredReportLanguage` and keep the ` — YYYY-MM-DD` suffix unchanged. The section names below are written in English for reference and are translated the same way.
 
-正常运行时只有前 3 节；第 4、5 节按条件出现，不得为凑格式而写「无」。
+1. Run summary
+2. Matched jobs
+3. Excluded jobs
+4. Needs manual review — **only when there are entries**, after all job tables
+5. Exception note — **only when the run failed or was largely unusable**, at the very end
 
-之后依次附「证据与一致性规则」「跨日重复与更新」，顺序固定。
+A normal run has only sections 1–3; sections 4 and 5 appear conditionally and must never be written as an empty "None".
 
-### 1. 运行汇总
+After that, append "Evidence and consistency rules" and "Cross-day repeats and updates", in that fixed order.
+
+### 1. Run summary
 
 ```markdown
-| 指标 | 数量 |
-|---|---:|
-| 打开的结果页 | N |
-| 卡片预筛排除（未打开详情页） | N |
-| 失效/已关闭（已跳过） | N |
-| 已投递（跳过，未打开） | N |
-| 打开的职位详情页 | N |
-| 成功读取 JD | N |
-| 命中 | N |
-| 需人工复核 | N |
-| 确认不符（已排除） | N |
-| 其中跨日重复 | N |
+| Metric | Value |
+|---|---|
+| Search sources | LinkedIn (list the platforms actually searched per `sources`) |
+| Result pages opened | N |
+| Cards skipped before opening | N |
+| Expired / closed (skipped) | N |
+| Already applied (skipped) | N |
+| Job detail pages opened | N |
+| JDs read successfully | N |
+| Matched | N |
+| Needs manual review | N |
+| Confirmed non-match (excluded) | N |
+| Of which cross-day repeats | N |
 ```
 
-- 只填浏览器会话能支撑的数字；无法确认时写「无法统计」，**不得估算**
-- 搜索结果卡片数 ≠ 打开的职位页数，不得混用
-- 「卡片预筛排除」只统计结果卡片上标题明显不属于目标岗位族、或明显不在配置国家/地点范围内、因而未打开详情页的职位；它们不进入排除表
-- 「失效/已关闭」只统计打开后发现 404、跳转离开职位页或明确停止招聘的链接；它们不进入排除表
-- 自检：命中 + 复核 + 排除 = 成功读取 JD 的页数
-- 「已投递」和「失效/已关闭」一样，不计入成功读取 JD 的页数；前者按索引判定，后者按页面判定
+- Only fill numbers the browser session can support; write `cannot determine` when unknown, and **never estimate**
+- Search-result card count ≠ opened job pages; never mix them
+- "Cards skipped before opening" counts only cards whose title clearly names a different role family, or that are clearly outside the configured country/location, and that were therefore not opened. They never appear in the excluded table
+- "Expired / closed" counts only links that turned out to be 404, redirected away from the job, or explicitly stopped accepting applications. They never appear in the excluded table
+- Self-check: matched + review + excluded = pages with a successfully read JD
+- "Already applied" and "Expired / closed" both stay out of that sum: the first is decided by the index, the second by the page
 
-### 2. 命中岗位
+### 2. Matched jobs
 
-按**城市**分组（`### 慕尼黑（13/30）` / `### 柏林（13/30）` / `### 汉堡（4/30）` …），城市内按**公司规模**排序，不按匹配度排序。
+Group by **city** (`### Munich (13/30)`, `### Berlin (13/30)`, `### Hamburg (4/30)` …), and order each city by **company size**, never by match quality.
 
-- 配置了 `locations` 时，小节标题使用配置的城市名。
-- `locations` 缺失或为空（全国搜索）时，城市取职位页面显示的地点，按实际出现的城市分组；页面只给出国家（如 `Germany`）或全国远程时，标题写 `### 全德国` 或 `### 全德国（Remote）`。不要为了套用旧标题而编造城市。
+- When `locations` is configured, use the configured city names as headings.
+- When `locations` is missing or empty (nationwide run), the city comes from each job page; group by the cities actually found. When a page shows only a country (e.g. `Germany`) or is nationwide remote, use `### All Germany` or `### All Germany (Remote)`. Never invent a city to fit an old heading.
 
-城市标题后的括号是该城市的**命中占比**：`该城市命中数/当日命中总数`。分母只算当日命中表里的行数，不含排除项和复核项；没有命中项的城市不出现在本节。
+The number in parentheses after a city heading is that city's **share of matches**: `matches in this city / total matches today`. The denominator counts only rows in today's matched table, excluding excluded and review rows. Cities without matches do not appear here.
 
-排序规则：
+Ordering rules:
 
-- 依据 `sortBy`（当前仅支持 `companySize`）与 `sortDirection`（`asc` / `desc`，默认 `asc`）
-- 规模取页面显示的区间，按**区间下限**比较：`11-50` → 11，`10001+` → 10001，`9,000` → 9000
-- 规模相同的保持发现顺序
-- `sortBy` 缺失或为未知值时，保持发现顺序
-- 排序后按最终展示顺序重排 `#` 列，并同步更新正文中的内部引用（如「与 #22 同一套 JD」）
+- Follow `sortBy` (currently only `companySize`) and `sortDirection` (`asc` / `desc`, default `asc`)
+- Company size uses the range shown on the page and compares the **lower bound**: `11-50` → 11, `10001+` → 10001, `9,000` → 9000
+- Rows with the same size keep discovery order
+- When `sortBy` is missing or unknown, keep discovery order
+- After sorting, renumber the `#` column sequentially in the final display order and update any internal references (e.g. "same JD as #22")
 
-每张表列固定：
+Fixed columns:
 
 ```markdown
-| # | 公司 | 规模 | 职位 | 模式 | 发布 | 命中关键词 | 备注 | 链接 |
+| # | Source | Company | Size | Title | Mode | Posted | Matched keywords | Notes | Link |
+|---|---|---|---|---|---|---|---|---|---|
+```
+
+Column rules:
+
+| Column | Rule |
+|---|---|
+| # | Sequential in final display order, after city grouping and sorting |
+| Source | Platform name from `sources`, e.g. `LinkedIn`, `Indeed`; add the domain when the name alone is ambiguous |
+| Company | The company field on the job page; when the poster ≠ the actual employer, put the poster here and the employer in Notes |
+| Size | The company size shown on the page, e.g. `51-200`, `9,000`, `10001+`; write `Not specified` when absent |
+| Title | Keep as published, including (m/f/d), (all genders) and similar suffixes; never put a pipe `|` inside a title, use `·` instead |
+| Mode | `On-site` / `Hybrid` / `Remote` as shown; when the page has no such field write `Not specified` and move the row to the review table; add ⚠️ and explain in Notes when it conflicts with the JD body |
+| Posted | Relative time (`2 days ago`, `19 hours ago`); mark reposts as `(reposted)` |
+| Matched keywords | Only **configured** terms that actually appear in the JD, comma-separated; never add unconfigured technologies |
+| Notes | Only facts verifiable on the page: main stack, level, contract arrangement, poster/employer mismatch, field conflicts; ≤ about 60 characters; no "great fit" or "recommended" language. Cross-day, application and possible-duplicate markers follow "Cross-day repeats and updates" |
+| Link | `[Open](URL)`, pointing to the canonical job URL actually visited in this run |
+
+City is not a table column: it comes from the section heading (`### Munich (13/30)`). Location details that disagree with the heading (e.g. a role in Pullach, or a remote scope limited to EMEA) go into Notes.
+
+Employment type is a filter, not a column; when it matters for judgment (contract work, parental-leave cover, part-time) write it in Notes.
+
+JD language is also a filter, not a column: matched jobs already satisfy `jdLanguages.include`. When the language cannot be determined and the job goes to the review table, Notes must say "language unknown" and why.
+
+When a job matched because of "German JD + JD explicitly names English as the working language", Notes must state that evidence (e.g. "German JD, names English as team language"); never infer it from the company's international profile.
+
+### 3. Excluded jobs
+
+A separate section, not counted in the main table. Fixed columns:
+
+```markdown
+| # | Source | Company | Title | City | Mode | Posted | Exclusion reason | Link |
 |---|---|---|---|---|---|---|---|---|
 ```
 
-列填写规则：
+- Posted: relative time (`2 days ago`, `19 hours ago`), mark reposts as `(reposted)`; write `Not specified` when the page does not show it
+- City: the location shown on the job page; write `Not specified` when absent, never infer
+- Exclusion reason must name the **dimension** (JD language / job title / technical keywords / work mode / employment type / seniority (when enabled) / poster type (staffing agency)) plus one short piece of evidence (e.g. the German original fragment, the missing keyword, the mode or type shown on the page, the industry, or an "our client" phrase in the JD)
+- Group similar reasons together (e.g. all German JDs) so the table is scannable
+- Do not paste long JD passages
+- Duplicate relationships (same role in different cities, bilingual copies) may be noted, but must never be double-counted as matches
+- Jobs skipped at the card stage (clearly wrong title or out of scope) and never opened **do not appear here**; they count only in "Cards skipped before opening"
+- **The link column is mandatory**, format `[Open](URL)`, pointing to the job page actually opened in this run, so every row can be checked
+- Excluded-table URLs are for manual checking only and **must never be used as a cross-day dedup key** (see "Cross-day repeats and updates")
 
-| 列 | 规则 |
+### 4. Needs manual review
+
+**Only when there are entries**, after all job tables. When empty, omit the whole section; never write "None".
+
+Use the same table structure as section 2, and state in **Notes**:
+
+- which check is unknown (title / language / keywords / work mode / employment type)
+- the concrete reason it is missing or ambiguous (JD did not load, too short, truncated, mixed language, page does not expose the field, …)
+
+Unknown items **must not** be written as matched or excluded.
+
+### 5. Exception note
+
+**Only when one of these happens, and always at the very end**; a normal run never includes it, and routine search parameters (city radius, paging method, time zone) are never listed:
+
+- the run failed or stopped: expired login, CAPTCHA, rate limit, no browser tool
+- the run did not finish: result pages left unread, stopped early
+- widespread failure: a large share of jobs could not be judged because JDs were unreadable, truncated or missing key fields
+
+Length limit: 3 lines, covering only three things — what happened, how many rows it affected, where it stopped. No disclaimer-style essay.
+
+## Evidence and consistency rules
+
+- Use only facts visible on the job page or verified in the browser session
+- Every active matching dimension must be independent and traceable to concrete evidence
+- Mark a job as matched only when every active dimension is confirmed
+- Write `Not specified` for missing fields; never infer location, work mode, employment type or posting date
+- Keep URLs exactly as found; never assemble or invent one
+- A job appears at most once in the same report; a match and an exclusion never both count
+- Every daily report uses the same section order and table columns so reports stay comparable
+- Do not output candidate-fit, salary-expectation or visa judgments
+
+## Cross-day repeats and updates
+
+A daily report is a **snapshot of that day**, not a cumulative list. Cross-day repeats are still listed; they are only annotated, never removed.
+
+Comparison baseline: prefer `reports/job-index.json`, which covers all history; when the index is missing, fall back to the previous 7 local dates under `reports/daily/`. Only jobs that ever entered the **matched table** or the **review table** count as already reported; excluded and expired entries do not.
+
+| Situation | Handling |
 |---|---|
-| # | 按最终展示顺序连续编号（城市分组 + 类型排序之后重排） |
-| 公司 | 取 LinkedIn 页面公司字段；发布方 ≠ 实际雇主时，公司列填发布方，实际雇主写进备注 |
-| 规模 | 取页面显示的公司规模，写成 `51-200 人`、`9,000 人`、`10001+ 人`；页面未显示写「未标注」 |
-| 职位 | 原样保留，含 (m/f/d)、(all genders) 等后缀；标题内不得出现竖线 `\|`，用「·」替代 |
-| 模式 | 原样填 `On-site` / `Hybrid` / `Remote`；页面无此字段写「未标注」（该条须移入复核表）；与 JD 正文冲突时加 ⚠️ 并在备注说明 |
-| 发布 | 转成中文相对时间（`2 天前`、`19 小时前`）；重新发布标注「（重发）」 |
-| 命中关键词 | 只列**配置内**且在 JD 中真实出现的词，用顿号分隔；不得添加未配置的技术词 |
-| 备注 | 只写可在页面上核实的事实：主栈、级别、合同安排、发布方/雇主差异、字段冲突；≤ 约 60 字；不得写「很适合」「推荐」之类评价。跨日、投递与疑似重复标记见「跨日重复与更新」 |
-| 链接 | `[打开](URL)`，必须是本次实际访问过的 canonical 职位 URL |
+| `firstReportedOn` is set in the index | List the job in today's report as usual and append `[reported MM-DD]` (from `firstReportedOn`) to Notes; never delete it, reclassify it or move it to the excluded table |
+| `appliedOn` is set in the index | Do not open or judge it; count it under "Already applied (skipped)" only; it must not appear in any job table |
+| Previously appeared only in the excluded table | Not part of dedup; re-evaluate it today |
+| No index and no earlier reports | Skip this step and add no marker |
 
-城市不在表中单列：由所在小节标题（`### 慕尼黑（13/30）`）给出。非市区岗位（如 Pullach）、远程范围限制（如仅限 EMEA）等与标题不一致的地点信息，写入备注。
+- Markers affect readability only and never reduce the number of jobs actually opened today
+- The same URL still appears at most once in today's report
+- "Of which cross-day repeats" = rows in today's matched table carrying `[reported …]`
+- Always use `MM-DD` in historical markers to avoid cross-year ambiguity
 
-雇佣类型是过滤条件，不单独成列；当它影响判断时（例如合同制、产假替补、兼职）写入备注。
+### Same role, different ID
 
-JD 语言同样是过滤条件，不单独成列：命中表里的岗位默认已符合 `jdLanguages.include`。若语言无法判定而被放进复核表，须在备注写明「语言未知」及原因。
+The same job may exist on one platform under several job IDs, in multi-city versions or in bilingual versions; the same job may also appear on several platforms. Compare `normalized company + normalized title + city`; when it is a match and the job ID differs, write `⚠️ possible duplicate` in Notes, or `⚠️ possibly applied MM-DD` when the other posting was applied to. Annotate only — never merge, delete or change counts. Normalization rules are in `job-index-and-audit.md`.
 
-若岗位因「德语 JD + JD 明确写明英语为工作语言」而命中，必须在备注写出该依据（如「JD 德语，注明英语为团队语言」），不得只凭公司国际化推断。
+### Application marker
 
-### 3. 被排除岗位
+After the user confirms an application, append `[applied MM-DD]` to that job's Notes and write `appliedOn` in the index. The marker does not change today's matched/review decision or any count.
 
-单独成节，不计入主表。列固定：
+## Updating an existing report
 
-```markdown
-| # | 公司 | 职位 | 城市 | 模式 | 发布时间 | 排除原因 | 链接 |
-|---|---|---|---|---|---|---|---|---|
-```
-
-- 发布时间：转成中文相对时间（`2 天前`、`19 小时前`），重新发布标注「（重发）」；页面未显示时写「未标注」
-- 城市：取职位页面显示的地点；页面未显示时写「未标注」，不得推断
-- 排除原因必须写明**维度**（JD 语言 / 职位标题 / 技术关键词 / 工作模式 / 雇佣类型 / 职级（仅启用时） / 发布方类型（招聘中介）），并附一句短证据（如德语原文片段、缺失的关键词、页面显示的模式或类型、公司行业或 JD 中的 “our client” 字样）
-- 同类原因（例如全部为德语 JD）按顺序集中排列，便于扫读
-- 不贴长 JD 正文
-- 允许标注重复关系（同岗异地版、同岗双语版），但不得重复计入命中
-- 仅在结果卡片阶段被预筛跳过（标题明显不符或范围外）、从未打开详情页的职位**不出现在本表**，只计入运行汇总的「卡片预筛排除」
-- **链接列必须填写**，格式 `[打开](URL)`，指向本次实际打开过的职位页，方便逐条自行核查
-- 排除表的 URL 仅用于人工复核，**不得作为跨日去重依据**（见「跨日重复与更新」）
-### 4. 待人工复核
-
-**仅当有条目时输出**，位于所有职位表之后。无条目时整节省略，不写「无」。
-
-使用与第 2 节相同的表结构，并在**备注**列写清楚：
-
-- 哪一项未知（标题 / 语言 / 关键词 / 工作模式 / 雇佣类型）
-- 缺失或模糊的具体原因（JD 未加载、过短、被截断、中英混排、页面未给出该字段等）
-
-未知项**不得**写成命中或排除。
-
-### 5. 异常说明
-
-**仅当出现以下情况时输出，且位于全篇最末**；正常运行一律不写，不罗列常规搜索口径（城市半径、翻页方式、时区等）：
-
-- 运行失败或中断：登录失效、验证码、限流、浏览器工具不可用
-- 未跑完：结果页未翻完、提前停止
-- 大面积异常：因 JD 无法读取、被截断或关键字段缺失，导致相当比例的职位无法判定
-
-写法限制：3 行以内，只写三件事——发生了什么、影响多少条、停在哪里。不做免责声明式的长篇说明。
-
-## 证据与一致性规则
-
-- 只使用 LinkedIn 页面上可见或浏览器会话中验证过的事实
-- 所有适用的匹配维度必须彼此独立，各自都能追溯到具体证据
-- 只有全部适用维度确认符合才可标为命中
-- 字段缺失一律写「未标注」，不得推断地点、工作模式、雇佣类型或发布日期
-- URL 必须原样保留，不得拼接或臆造
-- 同一职位在同一份报告内只出现一次；命中与排除不得重复计入
-- 各日期报告使用相同章节顺序与表格列，保证可对比
-- 不输出候选人匹配度、薪资预期、签证判断等画像类结论
-
-## 跨日重复与更新
-
-日报是**当日快照**，不是累积清单。跨日重复照常列出，只做标注，不做删除。
-
-比对基准：优先 `reports/job-index.json`，覆盖全部历史；索引不存在时回退到 `reports/daily/` 下此前 7 个本地日期的报告。只把曾经进入**命中表**或**复核表**的职位算作已报，排除表和失效记录不算。
-
-| 情况 | 处理 |
-|---|---|
-| 索引中 `firstReportedOn` 非空 | 照常列入当日报告，备注追加 `[已报 MM-DD]`（取 `firstReportedOn`）；不得删除、不得改判、不得移入排除表 |
-| 索引中 `appliedOn` 非空 | 不打开、不判定，只在运行汇总计入「已投递（跳过）」；不得出现在任何职位表 |
-| 此前仅在排除表出现 | 不参与去重，当日重新评估 |
-| 无索引且无历史报告 | 跳过该步骤，不输出任何标记 |
-
-- 标注只影响可读性，不得减少当日实际打开的职位数
-- 同一 URL 在当日报告内仍只出现一次
-- 运行汇总的「其中跨日重复」= 当日命中表中带 `[已报 …]` 标记的行数
-- 历史标记一律使用 `MM-DD`（两位月日），避免跨年歧义
-
-### 疑似同岗不同 ID
-
-同一职位在 LinkedIn 上可能有多个 job ID、多城市版本或双语版本。按「归一化公司名 + 归一化职位名 + 城市」比较；命中且 job ID 不同时，在备注写 `⚠️ 疑似重复`，对方已投递则写 `⚠️ 疑似已投 MM-DD`。只标注，不合并、不删除、不改变计数。归一化规则见 `job-index-and-audit.md`。
-
-### 投递标记
-
-用户确认投递后，在该职位备注追加 `[已投 MM-DD]`；索引中的 `appliedOn` 同步写入。投递标记不改变当日的命中/复核判定，也不改变计数。
-
-## 更新已有报告时
-
-- 保留原有条目与其证据
-- 仅在有新证据时补充或修正
-- 不因配置变化而静默改写旧结论；若配置变化导致某条判定翻转，在新条目或备注中说明原因
+- Keep existing entries and their evidence
+- Add or correct only when there is new evidence
+- Never silently rewrite an old conclusion because the configuration changed; when new configuration flips a decision, state the reason in the new entry or in Notes

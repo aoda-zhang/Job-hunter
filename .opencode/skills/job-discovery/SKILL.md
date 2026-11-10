@@ -1,11 +1,13 @@
 ---
 name: job-discovery
-description: Search LinkedIn vacancies with the local OpenCode browser, inspect real job descriptions, filter only by job title, JD language, technical keywords, configured work modes, employment types, optional seniority and direct-employer requirement, verify each posting is still open, and save a daily Markdown report.
+description: Search the job platforms configured in sources with the local OpenCode browser, inspect real job descriptions, filter only by job title, JD language, technical keywords, configured work modes, employment types, optional seniority and direct-employer requirement, verify each posting is still open, and save a daily Markdown report.
 ---
 
-# LinkedIn Job Discovery
+# Job Discovery
 
 This is the primary workflow of Job Hunter. Run it locally in this repository. OpenCode operates the browser tools already configured in the user's environment. This repository is an instruction harness, not an application: do not introduce a backend, database, CLI, CI pipeline, source adapters or extra configuration.
+
+The platforms are not fixed in this skill. `sources` in the user's config decides where to search. Each platform's mechanics live in its own file under `references/`; section 2 is only the navigation layer that picks the right file and enforces the shared rules.
 
 ## 1. Read the user's local configuration
 
@@ -27,12 +29,13 @@ All settings are top-level fields:
 - `seniority.include`: accepted levels (`Junior`, `Mid-level`, `Senior`, `Lead`). Optional; disabled when absent, empty or listing every level.
 - `excludeRecruiters`: when `true`, exclude postings from staffing and recruiting agencies that hire for a third-party client. Optional; absent or `false` disables it.
 - `lookbackHours`: posting window that defines the search scope.
-- `sources`: configured source list; currently LinkedIn.
+- `sources`: **required** list of job platforms to search, in order, for example `["LinkedIn"]` or `["LinkedIn", "Indeed", "Glassdoor"]`. See 2.1 for which reference each value uses. Never search a platform that is not listed, and never silently drop one that is.
+- `preferredReportLanguage`: language of the daily report and the run-summary email body, e.g. `English`, `German`, `Chinese`. Defaults to `English` when absent or empty. It never changes the search query, matching, index keys or audit fields; the email subject stays ASCII.
 - `reportRepo`: optional Git URL where the daily report is published after each run.
 - `notifications.email`: optional SMTP settings for run-summary emails; disabled by default. When `enabled` is `true`, send exactly one summary through the `email-notify` skill after the index and audit are written.
 - `sortBy`: how to order matched rows inside each city — currently `companySize`; omit for discovery order.
 - `sortDirection`: `asc` (default) or `desc`.
-- `jobSearchPrompt`: **required** natural-language search request for LinkedIn's AI job search. It is the only search query and is used verbatim.
+- `jobSearchPrompt`: **required** natural-language search request. It is the only search query and is used verbatim on every configured source.
 - `jobTitles.include`: target job-title variants. Used for matching and the card-level skip, never for building the query.
 - `jdLanguages.include`: accepted JD languages.
 - `jdLanguages.acceptGermanJdWithEnglishWorkingLanguage`: optional boolean. When `true`, a German-language JD still matches if it explicitly states that English is the working, team or company language.
@@ -45,9 +48,9 @@ Do not expect or add a `search` wrapper. Do not create another config file or as
 Read `reports/job-index.json` before searching. It is the local, Git-ignored memory of every vacancy already inspected, and its schema and rules live in `.opencode/skills/job-discovery/references/job-index-and-audit.md`.
 
 - If a job's `appliedOn` is set, skip it before opening it and count it as applied-skipped; never list it in today's tables.
-- Re-open jobs previously marked `matched` or `review` — they may be closed or changed. Annotate repeats with `[已报 MM-DD]` from `firstReportedOn`.
+- Re-open jobs previously marked `matched` or `review` — they may be closed or changed. Annotate repeats with `[reported MM-DD]` from `firstReportedOn`.
 - Re-evaluate jobs previously `excluded` or `expired`; do not annotate them as repeats.
-- Flag likely duplicate postings (same company, normalized title and city with a different job ID) as `⚠️ 疑似重复`; if the other posting was applied to, use `⚠️ 疑似已投 MM-DD`. Never merge or delete them.
+- Flag likely duplicate postings (same company, normalized title and city with a different job ID) as `⚠️ possible duplicate`; if the other posting was applied to, use `⚠️ possibly applied MM-DD`. Never merge or delete them.
 - If the index is missing, bootstrap it from the previous 7 daily reports; if that also fails, start empty.
 
 If `jobSearchPrompt` is missing, empty or whitespace, stop and ask the user to write one natural-language search request. Do not build a query from `countries`, `locations` or `jobTitles.include`.
@@ -65,33 +68,52 @@ Only job title, actual JD language, technical keywords, configured work modes, e
 
 If the user states search criteria in the chat for one run, restate the effective criteria before searching and apply them to that run only. Do not silently persist chat-level criteria into the config; write a setting to `job-hunter.config.json` only when the user asks for a lasting change.
 
-## 2. Search LinkedIn
+## 2. Search the configured sources
+
+This section is the navigation layer. The mechanics of each job platform live in its own file directly under `.opencode/skills/job-discovery/references/`. Read the matching reference before searching and follow it; do not improvise a flow that a reference already defines, and do not copy one platform's UI steps onto another.
 
 Check which browser-control tools exist. If none are available, stop and say so; never pretend to have searched.
 
-Record the run start time in ISO 8601 with the local UTC offset before step 1; the audit entry needs it as `runAt`.
+Resolve the source list from `sources` before searching. If it is missing, empty or contains only blank strings, stop and ask the user which platforms to search — do not default to LinkedIn silently.
 
-1. Open LinkedIn Jobs' AI search, enter `jobSearchPrompt` **verbatim** and submit it once. Do not rewrite, split, translate or append cities. If the prompt is missing or empty, stop and ask for it.
-2. Apply the config filters in the UI using the rules below, then verify they are active.
+Record the run start time in ISO 8601 with the local UTC offset before the first search; the audit entry needs it as `runAt`.
+
+Run the sources in the configured order and keep one shared result set. For each source:
+
+1. Open that platform's reference and use its search entry point with the query described below, submitting it once.
+2. Apply the config filters in that platform's own UI using that reference's mapping, then verify they are active.
 3. Paginate until results fall outside `lookbackHours`. Deduplicate canonical URLs before opening pages and skip jobs marked `appliedOn` in the index; there is no inspection cap.
 4. Skip a card without opening it only when its title clearly names a different function (for example sales, marketing, finance, HR, design or data analysis) and contains none of the configured role nouns or clear synonyms, or when the card is clearly outside the configured `countries`/`locations`. Everything ambiguous, truncated, localized or generic gets opened. This is the only allowed skip.
-5. Open the remaining vacancies, prefer the canonical job URL, and keep one record per vacancy.
+5. Open the remaining vacancies, prefer the canonical job URL, and keep one record per vacancy. Tag each record with its `source`.
 
-### Apply config filters in the UI
+### 2.1 Platform reference lookup
 
-Text inside `jobSearchPrompt` is not a filter: LinkedIn does not reliably enforce "24 hours", "full-time" or similar wording written in the prompt. After submitting the prompt and before paginating, set the filters in LinkedIn's filter bar:
+| Configured source | Reference |
+|---|---|
+| `LinkedIn` | `references/linkedin.md` |
+| `Indeed` | `references/indeed.md` |
+| `Glassdoor` (e.g. `glassdoor.de`) | `references/glassdoor.md` |
+| a platform being added | `references/_template.md` |
 
-1. **Date posted** — map `lookbackHours`: ≤24 → `Past 24 hours`; ≤168 → `Past week`; ≤720 → `Past month`; larger → no date filter. Pick the closest bucket that fully covers the window, never a narrower one. Still check each posting's date against `lookbackHours` when opening it.
-2. **Employment type** — when `employmentTypes` is a real subset, open the Employment type filter and check exactly those labels (`Full-time`, `Part-time`, `Contract`, `Temporary`, `Internship`, `Volunteer`).
-3. **Work mode** — when `workModes` is a real subset of `Remote` / `Hybrid` / `On-site`, select the matching filter.
-4. **Seniority** — only when `seniority.include` is configured and the UI labels map unambiguously; otherwise skip the UI filter and judge on the page.
-5. **Location** — set the configured country, and cities only when `locations` is non-empty, if a location filter is available.
+Look up the platform name case-insensitively, ignoring a country domain (`Indeed` → `indeed.md`, `glassdoor.de` → `glassdoor.md`).
 
-Do not add filters that are not in the config, such as salary, company, Easy Apply or applicant count. Use the visible filter controls; URL parameters like `f_TPR` and `f_JT` may be dropped by the AI search page.
+There is no fallback flow. A configured platform without its own reference is **not searched**: say which platform has no reference, point to `references/_template.md`, and continue with the sources that do. Never improvise a generic flow for an unknown site.
 
-Verify the filters show as checked or active before reading results. If the page resets them after a re-submit, apply them again. If a filter cannot be applied, say so and fall back to reading that field on each posting; never assume the prompt filtered it.
+Each reference must cover the same points: search entry, query field, filter mapping, result extraction, pagination, access boundaries and known quirks. The filtering, reporting, index and safety rules stay in this skill.
 
-If LinkedIn requires login, shows a CAPTCHA or blocks the run, stop at that boundary and report it. Never ask for credentials, never bypass access controls, and never apply, message, save or follow anything.
+### 2.2 The search query
+
+`jobSearchPrompt` is the single query, used **verbatim** on every source. Do not rewrite, split, translate or append cities, and do not build a query from `countries`, `locations` or `jobTitles.include`. If it is missing or empty, stop and ask for it.
+
+Platforms differ in what their query field accepts. Use the prompt as-is and let the platform parse it; do not pre-chew it into keywords. When a platform offers both a keyword box and a location box, put the prompt in the keyword box and set the location from `countries`/`locations`.
+
+### 2.3 Failure isolation
+
+Do not stop the whole run because one source fails. Record the failure in `limitations`, mark that source in `searchedBySource` as `failed` or `skipped`, continue with the next source, and say in the final summary which sources completed and which did not.
+
+Never guess a platform's private API, scrape behind an authentication wall, or fabricate results for a source you could not search. A source that cannot be searched is reported as not searched, not as empty.
+
+If any source requires login, shows a CAPTCHA or blocks the run, stop at that boundary and report it. Never ask for credentials, never bypass access controls, and never apply, message, save or follow anything.
 
 ## 3. Inspect and classify
 
@@ -118,6 +140,8 @@ Before writing or updating a daily report, read and follow the canonical format 
 
 This reference defines the required report sections, vacancy layout, metadata, evidence presentation, run-summary counts and update behavior. Every daily report must follow it consistently. Do not invent a different layout for individual runs.
 
+The reference fixes the structure; `preferredReportLanguage` fixes the language. Write every human-readable string — title, section headings, table headers, labels, relative times and annotation markers — in that language, and keep the structure, column order, date formats and URLs unchanged. Fall back to English when the field is absent, empty or names a language you cannot write, and say so in the final summary.
+
 Index updates, deduplication and the run audit log follow `.opencode/skills/job-discovery/references/job-index-and-audit.md`.
 
 ## 5. Write the daily report
@@ -126,7 +150,7 @@ Create or update exactly one report for the current local date:
 
 `reports/daily/YYYY-MM-DD.md`
 
-Create the parent directory if needed. If today's report already exists, merge new findings rather than overwriting useful entries. Deduplicate by canonical LinkedIn job URL; when no canonical URL is available, use a cautious combination of company, title and location and flag possible duplicates for review.
+Create the parent directory if needed. If today's report already exists, merge new findings rather than overwriting useful entries. Deduplicate by canonical job URL within and across sources; when no canonical URL is available, use a cautious combination of company, title and location and flag possible duplicates for review.
 
 ### Publish the daily file (optional)
 
@@ -143,7 +167,7 @@ Do not publish anything besides the day's report file.
 
 After the report is written:
 
-1. Upsert every vacancy inspected today into `reports/job-index.json` by job ID: set `lastSeen` and `status`, set `firstSeen` on first sight, set `firstReportedOn` the first time it enters the matched or review table, and never clear `appliedOn`.
+1. Upsert every vacancy inspected today into `reports/job-index.json` by its source-qualified key: set `source`, `lastSeen` and `status`, set `firstSeen` on first sight, set `firstReportedOn` the first time it enters the matched or review table, and never clear `appliedOn`.
 2. Append one JSON line for this run to `reports/runs/YYYY-MM-DD.jsonl` using the field list in `.opencode/skills/job-discovery/references/job-index-and-audit.md`. Use the recorded start as `runAt`, the current time as `finishedAt`, and their difference as `durationSeconds`.
 3. Preserve unknown fields and every other entry. Never delete index entries automatically.
 
@@ -151,11 +175,11 @@ If `notifications.email.enabled` is `true`, load the `email-notify` skill and se
 
 ### Cross-day repeats
 
-Before writing today's report, check each vacancy against `reports/job-index.json`, which covers all history. If the same job ID or canonical URL already entered a matched or review table, keep today's row and append `[已报 MM-DD]` using `firstReportedOn`. Excluded and expired entries do not count. If the index is missing, fall back to the previous 7 daily reports. This is annotation only; it never reduces inspected vacancies.
+Before writing today's report, check each vacancy against `reports/job-index.json`, which covers all history. If the same job ID or canonical URL already entered a matched or review table, keep today's row and append `[reported MM-DD]` using `firstReportedOn`. Excluded and expired entries do not count. If the index is missing, fall back to the previous 7 daily reports. This is annotation only; it never reduces inspected vacancies.
 
 For each `matched` or `review` vacancy the reference format requires a single table row containing:
-- company (as shown on LinkedIn) and job title as posted;
-- work mode, or `未标注` when absent;
+- source platform, company as shown on that platform, and job title as posted;
+- work mode, or `Not specified` when absent;
 - posting date in relative Chinese form, and the discovery date via the report metadata;
 - the configured technical keywords actually found;
 - a short factual note (main stack, level, contract type, posting-vs-employer differences, field conflicts) with no fit judgement;
@@ -168,7 +192,7 @@ Group matched entries by city. When the run is nationwide (no `locations`), the 
 - `sortBy: "companySize"` sorts by the lower bound of the size range shown on the page (`11-50` → 11, `10001+` → 10001).
 - `sortDirection` defaults to `asc`; use `desc` for largest first.
 - Rows with the same size keep discovery order. If `sortBy` is missing or unknown, keep discovery order.
-- After sorting, renumber the `#` column sequentially in the final display order and update any internal cross-references such as "与 #22 同一套 JD".
+- After sorting, renumber the `#` column sequentially in the final display order and update any internal cross-references such as "same JD as #22".
 
 Never sort by a candidate-fit score. Do not perform company research or prepare interview answers in this phase.
 
@@ -176,9 +200,9 @@ Never sort by a candidate-fit score. Do not perform company research or prepare 
 
 At the end, state:
 - report path;
-- the resolved search scope, explicitly noting when it was nationwide (for example `全德国`) because `locations` was empty;
+- the resolved search scope, explicitly noting when it was nationwide (for example `All Germany`) because `locations` was empty;
 - the exact `jobSearchPrompt` used;
-- number of distinct LinkedIn vacancies inspected;
+- number of distinct vacancies inspected, broken down by source;
 - number of applied jobs skipped from the index;
 - number of result cards skipped before opening (off-family title or out of scope);
 - number of expired or closed postings skipped by the validity check;
@@ -187,10 +211,10 @@ At the end, state:
 - confirmed non-matches excluded;
 - how many matched rows were flagged as cross-day repeats;
 - how many likely duplicates were flagged (different job ID, same role);
-- coverage: the LinkedIn result count when the page shows one, how many result pages were opened, and why pagination stopped, all taken from the run audit entry;
+- coverage per source: the result count when the page shows one, how many result pages were opened, and why pagination stopped, all taken from the run audit entry;
 - whether the summary email was sent, skipped because notifications are disabled, or failed;
-- any LinkedIn access or browser limitations, stated briefly and only when they actually occurred.
+- any source access or browser limitations, naming the affected source, stated briefly and only when they actually occurred;
 
-Inside the report itself, never add a limitations section on a normal run. Only a failed, interrupted or largely unevaluable run gets a short `异常说明` at the very end (see the format reference).
+Inside the report itself, never add a limitations section on a normal run. Only a failed, interrupted or largely unevaluable run gets a short `Exception note` at the very end (see the format reference).
 
 Only count pages actually opened and inspected. Clearly distinguish search results seen from job descriptions successfully reviewed. Never claim a search or inspection that did not happen.
