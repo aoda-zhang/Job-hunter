@@ -133,7 +133,7 @@ There is no score, no ranking by candidate fit, and no filtering on salary, year
 | Daily discovery | `reports/daily/YYYY-MM-DD.md` |
 | Interview preparation | `reports/interviews/<company-slug>/` |
 
-The daily report lists the platforms searched, then matched jobs grouped by city and sorted by company size, excluded jobs with the exact reason, and a review table when needed. Every table has a `Source` column so a mixed-platform run stays readable. Reports follow the fixed format reference at `.opencode/skills/job-discovery/references/daily-report-format.md` and are written in `preferredReportLanguage` (default `English`). The reference fixes the structure; only the human-readable text is translated.
+The daily report lists the platforms searched, then matched jobs grouped by city and sorted by company size, a review table when needed, and the excluded jobs with the exact reason last. Every table has a `Source` column so a mixed-platform run stays readable. Reports follow the fixed format reference at `.opencode/skills/job-discovery/references/daily-report-format.md` and are written in `preferredReportLanguage` (default `English`). The reference fixes the structure; only the human-readable text is translated.
 
 `job-hunter.config.json` and `reports/daily/` are Git-ignored. If you set `reportRepo`, only that day's report is committed and pushed to your chosen repository after each run.
 

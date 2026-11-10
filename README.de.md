@@ -133,7 +133,7 @@ Es gibt keine Punkte, kein Ranking nach Kandidaten-Fit und keine Filterung nach 
 | Tägliche Stellensuche | `reports/daily/YYYY-MM-DD.md` |
 | Interviewvorbereitung | `reports/interviews/<company-slug>/` |
 
-Der Tagesbericht enthält eine Laufzusammenfassung, Treffer nach Stadt und Unternehmensgröße sortiert, ausgeschlossene Stellen mit der genauen Begründung und bei Bedarf eine Prüftabelle. Die Struktur legt `.opencode/skills/job-discovery/references/daily-report-format.md` fest; die Sprache steuert `preferredReportLanguage` (Standard `English`). Übersetzt wird nur der lesbare Text.
+Der Tagesbericht enthält eine Laufzusammenfassung, Treffer nach Stadt und Unternehmensgröße sortiert, bei Bedarf eine Prüftabelle und zuletzt die ausgeschlossenen Stellen mit der genauen Begründung. Die Struktur legt `.opencode/skills/job-discovery/references/daily-report-format.md` fest; die Sprache steuert `preferredReportLanguage` (Standard `English`). Übersetzt wird nur der lesbare Text.
 
 `job-hunter.config.json` und `reports/daily/` sind per Git ignoriert. Ist `reportRepo` gesetzt, wird nach jedem Lauf nur der Tagesbericht committet und in dein gewähltes Repository gepusht.
 

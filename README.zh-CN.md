@@ -133,7 +133,7 @@ cp job-hunter.config.example.json job-hunter.config.json
 | 每日职位发现 | `reports/daily/YYYY-MM-DD.md` |
 | 面试准备 | `reports/interviews/<company-slug>/` |
 
-日报包含：运行汇总（含本次搜索的平台）、按城市分组并按公司规模排序的命中岗位、写明具体原因的排除岗位，以及需要时的待复核表。每张表都有 `Source` 列，混合平台时也能看清。日报格式由 `.opencode/skills/job-discovery/references/daily-report-format.md` 统一规定，语言由 `preferredReportLanguage` 指定（默认 `English`）。格式文档只固定结构，翻译的只是可读文字。
+日报包含：运行汇总（含本次搜索的平台）、按城市分组并按公司规模排序的命中岗位、需要时的待复核表，以及最后写明具体原因的排除岗位。每张表都有 `Source` 列，混合平台时也能看清。日报格式由 `.opencode/skills/job-discovery/references/daily-report-format.md` 统一规定，语言由 `preferredReportLanguage` 指定（默认 `English`）。格式文档只固定结构，翻译的只是可读文字。
 
 `job-hunter.config.json` 和 `reports/daily/` 都被 Git 忽略。如果配置了 `reportRepo`，每次运行后只会把当天日报提交并推送到你指定的仓库。
 

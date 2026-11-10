@@ -33,11 +33,11 @@ The title is part of the human-readable layer: translate `Daily Job Findings` in
 
 1. Run summary
 2. Matched jobs
-3. Excluded jobs
-4. Needs manual review — **only when there are entries**, after all job tables
+3. Needs manual review — **only when there are entries**
+4. Excluded jobs — **always the last job table**, after matched and review
 5. Exception note — **only when the run failed or was largely unusable**, at the very end
 
-A normal run has only sections 1–3; sections 4 and 5 appear conditionally and must never be written as an empty "None".
+A normal run has only sections 1, 2 and 4; sections 3 and 5 appear conditionally and must never be written as an empty "None". Excluded jobs always come last among the job tables so the actionable rows stay on top.
 
 After that, append "Evidence and consistency rules" and "Cross-day repeats and updates", in that fixed order.
 
@@ -113,9 +113,20 @@ JD language is also a filter, not a column: matched jobs already satisfy `jdLang
 
 When a job matched because of "German JD + JD explicitly names English as the working language", Notes must state that evidence (e.g. "German JD, names English as team language"); never infer it from the company's international profile.
 
-### 3. Excluded jobs
+### 3. Needs manual review
 
-A separate section, not counted in the main table. Fixed columns:
+**Only when there are entries**. When empty, omit the whole section; never write "None".
+
+Use the same table structure as section 2, and state in **Notes**:
+
+- which check is unknown (title / language / keywords / work mode / employment type)
+- the concrete reason it is missing or ambiguous (JD did not load, too short, truncated, mixed language, page does not expose the field, …)
+
+Unknown items **must not** be written as matched or excluded.
+
+### 4. Excluded jobs
+
+**Always the last job table**, written after matched and review. A separate section, not counted in the main table. Fixed columns:
 
 ```markdown
 | # | Source | Company | Title | City | Mode | Posted | Exclusion reason | Link |
@@ -131,17 +142,6 @@ A separate section, not counted in the main table. Fixed columns:
 - Jobs skipped at the card stage (clearly wrong title or out of scope) and never opened **do not appear here**; they count only in "Cards skipped before opening"
 - **The link column is mandatory**, format `[Open](URL)`, pointing to the job page actually opened in this run, so every row can be checked
 - Excluded-table URLs are for manual checking only and **must never be used as a cross-day dedup key** (see "Cross-day repeats and updates")
-
-### 4. Needs manual review
-
-**Only when there are entries**, after all job tables. When empty, omit the whole section; never write "None".
-
-Use the same table structure as section 2, and state in **Notes**:
-
-- which check is unknown (title / language / keywords / work mode / employment type)
-- the concrete reason it is missing or ambiguous (JD did not load, too short, truncated, mixed language, page does not expose the field, …)
-
-Unknown items **must not** be written as matched or excluded.
 
 ### 5. Exception note
 
