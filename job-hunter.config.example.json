@@ -1,13 +1,42 @@
 {
-  "countries": ["Germany"],
+  "countries": [
+    "Germany"
+  ],
   "locations": [],
   "lookbackHours": 48,
-  "workModes": ["Remote", "Hybrid", "On-site"],
-  "employmentTypes": ["Full-time"],
-  "seniority": { "include": [] },
+  "workModes": [
+    "Remote",
+    "Hybrid",
+    "On-site"
+  ],
+  "employmentTypes": [
+    "Full-time"
+  ],
+  "seniority": {
+    "include": []
+  },
   "excludeRecruiters": false,
-  "sources": ["LinkedIn"],
+  "sources": [
+    "LinkedIn"
+  ],
   "reportRepo": "",
+  "notifications": {
+    "email": {
+      "enabled": false,
+      "backend": "smtp",
+      "to": [
+        "you@example.com"
+      ],
+      "from": "you@example.com",
+      "smtp": {
+        "host": "smtp.gmail.com",
+        "port": 465,
+        "security": "ssl",
+        "user": "you@example.com",
+        "password": ""
+      }
+    }
+  },
   "sortBy": "companySize",
   "sortDirection": "desc",
   "jobSearchPrompt": "Find English-speaking software engineering jobs across all of Germany, posted in the last 48 hours.",
@@ -37,7 +66,9 @@
     ]
   },
   "jdLanguages": {
-    "include": ["English"],
+    "include": [
+      "English"
+    ],
     "acceptGermanJdWithEnglishWorkingLanguage": false
   },
   "technicalKeywords": {
@@ -53,5 +84,10 @@
       "Redux"
     ],
     "matchMode": "any"
+  },
+  "schedule": {
+    "enabled": false,
+    "time": "18:10",
+    "timezone": "Asia/Shanghai"
   }
 }

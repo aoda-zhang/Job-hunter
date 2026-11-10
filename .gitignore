@@ -11,6 +11,11 @@ job-hunter.config.json
 # Generated daily job reports (local only)
 reports/daily/
 
+# Local job index, applied status and run audit logs (never pushed)
+reports/job-index.json
+reports/job-index.json.bak
+reports/runs/
+
 # Logs and temporary files
 *.log
 logs/

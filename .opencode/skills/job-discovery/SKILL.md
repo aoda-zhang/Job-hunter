@@ -29,6 +29,7 @@ All settings are top-level fields:
 - `lookbackHours`: posting window that defines the search scope.
 - `sources`: configured source list; currently LinkedIn.
 - `reportRepo`: optional Git URL where the daily report is published after each run.
+- `notifications.email`: optional SMTP settings for run-summary emails; disabled by default. When `enabled` is `true`, send exactly one summary through the `email-notify` skill after the index and audit are written.
 - `sortBy`: how to order matched rows inside each city — currently `companySize`; omit for discovery order.
 - `sortDirection`: `asc` (default) or `desc`.
 - `jobSearchPrompt`: **required** natural-language search request for LinkedIn's AI job search. It is the only search query and is used verbatim.
@@ -38,6 +39,16 @@ All settings are top-level fields:
 - `technicalKeywords.include` and `technicalKeywords.matchMode`: technology terms and matching mode.
 
 Do not expect or add a `search` wrapper. Do not create another config file or ask the user to duplicate these values elsewhere.
+
+### Local job index and applied record
+
+Read `reports/job-index.json` before searching. It is the local, Git-ignored memory of every vacancy already inspected, and its schema and rules live in `.opencode/skills/job-discovery/references/job-index-and-audit.md`.
+
+- If a job's `appliedOn` is set, skip it before opening it and count it as applied-skipped; never list it in today's tables.
+- Re-open jobs previously marked `matched` or `review` — they may be closed or changed. Annotate repeats with `[已报 MM-DD]` from `firstReportedOn`.
+- Re-evaluate jobs previously `excluded` or `expired`; do not annotate them as repeats.
+- Flag likely duplicate postings (same company, normalized title and city with a different job ID) as `⚠️ 疑似重复`; if the other posting was applied to, use `⚠️ 疑似已投 MM-DD`. Never merge or delete them.
+- If the index is missing, bootstrap it from the previous 7 daily reports; if that also fails, start empty.
 
 If `jobSearchPrompt` is missing, empty or whitespace, stop and ask the user to write one natural-language search request. Do not build a query from `countries`, `locations` or `jobTitles.include`.
 
@@ -58,9 +69,11 @@ If the user states search criteria in the chat for one run, restate the effectiv
 
 Check which browser-control tools exist. If none are available, stop and say so; never pretend to have searched.
 
+Record the run start time in ISO 8601 with the local UTC offset before step 1; the audit entry needs it as `runAt`.
+
 1. Open LinkedIn Jobs' AI search, enter `jobSearchPrompt` **verbatim** and submit it once. Do not rewrite, split, translate or append cities. If the prompt is missing or empty, stop and ask for it.
 2. Apply the config filters in the UI using the rules below, then verify they are active.
-3. Paginate until results fall outside `lookbackHours`. Deduplicate canonical URLs before opening pages; there is no inspection cap.
+3. Paginate until results fall outside `lookbackHours`. Deduplicate canonical URLs before opening pages and skip jobs marked `appliedOn` in the index; there is no inspection cap.
 4. Skip a card without opening it only when its title clearly names a different function (for example sales, marketing, finance, HR, design or data analysis) and contains none of the configured role nouns or clear synonyms, or when the card is clearly outside the configured `countries`/`locations`. Everything ambiguous, truncated, localized or generic gets opened. This is the only allowed skip.
 5. Open the remaining vacancies, prefer the canonical job URL, and keep one record per vacancy.
 
@@ -105,6 +118,8 @@ Before writing or updating a daily report, read and follow the canonical format 
 
 This reference defines the required report sections, vacancy layout, metadata, evidence presentation, run-summary counts and update behavior. Every daily report must follow it consistently. Do not invent a different layout for individual runs.
 
+Index updates, deduplication and the run audit log follow `.opencode/skills/job-discovery/references/job-index-and-audit.md`.
+
 ## 5. Write the daily report
 
 Create or update exactly one report for the current local date:
@@ -124,9 +139,19 @@ If `reportRepo` is a non-empty Git URL, publish today's report after writing it:
 
 Do not publish anything besides the day's report file.
 
+### Update the local index and audit log
+
+After the report is written:
+
+1. Upsert every vacancy inspected today into `reports/job-index.json` by job ID: set `lastSeen` and `status`, set `firstSeen` on first sight, set `firstReportedOn` the first time it enters the matched or review table, and never clear `appliedOn`.
+2. Append one JSON line for this run to `reports/runs/YYYY-MM-DD.jsonl` using the field list in `.opencode/skills/job-discovery/references/job-index-and-audit.md`. Use the recorded start as `runAt`, the current time as `finishedAt`, and their difference as `durationSeconds`.
+3. Preserve unknown fields and every other entry. Never delete index entries automatically.
+
+If `notifications.email.enabled` is `true`, load the `email-notify` skill and send one run summary after steps 1 and 2. Do not send when it is `false` or absent.
+
 ### Cross-day repeats
 
-Before writing today's report, read the previous 7 daily reports and collect the canonical URLs that appeared in `matched` or `review` rows. If a URL already appeared, keep the row and append `[已报 MM-DD]` using the earliest date. Excluded rows are not used for this check. This is annotation only; it never reduces inspected vacancies.
+Before writing today's report, check each vacancy against `reports/job-index.json`, which covers all history. If the same job ID or canonical URL already entered a matched or review table, keep today's row and append `[已报 MM-DD]` using `firstReportedOn`. Excluded and expired entries do not count. If the index is missing, fall back to the previous 7 daily reports. This is annotation only; it never reduces inspected vacancies.
 
 For each `matched` or `review` vacancy the reference format requires a single table row containing:
 - company (as shown on LinkedIn) and job title as posted;
@@ -154,12 +179,16 @@ At the end, state:
 - the resolved search scope, explicitly noting when it was nationwide (for example `全德国`) because `locations` was empty;
 - the exact `jobSearchPrompt` used;
 - number of distinct LinkedIn vacancies inspected;
+- number of applied jobs skipped from the index;
 - number of result cards skipped before opening (off-family title or out of scope);
 - number of expired or closed postings skipped by the validity check;
 - confirmed matches;
 - items requiring manual review;
 - confirmed non-matches excluded;
 - how many matched rows were flagged as cross-day repeats;
+- how many likely duplicates were flagged (different job ID, same role);
+- coverage: the LinkedIn result count when the page shows one, how many result pages were opened, and why pagination stopped, all taken from the run audit entry;
+- whether the summary email was sent, skipped because notifications are disabled, or failed;
 - any LinkedIn access or browser limitations, stated briefly and only when they actually occurred.
 
 Inside the report itself, never add a limitations section on a normal run. Only a failed, interrupted or largely unevaluable run gets a short `异常说明` at the very end (see the format reference).

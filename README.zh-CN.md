@@ -1,96 +1,206 @@
-# Job Hunter 配置指南（简体中文）
+# Job Hunter
 
-## 个人配置文件
+**告诉 OpenCode 你想找什么工作。它用你自己已登录的浏览器搜索 LinkedIn，逐个打开候选职位页面，按你的配置筛选，并生成一份每日 Markdown 职位清单。**
 
-每个人的搜索偏好都不同，因此仓库不跟踪个人配置。首次使用时，将 `job-hunter.config.example.json` 复制为 `job-hunter.config.json`，再按自己的需求修改。个人配置文件已加入 `.gitignore`，只有示例模板会提交到 Git。
+[English](README.md) · **简体中文** · [Deutsch](README.de.md)
 
-Job Hunter 是一个**本地运行、由 OpenCode 驱动的 LinkedIn 职位搜索 Harness**。OpenCode 使用你本地已配置的浏览器工具搜索 LinkedIn、打开真实职位页面、检查 JD、按配置的条件筛选，并将结果保存到本地 Markdown 日报。不需要应用后端、云端服务、数据库、CLI 或 CI。
+## 1. 它能做什么
 
-## 1. 创建个人配置文件
+Job Hunter 由三部分组成：一份 OpenCode Agent 说明、三个 Skill 说明，以及一个属于你自己的配置文件。项目里没有应用代码——不需要后端、数据库、CLI、CI，也不需要任何 API Key。
 
-首次使用时，先将 `job-hunter.config.example.json` 复制为 `job-hunter.config.json`，然后编辑个人配置。个人配置已加入 `.gitignore`，不会提交到仓库。
+一次运行只做四件事：
 
-- `countries`：必填的国家级范围边界，用于校验结果和说明搜索范围，不用于拼接查询。`locations`：可选的城市范围；缺失或为空时覆盖整个国家。
-- `jobSearchPrompt`：必填的 LinkedIn AI 搜索自然语言请求（建议一句话）。整段原样作为唯一检索语句；为空时停止并提示你补全。
-- `workModes`：接受的工作模式（`Remote`、`Hybrid`、`On-site`）；三项全配等于不过滤。
-- `lookbackHours`：优先查找最近发布的职位。
-- `employmentTypes`：接受的雇佣类型（`Full-time`、`Part-time`、`Contract`、`Temporary`、`Internship`、`Volunteer`）；全部列出等于不过滤。
-- `seniority.include`：接受的职级（`Junior`、`Mid-level`、`Senior`、`Lead`）；缺失、为空或全部列出等于不过滤。
-- `excludeRecruiters`：为 `true` 时排除为第三方客户招聘的猎头/人力中介职位；证据不足时进复核，不直接排除。
-- `sources`：搜索来源，目前使用 LinkedIn。
-- `reportRepo`：可选的 Git 仓库地址；配置后每次运行会把当天日报推送到该仓库。
-- `jobTitles.include`：目标职位名称及常见变体。
-- `sortBy`：命中岗位在城市内的排序依据（目前支持 `companySize`）；`sortDirection`：`asc` / `desc`。
-- `jdLanguages.include`：接受的 JD 语言。`jdLanguages.acceptGermanJdWithEnglishWorkingLanguage`：为 `true` 时，德语 JD 只要明确写明英语是工作语言/团队语言/公司语言，也算命中。
-- `technicalKeywords.include`：JD 中希望命中的技术关键词。
-- `technicalKeywords.matchMode`：`any` 表示任意关键词命中即可；`all` 表示全部命中。
+1. **搜索**：用 `jobSearchPrompt` 里的那一句话，在 LinkedIn Jobs 的 AI 搜索中发起唯一的检索。
+2. **收窄范围**：在 LinkedIn 筛选栏中应用你配置的条件——发布时间、雇佣类型、工作模式、职级、地点。
+3. **逐个打开**：进入每一个剩余职位的真实页面（而不只是搜索结果卡片），跳过已关闭或不再接受申请的职位。
+4. **分类并写报告**：把每个职位判定为「命中 / 待复核 / 不符」，保存到 `reports/daily/YYYY-MM-DD.md`。
 
-国家、地点和发布时间只决定搜索范围，不参与职位匹配。没有 `locations` 时，搜索范围是整个配置国家；日报按职位页面实际出现的城市分组。职位筛选只使用已配置的维度：职位名称、JD 语言、技术关键词、工作模式、雇佣类型、职级（启用时）和直招要求（启用时）。
+它不会替你投递、不会私信招聘方、不会修改你的账号设置，只使用你已经登录的浏览器会话。
 
-## 2. 使用 OpenCode 搜索 LinkedIn
+## 2. 工作流程
 
-在仓库目录中打开 OpenCode，选择 **Job Hunter** Primary Agent（如果当前不是它，可以按 `Tab` 切换），然后直接告诉它你要找什么职位。
+```mermaid
+flowchart TD
+    A[job-hunter.config.json] --> B[Job Hunter Agent]
+    B --> C[LinkedIn AI 职位搜索<br/>jobSearchPrompt 原样提交]
+    C --> D[LinkedIn 页面筛选<br/>日期、类型、模式、职级]
+    D --> E[逐个打开职位页面]
+    E --> F{职位仍有效}
+    F -->|已关闭| X[跳过并计数]
+    F -->|有效| G[核对标题、发布方、JD 语言、<br/>关键词、模式、类型、职级]
+    G --> H[命中 / 待复核 / 不符]
+    H --> I[reports/daily/YYYY-MM-DD.md]
+```
 
-**你只需要和 Primary Agent 交互，不需要手动选择 Skill。** 它会根据任务自动加载对应能力。查找职位时，它会加载 `job-discovery`，并执行：
-1. 读取唯一配置文件 `job-hunter.config.json`。
-2. 检查当前 OpenCode 环境实际可用的浏览器工具。
-3. 在 LinkedIn Jobs 的 AI 搜索中直接使用 `jobSearchPrompt`（原样，不改写）作为唯一检索语句。
-4. 在 LinkedIn 筛选栏中主动应用配置：发布日期（由 `lookbackHours` 换算）、雇佣类型、工作模式、职级（启用时），并确认已生效；不会只依赖 prompt 文字。
-5. 打开职位详情并检查 JD，不只依赖搜索结果摘要。
-6. 按配置的维度筛选职位。
-7. 将匹配和需要复核的职位保存到当天的 Markdown 日报。
+判断按固定顺序进行，遇到第一个「确认不符」就停止。页面信息不足以证明符合或不符合时，职位会进入**待复核**，而不是被直接排除。
 
-日报位置：
+## 3. 你需要准备什么
 
-`reports/daily/YYYY-MM-DD.md`
-
-不需要运行 npm 命令、初始化数据库或配置 CI。如果 OpenCode 没有可用的浏览器工具，Skill 必须明确说明，不会假装已经完成搜索。
-
-## 3. 筛选维度
-
-| 维度 | 规则 |
+| 需要 | 说明 |
 |---|---|
-| Job Title | 支持常见职位名称变体；只有配置了 `seniority.include` 时职级词才参与筛选 |
-| JD Language | 识别 JD 实际使用的语言，不根据国家或网页界面语言推断 |
-| Technical Keywords | 在 JD 中查找配置关键词，支持常见大小写和明确别名 |
-| Work Mode | 与 `workModes` 比对；该字段缺失、为空或三种全配时不生效 |
-| Employment Type | 与 `employmentTypes` 比对；该字段缺失、为空或全部列出时不生效 |
-| Seniority | 与 `seniority.include` 比对；缺失、为空或全部列出时不生效 |
-| Direct Employer | `excludeRecruiters` 为 `true` 时排除确认的猎头/中介职位；证据不足进复核 |
-| Posting Validity | 打开页面后的有效性校验：跳过 404、已关闭或“不再接受申请”的职位并单独计数 |
+| OpenCode | 已安装，并在本仓库目录中打开 |
+| 浏览器工具 | 在 OpenCode 中已启用的浏览器集成；仓库本身不安装、也不配置浏览器 |
+| LinkedIn | 已在该浏览器中登录 |
+| 其它 | 无——不需要 Node.js、npm、数据库或 CI |
 
-运行时会先在结果卡片上做一次快速预筛：标题明显不属于目标岗位族、或明显超出配置地理范围的职位不打开详情页；标题模糊、被截断、多岗位或不确定时仍会打开。预筛只在运行汇总中计数，不进入排除表。
+## 4. 快速开始
 
-结果分为：
-- `matched`：所有生效维度均确认匹配。
-- `review`：信息不足或不确定，保留人工检查。
-- `not_matched`：至少一个维度有明确不匹配证据，不放入日报主体。
+```bash
+cp job-hunter.config.example.json job-hunter.config.json
+```
 
-JD 缺失、过短、被截断或无法访问时，不要猜测，标记为 Review。
+然后编辑 `job-hunter.config.json`（它已被 Git 忽略，偏好只留在本地）：
 
-不按工作年限、薪资、签证、候选人语言能力、行业或架构经验额外过滤职位；职级只有在 `seniority.include` 配置后才参与筛选。不计算加权分数，也不对职位进行候选人匹配排名。
+1. **`jobSearchPrompt`**：一句自然语言，写清地点、职位、技术栈和时间范围。这是 LinkedIn 收到的唯一检索语句。
+2. **`countries` / `locations`**：搜索范围。`locations` 为空表示搜索整个国家。
+3. **`jobTitles.include`**：你接受的职位名称，用于匹配。
+4. **`jdLanguages.include`** 和 **`technicalKeywords`**：你能接受的语言和技术栈。
+5. 可选：`workModes`、`employmentTypes`、`seniority`、`excludeRecruiters`。
 
-## 4. 第二阶段：面试准备
+接着：
 
-收到面试邀请后，告诉 **Job Hunter** 你要准备的具体公司和岗位。Primary Agent 会读取对应日报条目，并自动加载 `company-research`，研究公司业务、产品、客户、市场和岗位背景，生成：
-- `reports/interviews/<company-slug>/company-research.md`
-- `reports/interviews/<company-slug>/role-analysis.md`
-- `reports/interviews/<company-slug>/interview-preparation.md`
+1. 在 OpenCode 中打开本仓库目录。
+2. 选择 **Job Hunter** Primary Agent（按 `Tab` 切换 Agent）。
+3. 直接用自然语言说，例如「帮我找今天的职位」「刷新报告，只要远程」。
+4. Agent 操作浏览器搜索并筛选，最后写出 `reports/daily/YYYY-MM-DD.md`，打开看表格即可。
 
-Phase 2 与日常 LinkedIn 搜索分离，不会自动运行。
+你始终只需要和 Job Hunter Agent 交互。它会自行加载 `job-discovery`，不需要你手动选 Skill。
 
-## 5. Agent 与 Skills 的职责
+> **只有一句话是搜索语句。** `jobSearchPrompt` 会原样提交，不会根据配置改写。请把地点和技术栈写进这句话。`jobTitles` 和 `technicalKeywords` 用于**匹配结果**，不用于搜索。
+>
+> **筛选来自配置，不来自 prompt。** 在 prompt 里写「最近 24 小时」并不可靠；Agent 会按 `lookbackHours` 设置 LinkedIn 的「发布日期」筛选，并在读取结果前确认筛选已生效。
 
-- `.opencode/agents/job-hunter.md`：Primary Agent，唯一的日常交互入口，负责理解任务、选择工作流、调用 Skill 和检查结果。
-- `.opencode/skills/job-discovery/SKILL.md`：Phase 1，LinkedIn 职位发现与日报生成。
-- `.opencode/skills/company-research/SKILL.md`：Phase 2，公司调研、岗位分析与面试准备。
+## 5. 配置说明
 
-两个 Skill 是 Primary Agent 调用的专业能力，不是需要你分别管理的独立入口。
+| 字段 | 必填 | 作用 |
+|---|---|---|
+| `countries` | 是 | 国家级范围，例如 `["Germany"]`。用于校验和说明搜索范围，不用于拼接查询。 |
+| `locations` | 否 | 国家内的可选城市。为空或缺失表示整个国家。 |
+| `lookbackHours` | 是 | 发布时间窗口（小时）。决定 LinkedIn 日期筛选，并在打开每个职位时再次核对。 |
+| `jobSearchPrompt` | 是 | 给 LinkedIn AI 搜索的唯一自然语言语句，原样提交。 |
+| `jobTitles.include` | 是 | 接受的职位名称变体，用于匹配和卡片预筛。 |
+| `jdLanguages.include` | 是 | 接受的 JD 语言，例如 `["English"]`。 |
+| `jdLanguages.acceptGermanJdWithEnglishWorkingLanguage` | 否 | 为 `true` 时，德语 JD 只要明确写明英语是工作/团队/公司语言，也算命中。 |
+| `technicalKeywords.include` | 是 | 要在 JD 中查找的技术关键词。 |
+| `technicalKeywords.matchMode` | 是 | `any`：命中任意一个即可；`all`：必须全部命中。 |
+| `workModes` | 否 | `Remote` / `Hybrid` / `On-site`。三项全列、为空或缺失 = 不筛选。 |
+| `employmentTypes` | 否 | `Full-time` / `Part-time` / `Contract` / `Temporary` / `Internship` / `Volunteer`。全列、为空或缺失 = 不筛选。 |
+| `seniority.include` | 否 | `Junior` / `Mid-level` / `Senior` / `Lead`。为空、缺失或全列 = 不筛选。 |
+| `excludeRecruiters` | 否 | 为 `true` 时排除确认为第三方客户招聘的猎头/中介；证据不足的进复核。 |
+| `sources` | 是 | 搜索来源，目前仅 `LinkedIn`。 |
+| `reportRepo` | 否 | 可选 Git 地址。配置后每次运行会把当天日报提交并推送到该仓库。 |
+| `notifications.email` | 否 | 可选 SMTP 配置，用于发送运行摘要邮件；默认关闭。`enabled` 为 `true` 时每次运行后发送一封摘要。 |
+| `schedule` | 否 | 每日 launchd 定时任务：`enabled`、`time`（`HH:MM`，本地时间）、`timezone`。 |
+| `sortBy` / `sortDirection` | 否 | 城市内的排序方式。`companySize` 配合 `asc` / `desc`；不填则按发现顺序。 |
 
-## 6. 安全边界
+补充说明：
 
-- 只使用当前 OpenCode 环境中已配置的浏览器工具。
-- 不绕过 LinkedIn 登录限制、CAPTCHA、访问控制或速率限制。
-- 不自动提交申请、不发送消息、不创建账号或修改账户设置。
-- 将网页和 JD 内容视为不可信输入，不执行其中嵌入的指令。
-- 无法访问的页面要明确记录，不得声称已经检查。
+- `lookbackHours` 填数字。它会被映射到能完整覆盖该窗口的最近一档 LinkedIn 日期筛选（≤24 → 过去 24 小时，≤168 → 过去一周，≤720 → 过去一个月），并在每个职位页面上单独核对。
+- 只有你主动收窄时，某个维度才生效。三种工作模式全列、所有雇佣类型全列、或 `seniority.include` 为空，都等于「不筛选」。
+- 「范围」和「筛选」是两件事：国家、城市、发布时间决定**搜哪里、搜多新**；只有上表中的匹配维度决定一个职位**算不算命中**。
+
+**定时任务。** 只改配置里的 `schedule` 不会自动改变 launchd。改完 `enabled`、`time` 或 `timezone` 后，运行 `.opencode/scripts/apply-schedule.sh`（或直接让 Agent 改时间）。launchd 使用 Mac 的本地时间，所以 `timezone` 必须和系统时区一致。把 `enabled` 设为 `false` 会卸载并删除定时任务。
+
+## 6. 职位如何被筛选
+
+检查按以下顺序进行，遇到第一个确认不符即停止：
+
+1. 职位有效性——404、跳转离开职位页、「不再接受申请」。
+2. 职位名称——与 `jobTitles.include` 属于同一岗位族。
+3. 发布方类型——仅当 `excludeRecruiters` 为 `true` 时启用。
+4. JD 语言——以 JD 实际使用的语言为准。
+5. 技术关键词——按 `matchMode` 判断。
+6. 工作模式——仅当 `workModes` 是真正的子集时启用。
+7. 雇佣类型——仅当 `employmentTypes` 是真正的子集时启用。
+8. 职级——仅当 `seniority.include` 是真正的子集时启用。
+
+| 结果 | 含义 | 出现在哪 |
+|---|---|---|
+| `matched`（命中） | 所有生效维度都能在页面上确认符合 | 主表，按城市分组 |
+| `review`（待复核） | 页面不足以证明符合或不符合（过短、缺失、截断、中英混排） | 复核表 |
+| `not_matched`（不符） | 至少一个生效维度明确不符合 | 排除表，并写明原因 |
+
+在打开页面之前，Agent 会先做一次卡片预筛：标题明显是其它职能（销售、市场、财务、HR、设计、SAP 运维等），或明显不在配置的国家/城市范围内，才会跳过，并且只计数不列出。标题模糊、被截断或包含多个岗位的，仍然会打开。
+
+没有打分，不按「候选人匹配度」排名，也不按薪资、工作年限、签证或行业额外过滤。
+
+## 7. 报告
+
+| 产出 | 路径 |
+|---|---|
+| 每日职位发现 | `reports/daily/YYYY-MM-DD.md` |
+| 面试准备 | `reports/interviews/<company-slug>/` |
+
+日报包含：运行汇总、按城市分组并按公司规模排序的命中岗位、写明具体原因的排除岗位，以及需要时的待复核表。日报的格式和语言由 `.opencode/skills/job-discovery/references/daily-report-format.md` 统一规定（默认中文）；想换报告语言，改这份格式文档即可。
+
+`job-hunter.config.json` 和 `reports/daily/` 都被 Git 忽略。如果配置了 `reportRepo`，每次运行后只会把当天日报提交并推送到你指定的仓库。
+
+**本地记忆。** 另外两个文件只留在你的机器上，永远不会被推送：
+
+| 文件 | 作用 |
+|---|---|
+| `reports/job-index.json` | 所有检查过的职位、最近判定，以及你的投递日期 |
+| `reports/runs/YYYY-MM-DD.jsonl` | 每次运行一行审计：LinkedIn 结果数、翻页数、停止原因、各项计数 |
+
+职位索引让每日运行变得安全：已投递的职位在打开前就被跳过；任何一天出现过的重复职位标注 `[已报 MM-DD]`；同一岗位换个 job ID 再发一次会标 `⚠️ 疑似重复`。审计日志让「漏没漏」可量化：LinkedIn 显示 300 条而只检查了 120 条时，日志会记录少掉的 180 条去了哪里、为什么停止翻页。
+
+只要对 Agent 说「X 我投了」，它就会写入 `appliedOn`，之后每次运行都会跳过该职位。
+
+**邮件通知。** 在 `job-hunter.config.json` 中配置 `notifications.email`（默认关闭）。启用后，Agent 每次运行结束会加载 `email-notify` skill，发送一封只含检索时间、数量和日报路径的摘要，不列具体职位。邮件格式由 `.opencode/skills/email-notify/references/email-template.md` 固定。端口 465 用 `"security": "ssl"`，587 用 `"starttls"`。SMTP 密码就在配置文件里，建议执行 `chmod 600 job-hunter.config.json`。可以只校验配置、不发送：
+
+```bash
+.opencode/skills/email-notify/scripts/send-email.sh --check
+```
+
+## 8. 面试准备（第二阶段）
+
+收到面试邀请后，告诉同一个 Agent 公司名和岗位。它会加载 `company-research`，从你的日报或原始职位链接读取信息，然后生成：
+
+- `company-research.md`——公司业务、产品、客户、市场
+- `role-analysis.md`——这个具体岗位在做什么、看重什么
+- `interview-preparation.md`——针对性的回答和可能被问到的问题
+
+这一阶段需要你手动触发，日常搜索时绝不会自动运行。
+
+## 9. 仓库结构
+
+```
+.opencode/agents/job-hunter.md                    你对话的 Agent
+.opencode/scripts/daily-run.sh                    launchd 入口脚本
+.opencode/scripts/apply-schedule.sh               把定时配置同步到 launchd
+.opencode/skills/job-discovery/SKILL.md           第一阶段：搜索、筛选、写报告
+.opencode/skills/job-discovery/references/        报告格式，以及索引与审计规则
+.opencode/skills/company-research/SKILL.md        第二阶段：公司调研与面试准备
+.opencode/skills/email-notify/                    通过 SMTP 发送运行摘要
+job-hunter.config.example.json                    配置模板
+job-hunter.config.json                            你的配置（Git 忽略）
+reports/daily/                                    每日日报（Git 忽略）
+reports/job-index.json                            已见职位与投递日期（Git 忽略）
+reports/runs/                                     运行审计日志（Git 忽略）
+reports/interviews/                               第二阶段产出
+```
+
+## 10. 常见问题
+
+| 现象 | 原因与处理 |
+|---|---|
+| 没有生成报告 | 配置缺失、`jobSearchPrompt` 为空，或没有可用的浏览器工具。Agent 被要求明确说明是哪一种。 |
+| 提示「浏览器工具不可用」 | 在 OpenCode 中启用浏览器集成。本仓库不提供也不配置浏览器工具。 |
+| 搜索停在登录或验证码 | 你在该浏览器中自行登录 LinkedIn 后重试。Agent 不得绕过这些限制。 |
+| 德语职位都被排除 | `jdLanguages` 只接受英语。把 `acceptGermanJdWithEnglishWorkingLanguage` 设为 `true`，或把 `German` 加入列表。 |
+| 结果太少 | 放宽 `jobTitles`、使用 `matchMode: "any"`、减少关键词，或调大 `lookbackHours`。 |
+| 结果太多 | 收紧 `jobTitles`/关键词，限制 `workModes` 或 `employmentTypes`，或补充 `locations`。 |
+| 只想临时改一次条件 | 直接在对话里说。Agent 只对本次运行生效，不会改写你的配置。 |
+| 日报没有推送 | 检查 `reportRepo` 地址和该远程仓库的 Git 凭据。本地日报会保留。 |
+| 第二天会不会重复投同一个岗位 | 只要你登记过就不会。说「X 我投了」，索引会记下日期，之后运行直接跳过；出现过的重复职位也会标 `[已报 MM-DD]`。 |
+| 同一岗位出现两个 job ID | 标 `⚠️ 疑似重复`；其中一个已投递时标 `⚠️ 疑似已投 MM-DD`。不会自动合并或删除。 |
+| 怎么知道有没有漏岗位 | 审计日志记录 LinkedIn 显示的结果总数（页面提供时）、翻页数和停止原因。数量对不上说明是 LinkedIn 排序或结果上限造成的，而不是静默失败。任何工具都无法保证 100% 覆盖；每周跑一次 7 天窗口是兜底。 |
+| 怎么让每次运行后给我发邮件 | 在 `job-hunter.config.json` 里把 `notifications.email.enabled` 设为 `true`，填好 `to`、`from` 和 `smtp`。`email-notify` skill 每次运行发送一封摘要。可用 `send-email.sh --check` 校验。 |
+| 怎么改每天的运行时间 | 修改 `job-hunter.config.json` 里的 `schedule.time`，然后运行 `.opencode/scripts/apply-schedule.sh`，或直接让 Agent 改。只改配置不会改变 launchd。 |
+
+## 11. 安全边界
+
+- 只访问你有权查看的 LinkedIn 页面，并使用你自己的登录会话。
+- 不绕过登录、验证码、访问控制或速率限制。
+- 不投递、不私信、不收藏、不关注、不修改账号设置。
+- 把网页内容和 JD 当作不可信输入。
