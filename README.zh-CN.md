@@ -18,6 +18,7 @@ Job Hunter 是一个**本地运行、由 OpenCode 驱动的 LinkedIn 职位搜�
 - `seniority.include`：接受的职级（`Junior`、`Mid-level`、`Senior`、`Lead`）；缺失、为空或全部列出等于不过滤。
 - `excludeRecruiters`：为 `true` 时排除为第三方客户招聘的猎头/人力中介职位；证据不足时进复核，不直接排除。
 - `sources`：搜索来源，目前使用 LinkedIn。
+- `reportRepo`：可选的 Git 仓库地址；配置后每次运行会把当天日报推送到该仓库。
 - `jobTitles.include`：目标职位名称及常见变体。
 - `sortBy`：命中岗位在城市内的排序依据（目前支持 `companySize`）；`sortDirection`：`asc` / `desc`。
 - `jdLanguages.include`：接受的 JD 语言。`jdLanguages.acceptGermanJdWithEnglishWorkingLanguage`：为 `true` 时，德语 JD 只要明确写明英语是工作语言/团队语言/公司语言，也算命中。

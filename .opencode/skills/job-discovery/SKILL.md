@@ -28,6 +28,7 @@ All settings are top-level fields:
 - `excludeRecruiters`: when `true`, exclude postings from staffing and recruiting agencies that hire for a third-party client. Optional; absent or `false` disables it.
 - `lookbackHours`: posting window that defines the search scope.
 - `sources`: configured source list; currently LinkedIn.
+- `reportRepo`: optional Git URL where the daily report is published after each run.
 - `sortBy`: how to order matched rows inside each city — currently `companySize`; omit for discovery order.
 - `sortDirection`: `asc` (default) or `desc`.
 - `jobSearchPrompt`: **required** natural-language search request for LinkedIn's AI job search. It is the only search query and is used verbatim.
@@ -111,6 +112,17 @@ Create or update exactly one report for the current local date:
 `reports/daily/YYYY-MM-DD.md`
 
 Create the parent directory if needed. If today's report already exists, merge new findings rather than overwriting useful entries. Deduplicate by canonical LinkedIn job URL; when no canonical URL is available, use a cautious combination of company, title and location and flag possible duplicates for review.
+
+### Publish the daily file (optional)
+
+If `reportRepo` is a non-empty Git URL, publish today's report after writing it:
+
+1. Clone or pull `reportRepo` into a temporary directory.
+2. Copy the report to `reports/daily/YYYY-MM-DD.md` there.
+3. Commit `docs: add daily job results for YYYY-MM-DD` and push to the repository's default branch.
+4. If authentication, pull or push fails, report it and keep the local report. Never force-push and never rewrite unrelated files.
+
+Do not publish anything besides the day's report file.
 
 ### Cross-day repeats
 

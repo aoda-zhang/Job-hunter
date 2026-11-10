@@ -20,6 +20,7 @@ First copy `job-hunter.config.example.json` to `job-hunter.config.json`, then cu
 - `seniority.include`: accepted levels (`Junior`, `Mid-level`, `Senior`, `Lead`); absent, empty or listing every level disables this filter.
 - `excludeRecruiters`: when `true`, exclude postings from staffing or recruiting agencies that hire for a third-party client; unclear cases go to review instead of being excluded.
 - `sources`: configured source; currently LinkedIn.
+- `reportRepo`: optional Git URL where the daily report is pushed after each run.
 - `jobTitles.include`: target job-title variants.
 - `sortBy`: how matched rows are ordered inside each city (currently `companySize`); `sortDirection`: `asc` / `desc`.
 - `jdLanguages.include`: accepted JD languages. `jdLanguages.acceptGermanJdWithEnglishWorkingLanguage`: when `true`, a German-language JD still matches if it explicitly states that English is the working, team or company language.

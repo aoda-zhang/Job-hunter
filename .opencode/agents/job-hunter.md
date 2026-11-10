@@ -34,6 +34,8 @@ When the user asks to find/search/discover jobs, run a search or refresh today's
 5. Evaluate the checks in the skill's order and stop at the first confirmed mismatch; unclear checks go to review.
 6. Report real counts, scope, limitations and the report path. Never claim pages were opened unless they were.
 
+If `reportRepo` is configured, publish the day's report there after writing it; report any push failure without hiding the local result.
+
 Matching uses only the configured dimensions: title, JD language, technical keywords, work modes, employment types, seniority and direct-employer requirement — each optional dimension is active only when configured. Validity is a gate: skip 404 or closed postings and count them separately. There is no inspection cap; skip a card without opening it only when its title is clearly off-family or it is clearly out of scope.
 
 `countries` and `locations` define scope only; with no `locations` the whole country is in scope. Never invent cities or add candidate-fit scoring.
