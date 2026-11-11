@@ -33,7 +33,15 @@ If a filter cannot be applied, say so and read that field on each posting instea
 - Company, title, location and posting age come from the card; the detail page wins on conflicts.
 - Collect every card's canonical URL before opening details, then deduplicate.
 
-## 4. Pagination
+## 4. Premium "You'd be a top applicant" prompt
+
+Read this only when `linkedinPremium` is `true`. The account then shows a personal prompt on some jobs — **"You'd be a top applicant"**, **"You'd be a top applicant for this role"** or a **"Top applicant"** badge — on the result card and/or the detail page. Match it case-insensitively and accept both `'` and `’`; in a non-English UI, match its localized equivalent.
+
+- Record it per vacancy for this run only (`topApplicant`, phrase verbatim, `card` / `detail`); do not persist it in the index. The detail page wins; a card-only prompt still counts.
+- Never infer it from applicant counts, Easy Apply, search ranking or JD text. No visible prompt means no flag; `false` or absent skips this section without a limitation.
+- It is ordering metadata, not a check. Classification is unchanged: a prompted job that fails any check (e.g. JD language) is excluded and stays out of the priority group.
+
+## 5. Pagination
 
 Advance with the results pagination control (or the next-page button). Stop when:
 
@@ -44,11 +52,11 @@ Advance with the results pagination control (or the next-page button). Stop when
 
 Record the displayed result count when the page shows one, plus the number of result pages actually opened and the stop reason.
 
-## 5. Access boundaries
+## 6. Access boundaries
 
 If LinkedIn requires login, shows a CAPTCHA, or blocks the run, stop this source and record it in `limitations`. Never ask for credentials, never bypass access controls, and never apply, message, save or follow anything.
 
-## 6. Known quirks
+## 7. Known quirks
 
 - The AI search page may reset filters after a new submission — re-apply and re-verify.
 - The same role can appear under several job IDs, including multi-city and bilingual versions; that is handled by the soft-dedup rules in `job-index-and-audit.md`.

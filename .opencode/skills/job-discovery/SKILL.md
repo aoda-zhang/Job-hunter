@@ -130,7 +130,9 @@ Open the page and confirm the posting is still open. Then evaluate the checks be
 
 Disabled checks are skipped. Confirmed mismatch → `not_matched`, stop. No mismatch but any `unknown` → `review`. Otherwise `matched`.
 
-Keep `matched` and `review` in the report; exclude `not_matched` from the main report. Never rank, score or label fit. Do not filter on years, salary, visa, candidate language proficiency, industry, architecture or company size. Record only facts visible on the page; never infer a missing field.
+While the page is open, also record the platform priority prompt when its reference defines one and the config enables it (LinkedIn: `linkedinPremium`). It is ordering metadata only: never a check, never an upgrade of `unknown`, and a failed vacancy stays excluded even with the prompt.
+
+Keep `matched` and `review` in the report; exclude `not_matched` from the main report. Never rank, score or label fit; the only priority signal is the platform's own prompt, quoted as shown. Do not filter on years, salary, visa, candidate language proficiency, industry, architecture or company size. Record only facts visible on the page; never infer a missing field.
 
 ## 4. Follow the daily report reference
 
@@ -187,12 +189,12 @@ For each `matched` or `review` vacancy the reference format requires a single ta
 
 Do not restate the configured checks as prose, do not paste long JD text, and do not describe responsibilities in narrative form. Brief evidence belongs in the excluded table's reason column or in the note column.
 
-Group matched entries by city. When the run is nationwide (no `locations`), the city comes from each vacancy page, so group by the cities actually found and follow the format reference for country-level or remote-only postings. Within each city, order rows by company size using `sortBy` / `sortDirection`:
+Group matched entries by city. When the run is nationwide (no `locations`), the city comes from each vacancy page, so group by the cities actually found and follow the format reference for country-level or remote-only postings. Prompted matches form one leading group before the city groups (format reference) but still count in their city's share. Within each city, order rows by company size using `sortBy` / `sortDirection`:
 
 - `sortBy: "companySize"` sorts by the lower bound of the size range shown on the page (`11-50` → 11, `10001+` → 10001).
 - `sortDirection` defaults to `asc`; use `desc` for largest first.
 - Rows with the same size keep discovery order. If `sortBy` is missing or unknown, keep discovery order.
-- After sorting, renumber the `#` column sequentially in the final display order and update any internal cross-references such as "same JD as #22".
+- After sorting, renumber the `#` column sequentially in the final display order across the priority group and the city groups, and update any internal cross-references such as "same JD as #22".
 
 Never sort by a candidate-fit score. Do not perform company research or prepare interview answers in this phase.
 
@@ -206,7 +208,7 @@ At the end, state:
 - number of applied jobs skipped from the index;
 - number of result cards skipped before opening (off-family title or out of scope);
 - number of expired or closed postings skipped by the validity check;
-- confirmed matches;
+- confirmed matches, and how many of them carried the platform priority prompt;
 - items requiring manual review;
 - confirmed non-matches excluded;
 - how many matched rows were flagged as cross-day repeats;

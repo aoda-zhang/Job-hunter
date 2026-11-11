@@ -15,11 +15,11 @@ Cross-day memory, application records and the run audit live in `reports/job-ind
 
 - Write all human-readable text in `preferredReportLanguage` from `job-hunter.config.json`. Default to **English** when the field is absent, empty or unsupported, and say so in the final summary.
 - Translate the human-readable layer only: title, section headings, table headers, labels (e.g. `Not specified`, `All Germany`, `Exception note`), relative times (e.g. `2 days ago`) and annotation markers (e.g. `[reported MM-DD]`, `[applied MM-DD]`, `⚠️ possible duplicate`, `⚠️ possibly applied MM-DD`).
-- Do not translate company names, job titles, technical terms, posted keywords, URLs, dates in `YYYY-MM-DD` or `MM-DD`, or any key/field name from the job index and audit log.
+- Do not translate company names, job titles, technical terms, posted keywords, URLs, dates in `YYYY-MM-DD` or `MM-DD`, index/audit field names, or the priority prompt (`You'd be a top applicant`) and marker `Top applicant`.
 - The structure is fixed regardless of language: the same section order, table columns, column order and counts.
 - Use **tables** as the main presentation so the report is scannable
 - Do not restate long JD passages; do not paste full JDs
-- Do not add match scores, rankings, recommendation levels or star ratings, and do not evaluate the candidate profile
+- Do not add match scores, rankings, recommendation levels or star ratings, and do not evaluate the candidate profile. The only ordering exception is the platform's own prompt (section 2); never compute one
 
 ## Section order
 
@@ -68,12 +68,25 @@ After that, append "Evidence and consistency rules" and "Cross-day repeats and u
 
 ### 2. Matched jobs
 
-Group by **city** (`### Munich (13/30)`, `### Berlin (13/30)`, `### Hamburg (4/30)` …), and order each city by **company size**, never by match quality.
+Group by **city** (`### Munich (13/30)`, `### Berlin (13/30)`, `### Hamburg (4/30)` …), and order each city by **company size**, never by a computed match quality. Matched vacancies that carry the platform's priority prompt go into one leading group first (see below).
 
 - When `locations` is configured, use the configured city names as headings.
 - When `locations` is missing or empty (nationwide run), the city comes from each job page; group by the cities actually found. When a page shows only a country (e.g. `Germany`) or is nationwide remote, use `### All Germany` or `### All Germany (Remote)`. Never invent a city to fit an old heading.
 
 The number in parentheses after a city heading is that city's **share of matches**: `matches in this city / total matches today`. The denominator counts only rows in today's matched table, excluding excluded and review rows. Cities without matches do not appear here.
+
+#### Priority group: `You'd be a top applicant`
+
+Matched jobs with the verified prompt (currently LinkedIn Premium, `linkedinPremium: true`) form one group at the top of section 2, before all city groups:
+
+```markdown
+### You'd be a top applicant (3/30)
+```
+
+- Use the fixed heading `You'd be a top applicant` in every language; the number is `rows with the prompt / total matches today`.
+- Same columns; sort by `sortBy` / `sortDirection` inside the group.
+- City is not a column: start each Notes cell with the city, e.g. `Berlin; English JD; Full-time`. The row still counts in its city's share heading.
+- Omit the group when empty. The prompt never creates a match; a failed job goes to the excluded table instead.
 
 Ordering rules:
 
@@ -81,7 +94,7 @@ Ordering rules:
 - Company size uses the range shown on the page and compares the **lower bound**: `11-50` → 11, `10001+` → 10001, `9,000` → 9000
 - Rows with the same size keep discovery order
 - When `sortBy` is missing or unknown, keep discovery order
-- After sorting, renumber the `#` column sequentially in the final display order and update any internal references (e.g. "same JD as #22")
+- After sorting, renumber the `#` column sequentially in the final display order across the priority group and all city groups, and update any internal references (e.g. "same JD as #22")
 
 Fixed columns:
 
@@ -94,7 +107,7 @@ Column rules:
 
 | Column | Rule |
 |---|---|
-| # | Sequential in final display order, after city grouping and sorting |
+| # | Sequential in final display order, across the priority group and after city grouping and sorting |
 | Source | Platform name from `sources`, e.g. `LinkedIn`, `Indeed`; add the domain when the name alone is ambiguous |
 | Company | The company field on the job page; when the poster ≠ the actual employer, put the poster here and the employer in Notes |
 | Size | The company size shown on the page, e.g. `51-200`, `9,000`, `10001+`; write `Not specified` when absent |
@@ -102,10 +115,10 @@ Column rules:
 | Mode | `On-site` / `Hybrid` / `Remote` as shown; when the page has no such field write `Not specified` and move the row to the review table; add ⚠️ and explain in Notes when it conflicts with the JD body |
 | Posted | Relative time (`2 days ago`, `19 hours ago`); mark reposts as `(reposted)` |
 | Matched keywords | Only **configured** terms that actually appear in the JD, comma-separated; never add unconfigured technologies |
-| Notes | Only facts verifiable on the page: main stack, level, contract arrangement, poster/employer mismatch, field conflicts; ≤ about 60 characters; no "great fit" or "recommended" language. Cross-day, application and possible-duplicate markers follow "Cross-day repeats and updates" |
+| Notes | Only facts verifiable on the page: main stack, level, contract arrangement, poster/employer mismatch, field conflicts; ≤ about 60 characters; no "great fit" or "recommended" language. Markers follow "Cross-day repeats and updates". Start Notes with the city in the priority group; elsewhere a prompted row adds `Top applicant` |
 | Link | `[Open](URL)`, pointing to the canonical job URL actually visited in this run |
 
-City is not a table column: it comes from the section heading (`### Munich (13/30)`). Location details that disagree with the heading (e.g. a role in Pullach, or a remote scope limited to EMEA) go into Notes.
+City is not a table column: it comes from the section heading (`### Munich (13/30)`), or from the start of Notes inside the priority group. Location details that disagree with the heading (e.g. a role in Pullach, or a remote scope limited to EMEA) go into Notes.
 
 Employment type is a filter, not a column; when it matters for judgment (contract work, parental-leave cover, part-time) write it in Notes.
 
@@ -121,6 +134,8 @@ Use the same table structure as section 2, and state in **Notes**:
 
 - which check is unknown (title / language / keywords / work mode / employment type)
 - the concrete reason it is missing or ambiguous (JD did not load, too short, truncated, mixed language, page does not expose the field, …)
+
+Prompted rows come first in discovery order and start Notes with `Top applicant`; the prompt never makes an unknown check a match.
 
 Unknown items **must not** be written as matched or excluded.
 
@@ -139,6 +154,7 @@ Unknown items **must not** be written as matched or excluded.
 - Group similar reasons together (e.g. all German JDs) so the table is scannable
 - Do not paste long JD passages
 - Duplicate relationships (same role in different cities, bilingual copies) may be noted, but must never be double-counted as matches
+- A prompted job that failed a check is listed here with only the failed dimension; the prompt is never an exclusion reason
 - Jobs skipped at the card stage (clearly wrong title or out of scope) and never opened **do not appear here**; they count only in "Cards skipped before opening"
 - **The link column is mandatory**, format `[Open](URL)`, pointing to the job page actually opened in this run, so every row can be checked
 - Excluded-table URLs are for manual checking only and **must never be used as a cross-day dedup key** (see "Cross-day repeats and updates")
@@ -161,6 +177,7 @@ Length limit: 3 lines, covering only three things — what happened, how many ro
 - Write `Not specified` for missing fields; never infer location, work mode, employment type or posting date
 - Keep URLs exactly as found; never assemble or invent one
 - A job appears at most once in the same report; a match and an exclusion never both count
+- The priority prompt is personal Premium UI text: ordering metadata only, never a matching dimension or an inferred signal
 - Every daily report uses the same section order and table columns so reports stay comparable
 - Do not output candidate-fit, salary-expectation or visa judgments
 

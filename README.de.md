@@ -89,10 +89,11 @@ Du sprichst immer nur mit dem Job-Hunter-Agenten. Er lädt `job-discovery` selbs
 | `seniority.include` | nein | `Junior` / `Mid-level` / `Senior` / `Lead`. Leer, fehlend oder alle Level = kein Filter. |
 | `excludeRecruiters` | nein | Bei `true` werden bestätigte Personalvermittler mit Drittkunden ausgeschlossen; unklare Fälle gehen in die Prüfung. |
 | `sources` | ja | Zu durchsuchende Plattformen, in Reihenfolge. Eigene Referenzen für `LinkedIn`, `Indeed` und `Glassdoor` (z. B. `glassdoor.de`). Eine Plattform ohne Referenz wird übersprungen, nicht geraten – ergänze sie über `references/_template.md`. |
+| `linkedinPremium` | nein | Auf `true` setzen, wenn das LinkedIn-Konto Premium ist: Treffer mit dem Hinweis `You'd be a top applicant` erscheinen dann zuerst. `false` oder ohne Angabe ignoriert den Hinweis. |
 | `reportRepo` | nein | Optionale Git-URL. Ist sie gesetzt, wird der Tagesbericht nach jedem Lauf dorthin committet und gepusht. |
 | `notifications.email` | nein | Optionaler SMTP-Block für Zusammenfassungsmails. Standardmäßig aus; bei `enabled` wird nach jedem Lauf eine Zusammenfassung gesendet. |
 | `schedule` | nein | Täglicher launchd-Job: `enabled`, `time` (`HH:MM`, lokale Zeit) und `timezone`. |
-| `sortBy` / `sortDirection` | nein | Sortierung innerhalb einer Stadt. `companySize` mit `asc` oder `desc`; ohne Angabe gilt die Fundreihenfolge. |
+| `sortBy` / `sortDirection` | nein | Sortierung in der Prioritätsgruppe und innerhalb einer Stadt. `companySize` mit `asc` oder `desc`; ohne Angabe gilt die Fundreihenfolge. |
 | `preferredReportLanguage` | nein | Sprache des Tagesberichts und des E-Mail-Textes, z. B. `English`, `German`, `Chinese`. Standard `English`. Betrifft nie die Suchanfrage, das Matching, Index-Schlüssel oder Audit-Felder; der E-Mail-Betreff bleibt ASCII. |
 
 Hinweise:
@@ -124,7 +125,7 @@ Die Prüfungen laufen in dieser Reihenfolge und enden beim ersten bestätigten W
 
 Vor dem Öffnen einer Seite gibt es einen kurzen Kartenfilter: Titel, die eindeutig eine andere Funktion nennen (Vertrieb, Marketing, Finanzen, HR, Design, SAP-Administration …) oder klar außerhalb von Land/Stadt liegen, werden übersprungen und nur gezählt. Mehrdeutige, abgeschnittene oder rollenübergreifende Titel werden weiterhin geöffnet.
 
-Es gibt keine Punkte, kein Ranking nach Kandidaten-Fit und keine Filterung nach Gehalt, Berufsjahren, Visum oder Branche.
+Es gibt keine Punkte, kein Ranking nach Kandidaten-Fit und keine Filterung nach Gehalt, Berufsjahren, Visum oder Branche. Das einzige Prioritätssignal kommt von der Plattform: Mit `linkedinPremium` werden LinkedIn-Treffer mit **`You'd be a top applicant`** zuerst gelistet; eine fehlgeschlagene Prüfung schließt die Stelle weiterhin aus.
 
 ## 7. Berichte
 
@@ -133,7 +134,7 @@ Es gibt keine Punkte, kein Ranking nach Kandidaten-Fit und keine Filterung nach 
 | Tägliche Stellensuche | `reports/daily/YYYY-MM-DD.md` |
 | Interviewvorbereitung | `reports/interviews/<company-slug>/` |
 
-Der Tagesbericht enthält eine Laufzusammenfassung, Treffer nach Stadt und Unternehmensgröße sortiert, bei Bedarf eine Prüftabelle und zuletzt die ausgeschlossenen Stellen mit der genauen Begründung. Die Struktur legt `.opencode/skills/job-discovery/references/daily-report-format.md` fest; die Sprache steuert `preferredReportLanguage` (Standard `English`). Übersetzt wird nur der lesbare Text.
+Der Tagesbericht enthält eine Laufzusammenfassung, Treffer (Premium-Hinweisgruppe zuerst, danach der Rest nach Stadt und Unternehmensgröße sortiert), bei Bedarf eine Prüftabelle und zuletzt die ausgeschlossenen Stellen mit der genauen Begründung. Die Struktur legt `.opencode/skills/job-discovery/references/daily-report-format.md` fest; die Sprache steuert `preferredReportLanguage` (Standard `English`). Übersetzt wird nur der lesbare Text.
 
 `job-hunter.config.json` und `reports/daily/` sind per Git ignoriert. Ist `reportRepo` gesetzt, wird nach jedem Lauf nur der Tagesbericht committet und in dein gewähltes Repository gepusht.
 

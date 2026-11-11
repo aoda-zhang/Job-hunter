@@ -89,10 +89,11 @@ You only ever talk to the Job Hunter agent. It loads `job-discovery` by itself; 
 | `seniority.include` | no | `Junior` / `Mid-level` / `Senior` / `Lead`. Empty, absent or all levels = filter off. |
 | `excludeRecruiters` | no | `true` excludes confirmed staffing agencies hiring for a third-party client; unclear cases go to review. |
 | `sources` | yes | Platforms to search, in order. Dedicated references ship for `LinkedIn`, `Indeed` and `Glassdoor` (e.g. `glassdoor.de`). A platform without a reference is skipped, not guessed — add one from `references/_template.md`. |
+| `linkedinPremium` | no | Set `true` when your LinkedIn account is Premium: matched jobs showing the `You'd be a top applicant` prompt then form a leading group. `false` or absent ignores the prompt. |
 | `reportRepo` | no | Optional Git URL. When set, the day's report is committed and pushed there after each run. |
 | `notifications.email` | no | Optional SMTP block for run-summary emails. Off by default; when `enabled`, one summary is sent after each run. |
 | `schedule` | no | Daily launchd job: `enabled`, `time` (`HH:MM`, local time) and `timezone`. |
-| `sortBy` / `sortDirection` | no | Ordering inside each city. `companySize` with `asc` or `desc`; omit for discovery order. |
+| `sortBy` / `sortDirection` | no | Ordering inside the priority group and each city. `companySize` with `asc` or `desc`; omit for discovery order. |
 | `preferredReportLanguage` | no | Language of the daily report and the summary email body, e.g. `English`, `German`, `Chinese`. Defaults to `English`. It never affects the search query, matching, index keys or audit fields; the email subject stays ASCII. |
 
 Notes:
@@ -124,7 +125,7 @@ Checks run in this order and stop at the first confirmed mismatch:
 
 Before opening a page, the agent does a cheap card pass: titles that clearly name a different function (sales, marketing, finance, HR, design, SAP admin, …) or that are clearly outside your country/city are skipped and only counted. Ambiguous, truncated or multi-role titles are still opened.
 
-There is no score, no ranking by candidate fit, and no filtering on salary, years of experience, visa or industry.
+There is no score, no ranking by candidate fit, and no filtering on salary, years of experience, visa or industry. The only priority signal is the platform's own prompt: with `linkedinPremium`, LinkedIn matches showing **`You'd be a top applicant`** are listed first, and a failed check still excludes the job.
 
 ## 7. Reports
 
@@ -133,7 +134,7 @@ There is no score, no ranking by candidate fit, and no filtering on salary, year
 | Daily discovery | `reports/daily/YYYY-MM-DD.md` |
 | Interview preparation | `reports/interviews/<company-slug>/` |
 
-The daily report lists the platforms searched, then matched jobs grouped by city and sorted by company size, a review table when needed, and the excluded jobs with the exact reason last. Every table has a `Source` column so a mixed-platform run stays readable. Reports follow the fixed format reference at `.opencode/skills/job-discovery/references/daily-report-format.md` and are written in `preferredReportLanguage` (default `English`). The reference fixes the structure; only the human-readable text is translated.
+The daily report lists the platforms searched, then matched jobs (prompted LinkedIn Premium matches first, then the rest grouped by city and sorted by company size), a review table when needed, and the excluded jobs with the exact reason last. Every table has a `Source` column so a mixed-platform run stays readable. Reports follow the fixed format reference at `.opencode/skills/job-discovery/references/daily-report-format.md` and are written in `preferredReportLanguage` (default `English`). The reference fixes the structure; only the human-readable text is translated.
 
 `job-hunter.config.json` and `reports/daily/` are Git-ignored. If you set `reportRepo`, only that day's report is committed and pushed to your chosen repository after each run.
 
