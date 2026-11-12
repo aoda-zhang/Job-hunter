@@ -135,6 +135,7 @@ While the page is open, also record the platform priority prompt when its refere
 Also while the page is open, record two application-process fields for every inspected vacancy (matched, review or excluded). These are informational only — they never affect match/review/excluded classification:
 - `easyApply`: `yes` when the page shows a one-click apply button on the platform (e.g. LinkedIn "Easy Apply", Indeed "Indeed Apply"), `no` when the apply path clearly leaves the platform or requires an external form, `unknown` when the button or its absence cannot be determined.
 - `coverLetter`: `yes` when the page or application form explicitly says a cover letter is required, `no` when it explicitly says cover letter is optional or not needed, `unknown` when neither is stated.
+- `isNeededCover`: set to `true` when `coverLetter` is `yes`; otherwise `false`. When `true`, a cover letter must be drafted for this job (see section 5.4).
 
 Keep `matched` and `review` in the report; exclude `not_matched` from the main report. Never rank, score or label fit; the only priority signal is the platform's own prompt, quoted as shown. Do not filter on years, salary, visa, candidate language proficiency, industry, architecture or company size. Record only facts visible on the page; never infer a missing field.
 
@@ -173,9 +174,21 @@ Do not publish anything besides the day's report file.
 
 After the report is written:
 
-1. Upsert every vacancy inspected today into `reports/job-index.json` by its source-qualified key: set `source`, `lastSeen` and `status`, set `firstSeen` on first sight, set `firstReportedOn` the first time it enters the matched or review table, set `easyApply` and `coverLetter` from the page inspection, and never clear `appliedOn`.
+1. Upsert every vacancy inspected today into `reports/job-index.json` by its source-qualified key: set `source`, `lastSeen` and `status`, set `firstSeen` on first sight, set `firstReportedOn` the first time it enters the matched or review table, set `easyApply`, `coverLetter` and `isNeededCover` (`true` when `coverLetter` is `yes`) from the page inspection, and never clear `appliedOn`.
 2. Append one JSON line for this run to `reports/runs/YYYY-MM-DD.jsonl` using the field list in `.opencode/skills/job-discovery/references/job-index-and-audit.md`. Use the recorded start as `runAt`, the current time as `finishedAt`, and their difference as `durationSeconds`.
 3. Preserve unknown fields and every other entry. Never delete index entries automatically.
+
+### Draft cover letters (when needed)
+
+4. For every vacancy inspected today with `isNeededCover: true`, draft a cover letter from the root template `cover-letter-template.md` and save it locally under:
+
+   `reports/cover-letters/<company-slug>/<jobId>.md`
+
+   - `<company-slug>`: lowercase, spaces and punctuation replaced by `-`, e.g. `clickhouse`, `zimbra-ag`.
+   - Fill in every bracketed placeholder in the template using facts from the JD page: company name, job title, job URL, source platform, matched keywords, and relevant requirements from the JD.
+   - Never fabricate experience, achievements, or motivations. Only use what is verifiable from the JD and your own background.
+   - Do not submit the application automatically. The drafted cover letter is for manual review and sending.
+   - Skip jobs where `isNeededCover` is `false` or `null`.
 
 If `notifications.email.enabled` is `true`, load the `email-notify` skill and send one run summary after steps 1 and 2. Do not send when it is `false` or absent.
 

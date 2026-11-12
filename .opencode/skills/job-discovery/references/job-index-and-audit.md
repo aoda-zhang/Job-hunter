@@ -32,6 +32,7 @@ Never push these two files to `reportRepo`. `reportRepo` receives only the day's
       "appliedOn": null,
       "easyApply": "unknown",
       "coverLetter": "unknown",
+      "isNeededCover": false,
       "note": ""
     }
   }
@@ -51,6 +52,7 @@ Field rules:
 - `appliedOn`: the date the user confirmed an application; `null` otherwise.
 - `easyApply`: whether the posting offers a one-click apply path on the platform (`yes`, `no`, `unknown`). Read from the job page only; never infer from applicant count, search ranking or JD text.
 - `coverLetter`: whether the posting requires a cover letter (`yes`, `no`, `unknown`). Read from the job page or application form only; never infer from company size or industry.
+- `isNeededCover`: `true` when a cover letter is needed for this job (set from `coverLetter: "yes"`), `false` otherwise. When `true`, a cover letter must be drafted from `cover-letter-template.md` and saved under `reports/cover-letters/<company-slug>/`.
 - `note`: optional, verifiable facts from the page only, no judgment.
 - Update only the relevant fields and preserve unknown fields; never rewrite the whole object or touch other entries.
 
