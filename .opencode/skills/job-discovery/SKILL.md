@@ -132,6 +132,10 @@ Disabled checks are skipped. Confirmed mismatch → `not_matched`, stop. No mism
 
 While the page is open, also record the platform priority prompt when its reference defines one and the config enables it (LinkedIn: `linkedinPremium`). It is ordering metadata only: never a check, never an upgrade of `unknown`, and a failed vacancy stays excluded even with the prompt.
 
+Also while the page is open, record two application-process fields for every inspected vacancy (matched, review or excluded). These are informational only — they never affect match/review/excluded classification:
+- `easyApply`: `yes` when the page shows a one-click apply button on the platform (e.g. LinkedIn "Easy Apply", Indeed "Indeed Apply"), `no` when the apply path clearly leaves the platform or requires an external form, `unknown` when the button or its absence cannot be determined.
+- `coverLetter`: `yes` when the page or application form explicitly says a cover letter is required, `no` when it explicitly says cover letter is optional or not needed, `unknown` when neither is stated.
+
 Keep `matched` and `review` in the report; exclude `not_matched` from the main report. Never rank, score or label fit; the only priority signal is the platform's own prompt, quoted as shown. Do not filter on years, salary, visa, candidate language proficiency, industry, architecture or company size. Record only facts visible on the page; never infer a missing field.
 
 ## 4. Follow the daily report reference
@@ -169,7 +173,7 @@ Do not publish anything besides the day's report file.
 
 After the report is written:
 
-1. Upsert every vacancy inspected today into `reports/job-index.json` by its source-qualified key: set `source`, `lastSeen` and `status`, set `firstSeen` on first sight, set `firstReportedOn` the first time it enters the matched or review table, and never clear `appliedOn`.
+1. Upsert every vacancy inspected today into `reports/job-index.json` by its source-qualified key: set `source`, `lastSeen` and `status`, set `firstSeen` on first sight, set `firstReportedOn` the first time it enters the matched or review table, set `easyApply` and `coverLetter` from the page inspection, and never clear `appliedOn`.
 2. Append one JSON line for this run to `reports/runs/YYYY-MM-DD.jsonl` using the field list in `.opencode/skills/job-discovery/references/job-index-and-audit.md`. Use the recorded start as `runAt`, the current time as `finishedAt`, and their difference as `durationSeconds`.
 3. Preserve unknown fields and every other entry. Never delete index entries automatically.
 

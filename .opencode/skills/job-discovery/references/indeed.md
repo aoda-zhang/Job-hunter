@@ -45,7 +45,15 @@ Advance with the results pagination control (or `start=10`, `start=20`, … if t
 
 Indeed may interrupt with a login prompt, a "verify you are human" challenge or a rate limit after several pages. Stop this source at that boundary, record it in `limitations`, and continue with other sources. Never solve a CAPTCHA, never create an account, never use the "Easy apply" flow.
 
-## 6. Known quirks
+## 6. Application-process fields
+
+Record these while the job page is open. They are informational only and never affect match/review/excluded classification.
+
+**Easy Apply:** `Yes` when the detail page shows an "Indeed Apply" or "Easy Apply" button that applies within Indeed; `No` when the apply button clearly redirects to the employer's site or an external application form; `Unknown` when neither is visible. Never infer it from badges or search ranking. Never use the "Easy apply" flow itself.
+
+**Cover letter:** `Yes` when the page or the application form explicitly states a cover letter is required; `No` when it explicitly states cover letter is optional or not needed; `Unknown` when neither is stated. Do not open the apply flow just to check — record only what is visible on the job page.
+
+## 7. Known quirks
 
 - Country is encoded in the domain: use `de.indeed.com` for Germany, and so on. Search results and job IDs are not portable across domains.
 - Sponsored and organic cards duplicate each other; deduplicate on `jk`.

@@ -99,8 +99,8 @@ Ordering rules:
 Fixed columns:
 
 ```markdown
-| # | Source | Company | Size | Title | Mode | Posted | Matched keywords | Notes | Link |
-|---|---|---|---|---|---|---|---|---|---|
+| # | Source | Company | Size | Title | Mode | Posted | Matched keywords | Easy Apply | Cover letter | Notes | Link |
+|---|---|---|---|---|---|---|---|---|---|---|---|
 ```
 
 Column rules:
@@ -115,6 +115,8 @@ Column rules:
 | Mode | `On-site` / `Hybrid` / `Remote` as shown; when the page has no such field write `Not specified` and move the row to the review table; add ⚠️ and explain in Notes when it conflicts with the JD body |
 | Posted | Relative time (`2 days ago`, `19 hours ago`); mark reposts as `(reposted)` |
 | Matched keywords | Only **configured** terms that actually appear in the JD, comma-separated; never add unconfigured technologies |
+| Easy Apply | `Yes` when the page shows a one-click apply button on the platform (e.g. LinkedIn "Easy Apply", Indeed "Indeed Apply"), `No` when the apply path clearly leaves the platform or requires an external form, `Unknown` when it cannot be determined |
+| Cover letter | `Yes` when the page or application form explicitly says a cover letter is required, `No` when it explicitly says cover letter is optional or not needed, `Unknown` when neither is stated |
 | Notes | Only facts verifiable on the page: main stack, level, contract arrangement, poster/employer mismatch, field conflicts; ≤ about 60 characters; no "great fit" or "recommended" language. Markers follow "Cross-day repeats and updates". Start Notes with the city in the priority group; elsewhere a prompted row adds `Top applicant` |
 | Link | `[Open](URL)`, pointing to the canonical job URL actually visited in this run |
 
@@ -144,8 +146,8 @@ Unknown items **must not** be written as matched or excluded.
 **Always the last job table**, written after matched and review. A separate section, not counted in the main table. Fixed columns:
 
 ```markdown
-| # | Source | Company | Title | City | Mode | Posted | Exclusion reason | Link |
-|---|---|---|---|---|---|---|---|---|
+| # | Source | Company | Title | City | Mode | Posted | Easy Apply | Cover letter | Exclusion reason | Link |
+|---|---|---|---|---|---|---|---|---|---|---|
 ```
 
 - Posted: relative time (`2 days ago`, `19 hours ago`), mark reposts as `(reposted)`; write `Not specified` when the page does not show it

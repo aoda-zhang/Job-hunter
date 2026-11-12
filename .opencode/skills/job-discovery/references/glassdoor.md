@@ -52,7 +52,15 @@ Glassdoor gates some listings and some pages behind sign-in. When that happens:
 
 Never solve a CAPTCHA, never create an account, and never submit an application or "easy apply".
 
-## 6. Known quirks
+## 6. Application-process fields
+
+Record these while the job page is open. They are informational only and never affect match/review/excluded classification.
+
+**Easy Apply:** `Yes` when the detail page shows an "Easy Apply" button that applies within Glassdoor; `No` when the apply button clearly redirects to the employer's site or an external application form; `Unknown` when neither is visible. Never infer it from badges or search ranking. Never submit an application or use the "easy apply" flow.
+
+**Cover letter:** `Yes` when the page or the application form explicitly states a cover letter is required; `No` when it explicitly states cover letter is optional or not needed; `Unknown` when neither is stated. Do not open the apply flow just to check — record only what is visible on the job page.
+
+## 7. Known quirks
 
 - `glassdoor.de` serves German UI and German-language listings; a listing's own language may still be English. Judge the JD language from the posting, never from the site locale.
 - Ratings, salary estimates and "best places to work" badges are not filters and must not influence classification.

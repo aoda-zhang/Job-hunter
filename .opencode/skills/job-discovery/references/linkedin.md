@@ -56,7 +56,15 @@ Record the displayed result count when the page shows one, plus the number of re
 
 If LinkedIn requires login, shows a CAPTCHA, or blocks the run, stop this source and record it in `limitations`. Never ask for credentials, never bypass access controls, and never apply, message, save or follow anything.
 
-## 7. Known quirks
+## 7. Application-process fields
+
+Record these while the job page is open. They are informational only and never affect match/review/excluded classification.
+
+**Easy Apply:** `Yes` when the detail page shows an "Easy Apply" button that applies within LinkedIn; `No` when the apply button clearly redirects to the employer's site or an external application form; `Unknown` when neither is visible. Never infer it from applicant counts, Easy Apply badges on cards, or JD text.
+
+**Cover letter:** `Yes` when the page or the Easy Apply flow explicitly states a cover letter is required; `No` when it explicitly states cover letter is optional or not needed; `Unknown` when neither is stated. Do not open the apply flow just to check — record only what is visible on the job page.
+
+## 8. Known quirks
 
 - The AI search page may reset filters after a new submission — re-apply and re-verify.
 - The same role can appear under several job IDs, including multi-city and bilingual versions; that is handled by the soft-dedup rules in `job-index-and-audit.md`.
