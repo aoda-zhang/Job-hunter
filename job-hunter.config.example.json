@@ -62,5 +62,6 @@
     "enabled": false,
     "time": "18:10",
     "timezone": "Asia/Shanghai"
-  }
+  },
+  "isNeededCover": false
 }
