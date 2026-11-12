@@ -132,18 +132,27 @@ There is no score, no ranking by candidate fit, and no filtering on salary, year
 | Output | Path |
 |---|---|
 | Daily discovery | `reports/daily/YYYY-MM-DD.md` |
+| Cover letter drafts | `reports/cover-letters/<company-slug>/<jobId>.md` |
 | Interview preparation | `reports/interviews/<company-slug>/` |
 
-The daily report lists the platforms searched, then matched jobs (prompted LinkedIn Premium matches first, then the rest grouped by city and sorted by company size), a review table when needed, and the excluded jobs with the exact reason last. Every table has a `Source` column so a mixed-platform run stays readable. Reports follow the fixed format reference at `.opencode/skills/job-discovery/references/daily-report-format.md` and are written in `preferredReportLanguage` (default `English`). The reference fixes the structure; only the human-readable text is translated.
+The daily report lists the platforms searched, then matched jobs (prompted LinkedIn Premium matches first, then the rest grouped by city and sorted by company size), a review table when needed, and the excluded jobs with the exact reason last. Every table has a `Source` column so a mixed-platform run stays readable.
 
-`job-hunter.config.json` and `reports/daily/` are Git-ignored. If you set `reportRepo`, only that day's report is committed and pushed to your chosen repository after each run.
+**Matched and excluded tables** each include two extra application-process columns:
 
-**Local memory.** Two more files stay on your machine and are never pushed:
+- **Easy Apply** — `Yes`/`No`/`Unknown`: whether the page shows a one-click apply button on the platform (e.g. LinkedIn "Easy Apply", Indeed "Indeed Apply"). Informational only, never used as a filter.
+- **Cover letter** — `Yes`/`No`/`Unknown`: whether the page or application form explicitly says a cover letter is required. When `Yes`, the agent drafts a cover letter from `cover-letter-template.md` and saves it under `reports/cover-letters/<company-slug>/<jobId>.md` for your manual review and sending. Never auto-submitted.
+
+Reports follow the fixed format reference at `.opencode/skills/job-discovery/references/daily-report-format.md` and are written in `preferredReportLanguage` (default `English`). The reference fixes the structure; only the human-readable text is translated.
+
+`job-hunter.config.json`, `reports/daily/`, and `cover-letter-template.md` are Git-ignored. If you set `reportRepo`, only that day's report is committed and pushed to your chosen repository after each run.
+
+**Local memory.** Three more files stay on your machine and are never pushed:
 
 | File | Purpose |
 |---|---|
-| `reports/job-index.json` | Every vacancy ever inspected, its latest status, and the date you applied |
+| `reports/job-index.json` | Every vacancy ever inspected, its latest status, `easyApply`, `coverLetter`, `isNeededCover`, and the date you applied |
 | `reports/runs/YYYY-MM-DD.jsonl` | One audit line per run: result count, pages opened, stop reason, all counters |
+| `cover-letter-template.md` | Your personal cover letter template (root). Fill in the bracketed placeholders; the agent uses it to draft letters for jobs that need one |
 
 The index is what makes daily runs safe: a vacancy you already applied to is skipped before it is opened, repeats from any earlier day are tagged `[reported MM-DD]`, and the same role posted under a different job ID is flagged `⚠️ possible duplicate`. The audit log is what makes coverage measurable: if a platform showed 300 results and only 120 were inspected, the log records where the rest went and why pagination stopped.
 
