@@ -84,6 +84,7 @@ You only ever talk to the Job Hunter agent. It loads `job-discovery` by itself; 
 | `jdLanguages.acceptGermanJdWithEnglishWorkingLanguage` | no | When `true`, a German JD still matches if it explicitly names English as the working, team or company language. |
 | `technicalKeywords.include` | yes | Technologies to look for in the JD. |
 | `technicalKeywords.matchMode` | yes | `any` = one keyword is enough; `all` = every keyword must appear. |
+| `isNeededCover` | no | When `true`, draft a cover letter from `cover-letter-template.md` for every matched job whose JD requires a cover letter. Saved under `reports/cover-letters/<company-slug>/<jobId>.md`. Default `false`. |
 | `workModes` | no | `Remote` / `Hybrid` / `On-site`. All three, empty or absent = filter off. |
 | `employmentTypes` | no | `Full-time` / `Part-time` / `Contract` / `Temporary` / `Internship` / `Volunteer`. All of them, empty or absent = filter off. |
 | `seniority.include` | no | `Junior` / `Mid-level` / `Senior` / `Lead`. Empty, absent or all levels = filter off. |

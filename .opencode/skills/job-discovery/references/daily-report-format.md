@@ -116,7 +116,7 @@ Column rules:
 | Posted | Relative time (`2 days ago`, `19 hours ago`); mark reposts as `(reposted)` |
 | Matched keywords | Only **configured** terms that actually appear in the JD, comma-separated; never add unconfigured technologies |
 | Easy Apply | `Yes` when the page shows a one-click apply button on the platform (e.g. LinkedIn "Easy Apply", Indeed "Indeed Apply"), `No` when the apply path clearly leaves the platform or requires an external form, `Unknown` when it cannot be determined |
-| Cover letter | `Yes` when the page or application form explicitly says a cover letter is required, `No` when it explicitly says cover letter is optional or not needed, `Unknown` when neither is stated. When `Yes`, a cover letter must be drafted from `cover-letter-template.md` and saved under `reports/cover-letters/<company-slug>/<jobId>.md` |
+| Cover letter | `Yes` when the page or application form explicitly says a cover letter is required, `No` when it explicitly says cover letter is optional or not needed, `Unknown` when neither is stated. When `Yes` and `isNeededCover` is `true` in config, a cover letter is drafted from `cover-letter-template.md` and saved under `reports/cover-letters/<company-slug>/<jobId>.md` |
 | Notes | Only facts verifiable on the page: main stack, level, contract arrangement, poster/employer mismatch, field conflicts; ≤ about 60 characters; no "great fit" or "recommended" language. Markers follow "Cross-day repeats and updates". Start Notes with the city in the priority group; elsewhere a prompted row adds `Top applicant` |
 | Link | `[Open](URL)`, pointing to the canonical job URL actually visited in this run |
 
@@ -211,14 +211,14 @@ After the user confirms an application, append `[applied MM-DD]` to that job's N
 
 ### Cover letter generation
 
-When a matched or review job has `coverLetter: "Yes"` (equivalently `isNeededCover: true` in the index), draft a cover letter from the root template `cover-letter-template.md` and save it locally under:
+Read `isNeededCover` from `job-hunter.config.json` (default `false`). When `true` and a matched or review job has `coverLetter: "Yes"`, draft a cover letter from the root template `cover-letter-template.md` and save it locally under:
 
 `reports/cover-letters/<company-slug>/<jobId>.md`
 
 - Fill in every bracketed placeholder using facts from the JD page (company, title, job URL, source, matched keywords, JD requirements).
 - Never fabricate experience, achievements, or motivations.
 - Do not submit automatically — the draft is for manual review and sending.
-- Skip jobs where `coverLetter` is `No` or `Unknown`.
+- Skip jobs where `coverLetter` is `No` or `Unknown`. When `isNeededCover` is `false`, do not draft cover letters even if a JD requires one.
 
 ## Updating an existing report
 
