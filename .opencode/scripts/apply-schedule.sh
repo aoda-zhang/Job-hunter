@@ -2,16 +2,16 @@
 # Apply schedule blocks from job-hunter.config.json to launchd.
 # Usage: apply-schedule.sh [--dry-run]
 #
-# Daily job search:      schedule.enabled / schedule.time / schedule.timezone
+# Job search:            jobSearchSchedule.times[] / .timezone
 # LinkedIn feed review:  linkedinFeedReview.schedule.times[] / .timezone
-#                        empty times array = no feed review job
+#                        empty times array = no job
 set -u
 setopt NULL_GLOB
 
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 CONFIG="${JOB_HUNTER_CONFIG:-$REPO/job-hunter.config.json}"
-DAILY_LABEL="ai.jobhunter.daily"
-DAILY_PLIST="${JOB_HUNTER_PLIST:-$HOME/Library/LaunchAgents/${DAILY_LABEL}.plist}"
+JOB_LABEL="ai.jobhunter.daily"
+JOB_PLIST="${JOB_HUNTER_PLIST:-$HOME/Library/LaunchAgents/${JOB_LABEL}.plist}"
 FEED_LABEL="ai.jobhunter.feedreview"
 FEED_PLIST="${JOB_HUNTER_FEED_PLIST:-$HOME/Library/LaunchAgents/${FEED_LABEL}.plist}"
 
@@ -31,6 +31,8 @@ fi
 
 sys_tz="$(readlink /etc/localtime 2>/dev/null | sed 's|.*/zoneinfo/||')"
 [ -n "$sys_tz" ] || sys_tz="$(date +%Z)"
+
+typeset -ga TIMES
 
 validate_time() {
   case "$1" in
@@ -56,45 +58,72 @@ split_time() {
   MINUTE="${MINUTE#0}"; MINUTE="${MINUTE:-0}"
 }
 
-apply_daily() {
-  if [ "$(jq -r 'has("schedule")' "$CONFIG")" != "true" ]; then
-    print -r -- "no schedule block in $CONFIG; daily job left unchanged"
-    return 0
-  fi
-
-  local enabled daily_time tz
-  enabled="$(jq -r '.schedule.enabled // false' "$CONFIG")"
-  daily_time="$(jq -r '.schedule.time // "18:10"' "$CONFIG")"
-  tz="$(jq -r '.schedule.timezone // empty' "$CONFIG")"
-
-  if ! validate_time "$daily_time"; then
-    print -u2 -- "schedule.time must be HH:MM (24h), got: $daily_time"
+read_times() {
+  local jq_path="$1" label="$2"
+  local times_type t
+  times_type="$(jq -r "($jq_path // []) | type" "$CONFIG")"
+  if [ "$times_type" != "array" ]; then
+    print -u2 -- "$label must be an array of HH:MM strings"
     return 1
   fi
+
+  TIMES=()
+  while IFS= read -r t; do
+    [ -z "$t" ] && continue
+    if ! validate_time "$t"; then
+      print -u2 -- "$label must contain HH:MM (24h), got: $t"
+      return 1
+    fi
+    TIMES+=("$t")
+  done < <(jq -r "${jq_path}[]?" "$CONFIG")
+}
+
+disable_job() {
+  local label="$1" plist="$2" message="$3"
+  if [ "$DRY_RUN" = "1" ]; then
+    print -r -- "$message"
+    return 0
+  fi
+  launchctl bootout "gui/$(id -u)/$label" 2>/dev/null || true
+  rm -f "$plist"
+  print -r -- "$message"
+}
+
+apply_job_search() {
+  if [ "$(jq -r '(.jobSearchSchedule // null) != null' "$CONFIG")" != "true" ]; then
+    disable_job "$JOB_LABEL" "$JOB_PLIST" "no jobSearchSchedule block; job search job disabled"
+    return 0
+  fi
+
+  local tz
+  tz="$(jq -r '.jobSearchSchedule.timezone // empty' "$CONFIG")"
   check_timezone "$tz" || return 1
+  read_times '.jobSearchSchedule.times' 'jobSearchSchedule.times' || return 1
 
   if [ "$DRY_RUN" = "1" ]; then
-    print -r -- "daily job: enabled=$enabled time=$daily_time timezone=${tz:-system} plist=$DAILY_PLIST"
+    if [ ${#TIMES[@]} -eq 0 ]; then
+      print -r -- "job search job: disabled (empty times), timezone=${tz:-system}, plist=$JOB_PLIST"
+    else
+      print -r -- "job search job: times=${(j:,:)TIMES}, timezone=${tz:-system}, plist=$JOB_PLIST"
+    fi
     return 0
   fi
 
-  if [ "$enabled" != "true" ]; then
-    launchctl bootout "gui/$(id -u)/$DAILY_LABEL" 2>/dev/null || true
-    rm -f "$DAILY_PLIST"
-    print -r -- "daily job disabled; $DAILY_LABEL unloaded and plist removed"
+  if [ ${#TIMES[@]} -eq 0 ]; then
+    disable_job "$JOB_LABEL" "$JOB_PLIST" "job search times empty; $JOB_LABEL unloaded and plist removed"
     return 0
   fi
 
-  split_time "$daily_time"
-  mkdir -p "$(dirname "$DAILY_PLIST")"
-  cat > "$DAILY_PLIST" <<EOF
+  mkdir -p "$(dirname "$JOB_PLIST")"
+  {
+    cat <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
   "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>$DAILY_LABEL</string>
+  <string>$JOB_LABEL</string>
   <key>ProgramArguments</key>
   <array>
     <string>/bin/zsh</string>
@@ -103,12 +132,21 @@ apply_daily() {
   <key>WorkingDirectory</key>
   <string>$REPO</string>
   <key>StartCalendarInterval</key>
-  <dict>
-    <key>Hour</key>
-    <integer>$HOUR</integer>
-    <key>Minute</key>
-    <integer>$MINUTE</integer>
-  </dict>
+  <array>
+EOF
+    for t in "${TIMES[@]}"; do
+      split_time "$t"
+      cat <<EOF
+    <dict>
+      <key>Hour</key>
+      <integer>$HOUR</integer>
+      <key>Minute</key>
+      <integer>$MINUTE</integer>
+    </dict>
+EOF
+    done
+    cat <<EOF
+  </array>
   <key>StandardOutPath</key>
   <string>$HOME/Library/Logs/jobhunter.launchd.log</string>
   <key>StandardErrorPath</key>
@@ -116,65 +154,44 @@ apply_daily() {
 </dict>
 </plist>
 EOF
+  } > "$JOB_PLIST"
 
-  if ! plutil -lint "$DAILY_PLIST" >/dev/null 2>&1; then
-    print -u2 -- "generated plist is invalid: $DAILY_PLIST"
+  if ! plutil -lint "$JOB_PLIST" >/dev/null 2>&1; then
+    print -u2 -- "generated plist is invalid: $JOB_PLIST"
     return 1
   fi
 
-  launchctl bootout "gui/$(id -u)/$DAILY_LABEL" 2>/dev/null || true
-  if ! launchctl bootstrap "gui/$(id -u)" "$DAILY_PLIST"; then
-    print -u2 -- "launchctl bootstrap failed for $DAILY_PLIST"
+  launchctl bootout "gui/$(id -u)/$JOB_LABEL" 2>/dev/null || true
+  if ! launchctl bootstrap "gui/$(id -u)" "$JOB_PLIST"; then
+    print -u2 -- "launchctl bootstrap failed for $JOB_PLIST"
     return 1
   fi
 
-  print -r -- "daily job applied: daily $daily_time (${tz:-system time}), label $DAILY_LABEL"
+  print -r -- "job search job applied: ${(j:,:)TIMES} (${tz:-system time}), label $JOB_LABEL"
 }
 
 apply_feed_review() {
   if [ "$(jq -r '(.linkedinFeedReview.schedule // null) != null' "$CONFIG")" != "true" ]; then
-    print -r -- "no linkedinFeedReview.schedule block; feed review job disabled"
-    if [ "$DRY_RUN" != "1" ]; then
-      launchctl bootout "gui/$(id -u)/$FEED_LABEL" 2>/dev/null || true
-      rm -f "$FEED_PLIST"
-    fi
+    disable_job "$FEED_LABEL" "$FEED_PLIST" "no linkedinFeedReview.schedule block; feed review job disabled"
     return 0
   fi
 
-  local times_type tz
-  times_type="$(jq -r '(.linkedinFeedReview.schedule.times // []) | type' "$CONFIG")"
-  if [ "$times_type" != "array" ]; then
-    print -u2 -- "linkedinFeedReview.schedule.times must be an array of HH:MM strings"
-    return 1
-  fi
-  tz="$(jq -r '.linkedinFeedReview.schedule.timezone // .schedule.timezone // empty' "$CONFIG")"
+  local tz
+  tz="$(jq -r '.linkedinFeedReview.schedule.timezone // .jobSearchSchedule.timezone // empty' "$CONFIG")"
   check_timezone "$tz" || return 1
-
-  local -a times
-  times=()
-  local t
-  while IFS= read -r t; do
-    [ -z "$t" ] && continue
-    if ! validate_time "$t"; then
-      print -u2 -- "linkedinFeedReview.schedule.times must contain HH:MM (24h), got: $t"
-      return 1
-    fi
-    times+=("$t")
-  done < <(jq -r '.linkedinFeedReview.schedule.times[]?' "$CONFIG")
+  read_times '.linkedinFeedReview.schedule.times' 'linkedinFeedReview.schedule.times' || return 1
 
   if [ "$DRY_RUN" = "1" ]; then
-    if [ ${#times[@]} -eq 0 ]; then
+    if [ ${#TIMES[@]} -eq 0 ]; then
       print -r -- "feed review job: disabled (empty times), timezone=${tz:-system}, plist=$FEED_PLIST"
     else
-      print -r -- "feed review job: times=${(j:,:)times}, timezone=${tz:-system}, plist=$FEED_PLIST"
+      print -r -- "feed review job: times=${(j:,:)TIMES}, timezone=${tz:-system}, plist=$FEED_PLIST"
     fi
     return 0
   fi
 
-  if [ ${#times[@]} -eq 0 ]; then
-    launchctl bootout "gui/$(id -u)/$FEED_LABEL" 2>/dev/null || true
-    rm -f "$FEED_PLIST"
-    print -r -- "feed review times empty; $FEED_LABEL unloaded and plist removed"
+  if [ ${#TIMES[@]} -eq 0 ]; then
+    disable_job "$FEED_LABEL" "$FEED_PLIST" "feed review times empty; $FEED_LABEL unloaded and plist removed"
     return 0
   fi
 
@@ -198,7 +215,7 @@ apply_feed_review() {
   <key>StartCalendarInterval</key>
   <array>
 EOF
-    for t in "${times[@]}"; do
+    for t in "${TIMES[@]}"; do
       split_time "$t"
       cat <<EOF
     <dict>
@@ -231,10 +248,10 @@ EOF
     return 1
   fi
 
-  print -r -- "feed review job applied: ${(j:,:)times} (${tz:-system time}), label $FEED_LABEL"
+  print -r -- "feed review job applied: ${(j:,:)TIMES} (${tz:-system time}), label $FEED_LABEL"
 }
 
 rc=0
-apply_daily || rc=1
+apply_job_search || rc=1
 apply_feed_review || rc=1
 exit $rc

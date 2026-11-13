@@ -93,7 +93,7 @@ You only ever talk to the Job Hunter agent. It loads `job-discovery` by itself; 
 | `linkedinPremium` | no | Set `true` when your LinkedIn account is Premium: matched jobs showing the `You'd be a top applicant` prompt then form a leading group. `false` or absent ignores the prompt. |
 | `reportRepo` | no | Optional Git URL. When set, the day's report is committed and pushed there after each run. |
 | `notifications.email` | no | Optional SMTP block for run-summary emails. Off by default; when `enabled`, one summary is sent after each run. |
-| `schedule` | no | Daily launchd job: `enabled`, `time` (`HH:MM`, local time) and `timezone`. |
+| `jobSearchSchedule` | no | Daily job search launchd job. `times` is an array of `HH:MM` strings; an empty array disables the job. `timezone` must match the system. |
 | `linkedinFeedReview` | no | Feed review settings: `lookbackHours`, `maxPosts`, `excludeTopics`, `replyLanguage`, and `schedule.times` / `schedule.timezone`. `schedule.times` is an array of `HH:MM` strings; an empty array disables the separate feed review job. |
 | `sortBy` / `sortDirection` | no | Ordering inside the priority group and each city. `companySize` with `asc` or `desc`; omit for discovery order. |
 | `preferredReportLanguage` | no | Language of the daily report and the summary email body, e.g. `English`, `German`, `Chinese`. Defaults to `English`. It never affects the search query, matching, index keys or audit fields; the email subject stays ASCII. |
@@ -105,7 +105,7 @@ Notes:
 - `linkedinFeedReview.excludeTopics` is the only exclusion list, covering both topics and content types. The skill has no built-in exclusion list; an empty array disables these exclusions (the time window still applies).
 - Scope vs filter: country, city and posting date decide *what to search*. Only the dimensions above decide whether a vacancy *matches*.
 
-**Schedule.** Editing `schedule` in the config does not change launchd by itself. After changing `enabled`, `time` or `timezone`, run `.opencode/scripts/apply-schedule.sh` (or ask the agent to change the schedule). launchd uses the Mac's local time, so `timezone` must match the system timezone. Setting `enabled: false` unloads and removes the job.
+**Schedule.** Editing `jobSearchSchedule` in the config does not change launchd by itself. After changing `times` or `timezone`, run `.opencode/scripts/apply-schedule.sh` (or ask the agent to change the schedule). launchd uses the Mac's local time, so `timezone` must match the system timezone. An empty `times` array unloads and removes the job search schedule; adding times recreates it.
 
 The LinkedIn feed review has its own launchd timer. Set `linkedinFeedReview.schedule.times` to an array of `HH:MM` values and run the same script; an empty array disables that job. The daily job search also runs `linkedin-feed-jobs` and publishes the updated daily report to `reportRepo`.
 
@@ -220,7 +220,7 @@ reports/interviews/                               phase 2 output
 | Same role posted under two job IDs | Flagged `⚠️ possible duplicate`; if one was applied to, `⚠️ possibly applied MM-DD`. Nothing is merged or dropped automatically. |
 | How do I know whether jobs were missed? | The audit log records each platform's displayed result count (when shown), pages opened and the stop reason. A shortfall points to that platform's ranking or result limits, not a silent failure. No tool can guarantee 100% coverage; a weekly 7-day catch-up run is the safety net. |
 | How do I get an email after each run? | Set `notifications.email.enabled` to `true` and fill `to`, `from` and `smtp` in `job-hunter.config.json`. The `email-notify` skill sends one summary per run. Test with `send-email.sh --check`. |
-| How do I change the daily time? | Edit `schedule.time` in `job-hunter.config.json`, then run `.opencode/scripts/apply-schedule.sh` or ask the agent. The config alone does not change launchd. |
+| How do I change the daily time? | Edit `jobSearchSchedule.times` in `job-hunter.config.json`, then run `.opencode/scripts/apply-schedule.sh` or ask the agent. An empty array disables the job. The config alone does not change launchd. |
 
 ## 11. Safety
 

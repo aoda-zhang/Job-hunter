@@ -92,7 +92,7 @@ cp job-hunter.config.example.json job-hunter.config.json
 | `linkedinPremium` | 否 | LinkedIn 账号是 Premium 时设为 `true`：带 `You'd be a top applicant` 提示的命中岗位会置顶。`false` 或不填则忽略该提示。 |
 | `reportRepo` | 否 | 可选 Git 地址。配置后每次运行会把当天日报提交并推送到该仓库。 |
 | `notifications.email` | 否 | 可选 SMTP 配置，用于发送运行摘要邮件；默认关闭。`enabled` 为 `true` 时每次运行后发送一封摘要。 |
-| `schedule` | 否 | 每日 launchd 定时任务：`enabled`、`time`（`HH:MM`，本地时间）、`timezone`。 |
+| `jobSearchSchedule` | 否 | 每日 job search 的 launchd 定时任务。`times` 是 `HH:MM` 字符串数组；空数组表示不启动。`timezone` 必须和系统时区一致。 |
 | `linkedinFeedReview` | 否 | LinkedIn feed 检查设置：`lookbackHours`、`maxPosts`、`excludeTopics`、`replyLanguage`，以及 `schedule.times` / `schedule.timezone`。`schedule.times` 是 `HH:MM` 字符串数组；空数组表示不启动独立的 feed review 任务。 |
 | `sortBy` / `sortDirection` | 否 | 置顶分组与城市内的排序方式。`companySize` 配合 `asc` / `desc`；不填则按发现顺序。 |
 | `preferredReportLanguage` | 否 | 日报和摘要邮件正文的语言，例如 `English`、`German`、`Chinese`，默认 `English`。不影响搜索语句、匹配逻辑、索引键和审计字段；邮件主题保持英文。 |
@@ -104,7 +104,7 @@ cp job-hunter.config.example.json job-hunter.config.json
 - `linkedinFeedReview.excludeTopics` 是唯一的排除列表，话题和内容类型都在这里。Skill 里没有隐藏的内置排除列表；空数组表示不做这些排除（时间窗口仍然生效）。
 - 「范围」和「筛选」是两件事：国家、城市、发布时间决定**搜哪里、搜多新**；只有上表中的匹配维度决定一个职位**算不算命中**。
 
-**定时任务。** 只改配置里的 `schedule` 不会自动改变 launchd。改完 `enabled`、`time` 或 `timezone` 后，运行 `.opencode/scripts/apply-schedule.sh`（或直接让 Agent 改时间）。launchd 使用 Mac 的本地时间，所以 `timezone` 必须和系统时区一致。把 `enabled` 设为 `false` 会卸载并删除定时任务。
+**定时任务。** 只改配置里的 `jobSearchSchedule` 不会自动改变 launchd。改完 `times` 或 `timezone` 后，运行 `.opencode/scripts/apply-schedule.sh`（或直接让 Agent 改时间）。launchd 使用 Mac 的本地时间，所以 `timezone` 必须和系统时区一致。`times` 为空数组会卸载并删除 job search 定时任务；填入时间会重新创建。
 
 LinkedIn feed 检查有独立的定时器。把 `linkedinFeedReview.schedule.times` 设成 `HH:MM` 数组，再运行同一个脚本；空数组表示不启动这个任务。每天的 job search 也会运行 `linkedin-feed-jobs`，并把更新后的日报推送到 `reportRepo`。
 
@@ -210,7 +210,7 @@ reports/interviews/                               第二阶段产出
 | 同一岗位出现两个 job ID | 标 `⚠️ possible duplicate`；其中一个已投递时标 `⚠️ possibly applied MM-DD`。不会自动合并或删除。 |
 | 怎么知道有没有漏岗位 | 审计日志记录各平台显示的结果总数（页面提供时）、翻页数和停止原因。数量对不上说明是该平台的排序或结果上限造成的，而不是静默失败。任何工具都无法保证 100% 覆盖；每周跑一次 7 天窗口是兜底。 |
 | 怎么让每次运行后给我发邮件 | 在 `job-hunter.config.json` 里把 `notifications.email.enabled` 设为 `true`，填好 `to`、`from` 和 `smtp`。`email-notify` skill 每次运行发送一封摘要。可用 `send-email.sh --check` 校验。 |
-| 怎么改每天的运行时间 | 修改 `job-hunter.config.json` 里的 `schedule.time`，然后运行 `.opencode/scripts/apply-schedule.sh`，或直接让 Agent 改。只改配置不会改变 launchd。 |
+| 怎么改每天的运行时间 | 修改 `job-hunter.config.json` 里的 `jobSearchSchedule.times`，然后运行 `.opencode/scripts/apply-schedule.sh`，或直接让 Agent 改。空数组会关闭任务；只改配置不会改变 launchd。 |
 
 ## 11. 安全边界
 

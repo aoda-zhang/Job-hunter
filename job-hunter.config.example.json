@@ -82,9 +82,8 @@
       "timezone": "Asia/Shanghai"
     }
   },
-  "schedule": {
-    "enabled": false,
-    "time": "18:10",
+  "jobSearchSchedule": {
+    "times": [],
     "timezone": "Asia/Shanghai"
   },
   "isNeededCover": false
