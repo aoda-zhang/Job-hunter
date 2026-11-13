@@ -1,6 +1,6 @@
 ---
 name: linkedin-feed-review
-description: Daily read-only review of the LinkedIn Following feed. Select posts from people the user follows that are genuinely worth replying to, hard-skip politics, jokes, personal life and other low-value topics, and draft reply options for manual sending. Never posts, comments, reacts, follows, connects or messages.
+description: Daily read-only review of the LinkedIn Recent feed, filtered to people the user follows. Select posts genuinely worth replying to, hard-skip politics, jokes, personal life and other low-value topics, and draft reply options for manual sending. Never posts, comments, reacts, follows, connects or messages.
 ---
 
 # LinkedIn Feed Review
@@ -79,20 +79,28 @@ The post gives something concrete to respond to:
 
 Skip pure announcements, low-effort posts and anything where a reply would only be "nice".
 
-## 4. Browse the Following feed
+## 4. Refresh the following list, then browse the Recent feed
 
-Open `https://www.linkedin.com/feed/` and switch to the **Following** tab, not "For you".
+LinkedIn no longer exposes a pure "Following" feed in this account's UI. Use this read-only fallback:
 
-- Read the visible posts, newest first.
-- Scroll at most 10 screens, or stop earlier when three consecutive screens contain no post inside the window.
+1. Open `https://www.linkedin.com/mynetwork/network-manager/people-follow/following/` (the Manage Follows page). It is the source of truth for "people I follow".
+2. Scroll to the bottom until the list stops growing. Read only the names; do not open profiles and do not click Follow or Unfollow.
+3. Record the refresh time and the number of people loaded.
+4. Open `https://www.linkedin.com/feed/`, set **Sort by: Recent** (not Top), and read the visible posts.
+
+Rules:
+
+- Re-read the following list at the start of **every** run. Do not cache, reuse or save it to a file; a new follow must appear in the next run.
+- Keep a post only when its author's name matches the freshly loaded list. Ignore strangers, company pages and promoted posts even if LinkedIn shows them.
+- The list is a filter, not a coverage guarantee: the Recent feed may not show every post from every followed person. Say this in the report.
+- Read the visible posts, newest first. Scroll at most 10 screens, or stop earlier when three consecutive screens contain no post inside the window.
 - Do not open author profile pages.
 - Do not click links inside posts.
 - Do not like, comment, react, repost, follow, connect or message.
-- Do not use content search or browse strangers' posts; this skill is about people the user follows.
 
 For each candidate record: author, headline, post time, text, permalink and visible engagement. Use the post's overflow menu → "Copy link to post" or the timestamp link. Never assemble or guess a URL; if no permalink is available, write `Link unavailable`.
 
-If LinkedIn shows a login wall, a CAPTCHA or a rate limit, stop, write the exception note and report it. Never ask for credentials or bypass access controls.
+If the Manage Follows page or the feed shows a login wall, a CAPTCHA or a rate limit, stop, write the exception note and report it. Never ask for credentials or bypass access controls.
 
 ## 5. Order and cap
 
@@ -162,6 +170,8 @@ One item per selected post, in reply order:
 | Metric | Value |
 |---|---|
 | Time window | Past 24 hours |
+| Following list refreshed | HH:MM (local) |
+| Following count | N |
 | Posts reviewed | N |
 | Hard-filtered (politics / jokes / low-value) | N |
 | Author and topic relevant | N |
@@ -170,6 +180,8 @@ One item per selected post, in reply order:
 | Reply language | auto (per post) |
 
 Never estimate. Write `cannot determine` when a count is not supported.
+
+`Following list refreshed` is the local time the Manage Follows page was loaded. New follows after that moment appear in the next run. The Recent feed may not show every post from every followed person; that is a coverage limit, not proof that the person posted nothing.
 
 ### 7.3 Post details
 
@@ -222,7 +234,7 @@ Only on a failed or interrupted run, at the very end, maximum 3 lines.
 
 ## 9. Finish
 
-State the report path, time window, posts reviewed, hard-filter counts, selected count, left-out count, reply language and any access limitation. If nothing met the bar, say so plainly and still write the report with zero selected.
+State the report path, time window, following-list refresh time and count, posts reviewed, hard-filter counts, selected count, left-out count, reply language and any access limitation. Also state that the Recent feed may not show every post from every followed person. If nothing met the bar, say so plainly and still write the report with zero selected.
 
 Only count posts actually rendered in the browser. Never claim a feed pass that did not happen.
 
