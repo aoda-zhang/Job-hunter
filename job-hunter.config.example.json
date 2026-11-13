@@ -61,7 +61,21 @@
   "linkedinFeedReview": {
     "lookbackHours": 24,
     "maxPosts": 10,
-    "excludeTopics": [],
+    "excludeTopics": [
+      "politics",
+      "jokes and memes",
+      "personal life",
+      "sports and entertainment",
+      "religion",
+      "war and conflict",
+      "crypto and hustle culture",
+      "ads, sponsored or promoted posts, and pure product marketing",
+      "pure link, article or video shares with no commentary",
+      "reposts with no added commentary",
+      "job ads, recruiter posts, and we are hiring / apply here posts",
+      "engagement bait such as Agree? or Thoughts? with no substance",
+      "pure announcements or low-effort posts with nothing to reply to"
+    ],
     "replyLanguage": "auto",
     "schedule": {
       "times": [],

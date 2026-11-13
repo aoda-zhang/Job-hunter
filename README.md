@@ -102,6 +102,7 @@ Notes:
 
 - `lookbackHours` is a number. It is mapped to the closest date filter that platform offers and that fully covers the window (on LinkedIn: ≤24 → past 24 hours, ≤168 → past week, ≤720 → past month), and each posting is checked again on its own page.
 - A dimension is active only when you restrict it. Listing all three work modes, all employment types, or leaving `seniority.include` empty means "no filter".
+- `linkedinFeedReview.excludeTopics` is the only exclusion list, covering both topics and content types. The skill has no built-in exclusion list; an empty array disables these exclusions (the time window still applies).
 - Scope vs filter: country, city and posting date decide *what to search*. Only the dimensions above decide whether a vacancy *matches*.
 
 **Schedule.** Editing `schedule` in the config does not change launchd by itself. After changing `enabled`, `time` or `timezone`, run `.opencode/scripts/apply-schedule.sh` (or ask the agent to change the schedule). launchd uses the Mac's local time, so `timezone` must match the system timezone. Setting `enabled: false` unloads and removes the job.

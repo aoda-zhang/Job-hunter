@@ -101,6 +101,7 @@ cp job-hunter.config.example.json job-hunter.config.json
 
 - `lookbackHours` 填数字。它会被映射到该平台能提供的、能完整覆盖该窗口的最近一档日期筛选（LinkedIn 上：≤24 → 过去 24 小时，≤168 → 过去一周，≤720 → 过去一个月），并在每个职位页面上单独核对。
 - 只有你主动收窄时，某个维度才生效。三种工作模式全列、所有雇佣类型全列、或 `seniority.include` 为空，都等于「不筛选」。
+- `linkedinFeedReview.excludeTopics` 是唯一的排除列表，话题和内容类型都在这里。Skill 里没有隐藏的内置排除列表；空数组表示不做这些排除（时间窗口仍然生效）。
 - 「范围」和「筛选」是两件事：国家、城市、发布时间决定**搜哪里、搜多新**；只有上表中的匹配维度决定一个职位**算不算命中**。
 
 **定时任务。** 只改配置里的 `schedule` 不会自动改变 launchd。改完 `enabled`、`time` 或 `timezone` 后，运行 `.opencode/scripts/apply-schedule.sh`（或直接让 Agent 改时间）。launchd 使用 Mac 的本地时间，所以 `timezone` 必须和系统时区一致。把 `enabled` 设为 `false` 会卸载并删除定时任务。

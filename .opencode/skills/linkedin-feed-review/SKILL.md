@@ -1,6 +1,6 @@
 ---
 name: linkedin-feed-review
-description: Daily read-only review of the LinkedIn Recent feed, filtered to people the user follows. Select posts genuinely worth replying to, hard-skip politics, jokes, personal life and other low-value topics, and draft reply options for manual sending. Never posts, comments, reacts, follows, connects or messages.
+description: Daily read-only review of the LinkedIn Recent feed, filtered to people the user follows. Select posts genuinely worth replying to, apply the linkedinFeedReview.excludeTopics list and content-type filters, and draft reply options for manual sending. Never posts, comments, reacts, follows, connects or messages.
 ---
 
 # LinkedIn Feed Review
@@ -23,37 +23,23 @@ Optional `linkedinFeedReview` block. Every field is optional and the skill works
 |---|---|---|
 | `lookbackHours` | `24` | Only posts newer than this window. |
 | `maxPosts` | `10` | Maximum posts in today's report. |
-| `excludeTopics` | built-in list | Extra topics to hard-skip, case-insensitive. |
+| `excludeTopics` | `[]` | The only exclusion list, covering both topics and content types. The skill has no built-in exclusion list. Empty means no exclusions from this list (the time window still applies). |
 | `replyLanguage` | `auto` | `auto` matches the post; otherwise `English`, `German`, `Chinese`, etc. |
 
 If both `jobTitles.include` and `technicalKeywords.include` are empty, stop and ask the user what role family to use. Do not guess. Do not modify the config during a run.
 
-## 2. Hard exclusions — run before any relevance check
+## 2. Exclusions — entirely from config
 
-Skip immediately, without opening the post or reading further:
+Read `linkedinFeedReview.excludeTopics` from `job-hunter.config.json`. It is the single source of truth for every exclusion, including topics and content types. The skill must not carry a hidden exclusion list.
 
-- politics, elections, government, policy, activism, culture-war topics
-- war, conflict, terrorism, disasters
-- religion
-- jokes, memes, humor, satire, shitposts, "funny" stories
-- personal life: family, relationships, birthdays, travel, health, food
-- sports, celebrities, entertainment, movies, music
-- crypto, trading, hustle culture, MLM, giveaways, follow-for-follow
-- ads, sponsored or promoted posts, pure product marketing
-- pure link, article or video shares with no commentary
-- reposts with no added commentary
-- job ads, recruiter posts, "we are hiring, apply here"
-- engagement bait such as "Agree?" or "Thoughts?" with no substance
-- anything older than `lookbackHours`
-- any `excludeTopics` term, case-insensitive
-
-These are hard filters. A politics or joke post is never selected, even if the author is relevant or the post is popular.
-
-Record counts by category for the report summary. Do not list every filtered post in the report.
+- Skip a post when it is primarily about, or is an instance of, any entry in the list. Use judgment on the post's main subject and format; do not keyword-match a passing mention.
+- If `excludeTopics` is empty, apply no exclusions from this list. The time window (`lookbackHours`) still applies.
+- Do not add extra excluded topics or content types during a run. If the user wants a new exclusion, edit the config.
+- Record counts by matched entry for the report summary.
 
 ## 3. Relevance gates
 
-Only after the hard exclusions, keep a post when all three pass.
+Only after the exclusions in section 2, keep a post when all three pass.
 
 ### 3.1 Author
 
@@ -77,7 +63,7 @@ The post gives something concrete to respond to:
 - raises a technical or industry claim that can be discussed;
 - describes a team or way of working in enough detail to add a useful perspective.
 
-Skip pure announcements, low-effort posts and anything where a reply would only be "nice".
+A post that does not meet one of these criteria is not selected, even if it passes the author and topic gates.
 
 ## 4. Refresh the following list, then browse the Recent feed
 
@@ -175,7 +161,7 @@ One item per selected post, in reply order:
 | Following list refreshed | HH:MM (local) |
 | Following count | N |
 | Posts reviewed | N |
-| Hard-filtered (politics / jokes / low-value) | N |
+| Hard-filtered (excludeTopics) | N |
 | Author and topic relevant | N |
 | Worth replying | N |
 | Left out by maxPosts | N |
@@ -220,7 +206,7 @@ backup reply text
 
 ### 7.4 Filtered out (optional)
 
-Only when an author-relevant post was skipped and listing it helps. Maximum 10 rows. Columns: Author, Headline, Post time, Category, Link. Categories: `politics`, `joke/meme`, `personal`, `sports/entertainment`, `ad`, `engagement bait`, `off-topic`, `too old`, `pure share`, `job ad`.
+Only when an author-relevant post was skipped and listing it helps. Maximum 10 rows. Columns: Author, Headline, Post time, Category, Link. Category is the matched `excludeTopics` entry, or `off-topic` or `too old`.
 
 ### 7.5 Exception note
 
