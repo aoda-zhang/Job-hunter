@@ -158,7 +158,7 @@ Create or update exactly one report for the current local date:
 
 `reports/daily/YYYY-MM-DD.md`
 
-Create the parent directory if needed. If today's report already exists, merge new findings rather than overwriting useful entries. Deduplicate by canonical job URL within and across sources; when no canonical URL is available, use a cautious combination of company, title and location and flag possible duplicates for review.
+Create the parent directory if needed. If today's report already exists, merge new findings rather than overwriting useful entries. If it contains a `Feed-sourced jobs` section, preserve that section, its rows and its run-summary count; never move feed rows into the matched or excluded tables. Deduplicate by canonical job URL within and across sources; when no canonical URL is available, use a cautious combination of company, title and location and flag possible duplicates for review.
 
 ### Publish the daily file (optional)
 

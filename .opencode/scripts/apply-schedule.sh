@@ -1,13 +1,24 @@
 #!/bin/zsh
-# Apply the schedule block from job-hunter.config.json to launchd.
+# Apply schedule blocks from job-hunter.config.json to launchd.
 # Usage: apply-schedule.sh [--dry-run]
+#
+# Daily job search:      schedule.enabled / schedule.time / schedule.timezone
+# LinkedIn feed review:  linkedinFeedReview.schedule.times[] / .timezone
+#                        empty times array = no feed review job
 set -u
 setopt NULL_GLOB
 
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 CONFIG="${JOB_HUNTER_CONFIG:-$REPO/job-hunter.config.json}"
-PLIST="${JOB_HUNTER_PLIST:-$HOME/Library/LaunchAgents/ai.jobhunter.daily.plist}"
-LABEL="ai.jobhunter.daily"
+DAILY_LABEL="ai.jobhunter.daily"
+DAILY_PLIST="${JOB_HUNTER_PLIST:-$HOME/Library/LaunchAgents/${DAILY_LABEL}.plist}"
+FEED_LABEL="ai.jobhunter.feedreview"
+FEED_PLIST="${JOB_HUNTER_FEED_PLIST:-$HOME/Library/LaunchAgents/${FEED_LABEL}.plist}"
+
+DRY_RUN=0
+if [ "${1:-}" = "--dry-run" ]; then
+  DRY_RUN=1
+fi
 
 if [ ! -r "$CONFIG" ]; then
   print -u2 -- "config not found: $CONFIG"
@@ -18,59 +29,72 @@ if ! command -v jq >/dev/null 2>&1; then
   exit 2
 fi
 
-if [ "$(jq -r 'has("schedule")' "$CONFIG")" != "true" ]; then
-  print -r -- "no schedule block in $CONFIG; launchd left unchanged"
-  exit 0
-fi
+sys_tz="$(readlink /etc/localtime 2>/dev/null | sed 's|.*/zoneinfo/||')"
+[ -n "$sys_tz" ] || sys_tz="$(date +%Z)"
 
-enabled="$(jq -r '.schedule.enabled // false' "$CONFIG")"
-time="$(jq -r '.schedule.time // "18:10"' "$CONFIG")"
-tz="$(jq -r '.schedule.timezone // empty' "$CONFIG")"
+validate_time() {
+  case "$1" in
+    [01][0-9]:[0-5][0-9]|2[0-3]:[0-5][0-9]) return 0 ;;
+    *) return 1 ;;
+  esac
+}
 
-case "$time" in
-  [01][0-9]:[0-5][0-9]|2[0-3]:[0-5][0-9]) ;;
-  *)
-    print -u2 -- "schedule.time must be HH:MM (24h), got: $time"
-    exit 2
-    ;;
-esac
-
-hour="${time%%:*}"
-minute="${time##*:}"
-hour="${hour#0}"; hour="${hour:-0}"
-minute="${minute#0}"; minute="${minute:-0}"
-
-if [ -n "$tz" ]; then
-  sys_tz="$(readlink /etc/localtime 2>/dev/null | sed 's|.*/zoneinfo/||')"
-  [ -n "$sys_tz" ] || sys_tz="$(date +%Z)"
+check_timezone() {
+  local tz="$1"
+  [ -z "$tz" ] && return 0
   if [ "$tz" != "$sys_tz" ]; then
-    print -u2 -- "schedule.timezone is $tz but the system timezone is $sys_tz."
-    print -u2 -- "launchd uses local time; change the system timezone or set schedule.timezone to $sys_tz."
-    exit 2
+    print -u2 -- "schedule timezone is $tz but the system timezone is $sys_tz."
+    print -u2 -- "launchd uses local time; change the system timezone or set the schedule timezone to $sys_tz."
+    return 1
   fi
-fi
+}
 
-if [ "${1:-}" = "--dry-run" ]; then
-  print -r -- "schedule enabled=$enabled time=$time timezone=${tz:-system} plist=$PLIST"
-  exit 0
-fi
+split_time() {
+  HOUR="${1%%:*}"
+  MINUTE="${1##*:}"
+  HOUR="${HOUR#0}"; HOUR="${HOUR:-0}"
+  MINUTE="${MINUTE#0}"; MINUTE="${MINUTE:-0}"
+}
 
-if [ "$enabled" != "true" ]; then
-  launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
-  rm -f "$PLIST"
-  print -r -- "schedule disabled; $LABEL unloaded and plist removed"
-  exit 0
-fi
+apply_daily() {
+  if [ "$(jq -r 'has("schedule")' "$CONFIG")" != "true" ]; then
+    print -r -- "no schedule block in $CONFIG; daily job left unchanged"
+    return 0
+  fi
 
-mkdir -p "$(dirname "$PLIST")"
-cat > "$PLIST" <<EOF
+  local enabled daily_time tz
+  enabled="$(jq -r '.schedule.enabled // false' "$CONFIG")"
+  daily_time="$(jq -r '.schedule.time // "18:10"' "$CONFIG")"
+  tz="$(jq -r '.schedule.timezone // empty' "$CONFIG")"
+
+  if ! validate_time "$daily_time"; then
+    print -u2 -- "schedule.time must be HH:MM (24h), got: $daily_time"
+    return 1
+  fi
+  check_timezone "$tz" || return 1
+
+  if [ "$DRY_RUN" = "1" ]; then
+    print -r -- "daily job: enabled=$enabled time=$daily_time timezone=${tz:-system} plist=$DAILY_PLIST"
+    return 0
+  fi
+
+  if [ "$enabled" != "true" ]; then
+    launchctl bootout "gui/$(id -u)/$DAILY_LABEL" 2>/dev/null || true
+    rm -f "$DAILY_PLIST"
+    print -r -- "daily job disabled; $DAILY_LABEL unloaded and plist removed"
+    return 0
+  fi
+
+  split_time "$daily_time"
+  mkdir -p "$(dirname "$DAILY_PLIST")"
+  cat > "$DAILY_PLIST" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
   "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>$LABEL</string>
+  <string>$DAILY_LABEL</string>
   <key>ProgramArguments</key>
   <array>
     <string>/bin/zsh</string>
@@ -81,9 +105,9 @@ cat > "$PLIST" <<EOF
   <key>StartCalendarInterval</key>
   <dict>
     <key>Hour</key>
-    <integer>$hour</integer>
+    <integer>$HOUR</integer>
     <key>Minute</key>
-    <integer>$minute</integer>
+    <integer>$MINUTE</integer>
   </dict>
   <key>StandardOutPath</key>
   <string>$HOME/Library/Logs/jobhunter.launchd.log</string>
@@ -93,15 +117,124 @@ cat > "$PLIST" <<EOF
 </plist>
 EOF
 
-if ! plutil -lint "$PLIST" >/dev/null 2>&1; then
-  print -u2 -- "generated plist is invalid: $PLIST"
-  exit 2
-fi
+  if ! plutil -lint "$DAILY_PLIST" >/dev/null 2>&1; then
+    print -u2 -- "generated plist is invalid: $DAILY_PLIST"
+    return 1
+  fi
 
-launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
-if ! launchctl bootstrap "gui/$(id -u)" "$PLIST"; then
-  print -u2 -- "launchctl bootstrap failed for $PLIST"
-  exit 2
-fi
+  launchctl bootout "gui/$(id -u)/$DAILY_LABEL" 2>/dev/null || true
+  if ! launchctl bootstrap "gui/$(id -u)" "$DAILY_PLIST"; then
+    print -u2 -- "launchctl bootstrap failed for $DAILY_PLIST"
+    return 1
+  fi
 
-print -r -- "schedule applied: daily $time (${tz:-system time}), label $LABEL"
+  print -r -- "daily job applied: daily $daily_time (${tz:-system time}), label $DAILY_LABEL"
+}
+
+apply_feed_review() {
+  if [ "$(jq -r '(.linkedinFeedReview.schedule // null) != null' "$CONFIG")" != "true" ]; then
+    print -r -- "no linkedinFeedReview.schedule block; feed review job disabled"
+    if [ "$DRY_RUN" != "1" ]; then
+      launchctl bootout "gui/$(id -u)/$FEED_LABEL" 2>/dev/null || true
+      rm -f "$FEED_PLIST"
+    fi
+    return 0
+  fi
+
+  local times_type tz
+  times_type="$(jq -r '(.linkedinFeedReview.schedule.times // []) | type' "$CONFIG")"
+  if [ "$times_type" != "array" ]; then
+    print -u2 -- "linkedinFeedReview.schedule.times must be an array of HH:MM strings"
+    return 1
+  fi
+  tz="$(jq -r '.linkedinFeedReview.schedule.timezone // .schedule.timezone // empty' "$CONFIG")"
+  check_timezone "$tz" || return 1
+
+  local -a times
+  times=()
+  local t
+  while IFS= read -r t; do
+    [ -z "$t" ] && continue
+    if ! validate_time "$t"; then
+      print -u2 -- "linkedinFeedReview.schedule.times must contain HH:MM (24h), got: $t"
+      return 1
+    fi
+    times+=("$t")
+  done < <(jq -r '.linkedinFeedReview.schedule.times[]?' "$CONFIG")
+
+  if [ "$DRY_RUN" = "1" ]; then
+    if [ ${#times[@]} -eq 0 ]; then
+      print -r -- "feed review job: disabled (empty times), timezone=${tz:-system}, plist=$FEED_PLIST"
+    else
+      print -r -- "feed review job: times=${(j:,:)times}, timezone=${tz:-system}, plist=$FEED_PLIST"
+    fi
+    return 0
+  fi
+
+  if [ ${#times[@]} -eq 0 ]; then
+    launchctl bootout "gui/$(id -u)/$FEED_LABEL" 2>/dev/null || true
+    rm -f "$FEED_PLIST"
+    print -r -- "feed review times empty; $FEED_LABEL unloaded and plist removed"
+    return 0
+  fi
+
+  mkdir -p "$(dirname "$FEED_PLIST")"
+  {
+    cat <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>$FEED_LABEL</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/zsh</string>
+    <string>$REPO/.opencode/scripts/feed-review-run.sh</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>$REPO</string>
+  <key>StartCalendarInterval</key>
+  <array>
+EOF
+    for t in "${times[@]}"; do
+      split_time "$t"
+      cat <<EOF
+    <dict>
+      <key>Hour</key>
+      <integer>$HOUR</integer>
+      <key>Minute</key>
+      <integer>$MINUTE</integer>
+    </dict>
+EOF
+    done
+    cat <<EOF
+  </array>
+  <key>StandardOutPath</key>
+  <string>$HOME/Library/Logs/jobhunter-feed-review.launchd.log</string>
+  <key>StandardErrorPath</key>
+  <string>$HOME/Library/Logs/jobhunter-feed-review.launchd.err.log</string>
+</dict>
+</plist>
+EOF
+  } > "$FEED_PLIST"
+
+  if ! plutil -lint "$FEED_PLIST" >/dev/null 2>&1; then
+    print -u2 -- "generated plist is invalid: $FEED_PLIST"
+    return 1
+  fi
+
+  launchctl bootout "gui/$(id -u)/$FEED_LABEL" 2>/dev/null || true
+  if ! launchctl bootstrap "gui/$(id -u)" "$FEED_PLIST"; then
+    print -u2 -- "launchctl bootstrap failed for $FEED_PLIST"
+    return 1
+  fi
+
+  print -r -- "feed review job applied: ${(j:,:)times} (${tz:-system time}), label $FEED_LABEL"
+}
+
+rc=0
+apply_daily || rc=1
+apply_feed_review || rc=1
+exit $rc

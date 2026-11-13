@@ -91,7 +91,7 @@ LinkedIn no longer exposes a pure "Following" feed in this account's UI. Use thi
 Rules:
 
 - Re-read the following list at the start of **every** run. Do not cache, reuse or save it to a file; a new follow must appear in the next run.
-- Keep a post only when its author's name matches the freshly loaded list. Ignore strangers, company pages and promoted posts even if LinkedIn shows them.
+- For the reply selection, keep a post only when its author's name matches the freshly loaded list. Keep the full post set, including strangers, for `linkedin-feed-jobs`; strangers are not reply candidates.
 - The list is a filter, not a coverage guarantee: the Recent feed may not show every post from every followed person. Say this in the report.
 - Read the visible posts, newest first. Scroll at most 10 screens, or stop earlier when three consecutive screens contain no post inside the window.
 - Do not open author profile pages.
@@ -101,6 +101,8 @@ Rules:
 For each candidate record: author, headline, post time, text, permalink and visible engagement. Use the post's overflow menu → "Copy link to post" or the timestamp link. Never assemble or guess a URL; if no permalink is available, write `Link unavailable`.
 
 If the Manage Follows page or the feed shows a login wall, a CAPTCHA or a rate limit, stop, write the exception note and report it. Never ask for credentials or bypass access controls.
+
+Keep the full post set, including authors who are not on the following list, so `linkedin-feed-jobs` can reuse it when both skills run in the same session. The feed review timer does not run `linkedin-feed-jobs`; that skill runs with the daily job search.
 
 ## 5. Order and cap
 

@@ -6,7 +6,7 @@
 
 ## 1. What it does
 
-Job Hunter is a small set of OpenCode instructions (one agent + three skills) plus one personal config file. There is no application code: no backend, database, CLI, CI or API key.
+Job Hunter is a small set of OpenCode instructions (one agent + five skills) plus one personal config file. There is no application code: no backend, database, CLI, CI or API key.
 
 A run does four things:
 
@@ -94,6 +94,7 @@ You only ever talk to the Job Hunter agent. It loads `job-discovery` by itself; 
 | `reportRepo` | no | Optional Git URL. When set, the day's report is committed and pushed there after each run. |
 | `notifications.email` | no | Optional SMTP block for run-summary emails. Off by default; when `enabled`, one summary is sent after each run. |
 | `schedule` | no | Daily launchd job: `enabled`, `time` (`HH:MM`, local time) and `timezone`. |
+| `linkedinFeedReview` | no | Feed review settings: `lookbackHours`, `maxPosts`, `excludeTopics`, `replyLanguage`, and `schedule.times` / `schedule.timezone`. `schedule.times` is an array of `HH:MM` strings; an empty array disables the separate feed review job. |
 | `sortBy` / `sortDirection` | no | Ordering inside the priority group and each city. `companySize` with `asc` or `desc`; omit for discovery order. |
 | `preferredReportLanguage` | no | Language of the daily report and the summary email body, e.g. `English`, `German`, `Chinese`. Defaults to `English`. It never affects the search query, matching, index keys or audit fields; the email subject stays ASCII. |
 
@@ -104,6 +105,8 @@ Notes:
 - Scope vs filter: country, city and posting date decide *what to search*. Only the dimensions above decide whether a vacancy *matches*.
 
 **Schedule.** Editing `schedule` in the config does not change launchd by itself. After changing `enabled`, `time` or `timezone`, run `.opencode/scripts/apply-schedule.sh` (or ask the agent to change the schedule). launchd uses the Mac's local time, so `timezone` must match the system timezone. Setting `enabled: false` unloads and removes the job.
+
+The LinkedIn feed review has its own launchd timer. Set `linkedinFeedReview.schedule.times` to an array of `HH:MM` values and run the same script; an empty array disables that job. The daily job search also runs `linkedin-feed-jobs` and publishes the updated daily report to `reportRepo`.
 
 ## 6. How jobs are filtered
 
@@ -133,6 +136,7 @@ There is no score, no ranking by candidate fit, and no filtering on salary, year
 | Output | Path |
 |---|---|
 | Daily discovery | `reports/daily/YYYY-MM-DD.md` |
+| LinkedIn feed review | `reports/linkedin-feed/YYYY-MM-DD.md` |
 | Cover letter drafts | `reports/cover-letters/<company-slug>/<jobId>.md` |
 | Interview preparation | `reports/interviews/<company-slug>/` |
 
@@ -181,15 +185,19 @@ This phase is manual and never runs during daily discovery.
 .opencode/agents/job-hunter.md                    the agent you talk to
 .opencode/scripts/daily-run.sh                    launchd entry point
 .opencode/scripts/apply-schedule.sh               sync the schedule config to launchd
+.opencode/scripts/feed-review-run.sh             feed review launchd entry point
 .opencode/skills/job-discovery/SKILL.md           phase 1: search, filter, report
 .opencode/skills/job-discovery/references/        report format, index/audit rules
 .opencode/skills/job-discovery/references/        linkedin.md, indeed.md, glassdoor.md,
                                                   _template.md
+.opencode/skills/linkedin-feed-review/SKILL.md    feed posts worth replying to
+.opencode/skills/linkedin-feed-jobs/SKILL.md      feed hiring posts into the daily report
 .opencode/skills/company-research/SKILL.md        phase 2: research and interview prep
 .opencode/skills/email-notify/                    run-summary email via SMTP
 job-hunter.config.example.json                    template to copy
 job-hunter.config.json                            your settings (git-ignored)
 reports/daily/                                    daily reports (git-ignored)
+reports/linkedin-feed/                            feed review reports (git-ignored)
 reports/job-index.json                            seen jobs and applied dates (git-ignored)
 reports/runs/                                     run audit logs (git-ignored)
 reports/interviews/                               phase 2 output

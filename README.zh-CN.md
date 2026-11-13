@@ -6,7 +6,7 @@
 
 ## 1. 它能做什么
 
-Job Hunter 由三部分组成：一份 OpenCode Agent 说明、三个 Skill 说明，以及一个属于你自己的配置文件。项目里没有应用代码——不需要后端、数据库、CLI、CI，也不需要任何 API Key。
+Job Hunter 由三部分组成：一份 OpenCode Agent 说明、五个 Skill 说明，以及一个属于你自己的配置文件。项目里没有应用代码——不需要后端、数据库、CLI、CI，也不需要任何 API Key。
 
 一次运行只做四件事：
 
@@ -93,6 +93,7 @@ cp job-hunter.config.example.json job-hunter.config.json
 | `reportRepo` | 否 | 可选 Git 地址。配置后每次运行会把当天日报提交并推送到该仓库。 |
 | `notifications.email` | 否 | 可选 SMTP 配置，用于发送运行摘要邮件；默认关闭。`enabled` 为 `true` 时每次运行后发送一封摘要。 |
 | `schedule` | 否 | 每日 launchd 定时任务：`enabled`、`time`（`HH:MM`，本地时间）、`timezone`。 |
+| `linkedinFeedReview` | 否 | LinkedIn feed 检查设置：`lookbackHours`、`maxPosts`、`excludeTopics`、`replyLanguage`，以及 `schedule.times` / `schedule.timezone`。`schedule.times` 是 `HH:MM` 字符串数组；空数组表示不启动独立的 feed review 任务。 |
 | `sortBy` / `sortDirection` | 否 | 置顶分组与城市内的排序方式。`companySize` 配合 `asc` / `desc`；不填则按发现顺序。 |
 | `preferredReportLanguage` | 否 | 日报和摘要邮件正文的语言，例如 `English`、`German`、`Chinese`，默认 `English`。不影响搜索语句、匹配逻辑、索引键和审计字段；邮件主题保持英文。 |
 
@@ -103,6 +104,8 @@ cp job-hunter.config.example.json job-hunter.config.json
 - 「范围」和「筛选」是两件事：国家、城市、发布时间决定**搜哪里、搜多新**；只有上表中的匹配维度决定一个职位**算不算命中**。
 
 **定时任务。** 只改配置里的 `schedule` 不会自动改变 launchd。改完 `enabled`、`time` 或 `timezone` 后，运行 `.opencode/scripts/apply-schedule.sh`（或直接让 Agent 改时间）。launchd 使用 Mac 的本地时间，所以 `timezone` 必须和系统时区一致。把 `enabled` 设为 `false` 会卸载并删除定时任务。
+
+LinkedIn feed 检查有独立的定时器。把 `linkedinFeedReview.schedule.times` 设成 `HH:MM` 数组，再运行同一个脚本；空数组表示不启动这个任务。每天的 job search 也会运行 `linkedin-feed-jobs`，并把更新后的日报推送到 `reportRepo`。
 
 ## 6. 职位如何被筛选
 
@@ -132,6 +135,7 @@ cp job-hunter.config.example.json job-hunter.config.json
 | 产出 | 路径 |
 |---|---|
 | 每日职位发现 | `reports/daily/YYYY-MM-DD.md` |
+| LinkedIn feed 回复机会 | `reports/linkedin-feed/YYYY-MM-DD.md` |
 | 面试准备 | `reports/interviews/<company-slug>/` |
 
 日报包含：运行汇总（含本次搜索的平台）、命中岗位（Premium 提示分组置顶，其余按城市与公司规模排序）、需要时的待复核表，以及最后写明具体原因的排除岗位。每张表都有 `Source` 列，混合平台时也能看清。日报格式由 `.opencode/skills/job-discovery/references/daily-report-format.md` 统一规定，语言由 `preferredReportLanguage` 指定（默认 `English`）。格式文档只固定结构，翻译的只是可读文字。
@@ -171,15 +175,19 @@ cp job-hunter.config.example.json job-hunter.config.json
 .opencode/agents/job-hunter.md                    你对话的 Agent
 .opencode/scripts/daily-run.sh                    launchd 入口脚本
 .opencode/scripts/apply-schedule.sh               把定时配置同步到 launchd
+.opencode/scripts/feed-review-run.sh              feed review 的 launchd 入口
 .opencode/skills/job-discovery/SKILL.md           第一阶段：搜索、筛选、写报告
 .opencode/skills/job-discovery/references/        报告格式、索引与审计规则
 .opencode/skills/job-discovery/references/        linkedin.md、indeed.md、glassdoor.md、
                                                   _template.md
+.opencode/skills/linkedin-feed-review/SKILL.md    值得回复的 feed 帖子
+.opencode/skills/linkedin-feed-jobs/SKILL.md      feed 招聘帖写入日报
 .opencode/skills/company-research/SKILL.md        第二阶段：公司调研与面试准备
 .opencode/skills/email-notify/                    通过 SMTP 发送运行摘要
 job-hunter.config.example.json                    配置模板
 job-hunter.config.json                            你的配置（Git 忽略）
 reports/daily/                                    每日日报（Git 忽略）
+reports/linkedin-feed/                            feed review 报告（Git 忽略）
 reports/job-index.json                            已见职位与投递日期（Git 忽略）
 reports/runs/                                     运行审计日志（Git 忽略）
 reports/interviews/                               第二阶段产出

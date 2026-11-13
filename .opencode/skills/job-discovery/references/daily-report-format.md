@@ -33,11 +33,12 @@ The title is part of the human-readable layer: translate `Daily Job Findings` in
 
 1. Run summary
 2. Matched jobs
-3. Needs manual review — **only when there are entries**
-4. Excluded jobs — **always the last job table**, after matched and review
-5. Exception note — **only when the run failed or was largely unusable**, at the very end
+3. Feed-sourced jobs — **only when matching feed hiring posts exist**
+4. Needs manual review — **only when there are entries**
+5. Excluded jobs — **always the last job table**, after matched, feed and review
+6. Exception note — **only when the run failed or was largely unusable**, at the very end
 
-A normal run has only sections 1, 2 and 4; sections 3 and 5 appear conditionally and must never be written as an empty "None". Excluded jobs always come last among the job tables so the actionable rows stay on top.
+A normal run has only sections 1, 2 and 5; sections 3, 4 and 6 appear conditionally and must never be written as an empty "None". Excluded jobs always come last among the job tables so the actionable rows stay on top.
 
 After that, append "Evidence and consistency rules" and "Cross-day repeats and updates", in that fixed order.
 
@@ -54,6 +55,7 @@ After that, append "Evidence and consistency rules" and "Cross-day repeats and u
 | Job detail pages opened | N |
 | JDs read successfully | N |
 | Matched | N |
+| Feed-sourced jobs | N |
 | Needs manual review | N |
 | Confirmed non-match (excluded) | N |
 | Of which cross-day repeats | N |
@@ -64,6 +66,7 @@ After that, append "Evidence and consistency rules" and "Cross-day repeats and u
 - "Cards skipped before opening" counts only cards whose title clearly names a different role family, or that are clearly outside the configured country/location, and that were therefore not opened. They never appear in the excluded table
 - "Expired / closed" counts only links that turned out to be 404, redirected away from the job, or explicitly stopped accepting applications. They never appear in the excluded table
 - Self-check: matched + review + excluded = pages with a successfully read JD
+- `Feed-sourced jobs` are post-only matches from the LinkedIn feed; they are not part of the JD inspection sum
 - "Already applied" and "Expired / closed" both stay out of that sum: the first is decided by the index, the second by the page
 
 ### 2. Matched jobs
@@ -128,7 +131,30 @@ JD language is also a filter, not a column: matched jobs already satisfy `jdLang
 
 When a job matched because of "German JD + JD explicitly names English as the working language", Notes must state that evidence (e.g. "German JD, names English as team language"); never infer it from the company's international profile.
 
-### 3. Needs manual review
+### 3. Feed-sourced jobs
+
+**Only when at least one matching feed hiring post exists.** Do not write an empty section. This section is filled by the `linkedin-feed-jobs` skill and must be preserved by `job-discovery`.
+
+- Only confirmed matches: the role and location match the config. Non-matching hiring posts are not listed here, not in the review table and not in the excluded table.
+- The author does not need to be in the user's following list; a matching job from a stranger, a 2nd/3rd-degree contact or a company page still counts.
+- Only role and location are mandatory. A post that names only those two is included; a conflicting stack, work mode, employment type, seniority or language goes into Notes, never into a drop.
+- Do not infer a company, role or location the post does not state.
+- Fixed columns:
+
+```markdown
+| # | Source | Company | Title | Location | Mode | Posted | Matched keywords | Notes | Link |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | LinkedIn Feed | Example GmbH | Senior Frontend Engineer | Berlin | Hybrid | 2h ago | React, TypeScript | 来自 feed; hiring manager post | [Open](URL) |
+```
+
+- `Source` is always `LinkedIn Feed`.
+- `Matched keywords` lists only configured terms actually named; write `None matched` when the post names a stack but no configured term matches, and `Not stated` when no stack is named.
+- `Notes` must start with `来自 feed` (use `From feed` when the report language is not Chinese), followed by one short verifiable fact.
+- `Link` is the post permalink; write `Link unavailable` when no permalink exists.
+- Deduplicate against matched, review and existing feed rows. A job appears in only one section.
+- Renumber the `#` column after merging.
+
+### 4. Needs manual review
 
 **Only when there are entries**. When empty, omit the whole section; never write "None".
 
@@ -141,9 +167,9 @@ Prompted rows come first in discovery order and start Notes with `Top applicant`
 
 Unknown items **must not** be written as matched or excluded.
 
-### 4. Excluded jobs
+### 5. Excluded jobs
 
-**Always the last job table**, written after matched and review. A separate section, not counted in the main table. Fixed columns:
+**Always the last job table**, written after matched, feed and review. A separate section, not counted in the main table. Fixed columns:
 
 ```markdown
 | # | Source | Company | Title | City | Mode | Posted | Easy Apply | Cover letter | Exclusion reason | Link |
@@ -161,7 +187,7 @@ Unknown items **must not** be written as matched or excluded.
 - **The link column is mandatory**, format `[Open](URL)`, pointing to the job page actually opened in this run, so every row can be checked
 - Excluded-table URLs are for manual checking only and **must never be used as a cross-day dedup key** (see "Cross-day repeats and updates")
 
-### 5. Exception note
+### 6. Exception note
 
 **Only when one of these happens, and always at the very end**; a normal run never includes it, and routine search parameters (city radius, paging method, time zone) are never listed:
 
@@ -179,6 +205,10 @@ Length limit: 3 lines, covering only three things — what happened, how many ro
 - Write `Not specified` for missing fields; never infer location, work mode, employment type or posting date
 - Keep URLs exactly as found; never assemble or invent one
 - A job appears at most once in the same report; a match and an exclusion never both count
+- `Feed-sourced jobs` use only the post text. Never open an external link to verify them.
+- Feed jobs are matched on role + location only; technical keywords, work mode, employment type, seniority and JD language never exclude a row.
+- A non-matching feed hiring post is ignored and must never be listed in any section, including the excluded table.
+- A feed job appears only in the feed section; if the same job is already in matched or review, do not duplicate it.
 - The priority prompt is personal Premium UI text: ordering metadata only, never a matching dimension or an inferred signal
 - Every daily report uses the same section order and table columns so reports stay comparable
 - Do not output candidate-fit, salary-expectation or visa judgments
@@ -224,5 +254,6 @@ Read `isNeededCover` from `job-hunter.config.json` (default `false`). Generate a
 ## Updating an existing report
 
 - Keep existing entries and their evidence
+- Preserve the `Feed-sourced jobs` section and its rows when updating the report
 - Add or correct only when there is new evidence
 - Never silently rewrite an old conclusion because the configuration changed; when new configuration flips a decision, state the reason in the new entry or in Notes

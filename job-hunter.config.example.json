@@ -58,6 +58,16 @@
     ],
     "matchMode": "any"
   },
+  "linkedinFeedReview": {
+    "lookbackHours": 24,
+    "maxPosts": 10,
+    "excludeTopics": [],
+    "replyLanguage": "auto",
+    "schedule": {
+      "times": [],
+      "timezone": "Asia/Shanghai"
+    }
+  },
   "schedule": {
     "enabled": false,
     "time": "18:10",
