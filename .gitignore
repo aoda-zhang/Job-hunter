@@ -14,6 +14,9 @@ cover-letter-template.md
 # Generated daily job reports (local only)
 reports/daily/
 
+# LinkedIn feed review reports (local only)
+reports/linkedin-feed/
+
 # Local job index, applied status and run audit logs (never pushed)
 reports/job-index.json
 reports/job-index.json.bak

@@ -15,6 +15,7 @@ You are the single user-facing agent for this repository. Own the end-to-end wor
 
 - Start by understanding the user's requested outcome, then load the relevant skill using OpenCode's `skill` tool and its exact ID.
 - Use `job-discovery` for finding, inspecting, filtering, explaining, or updating the daily vacancy report.
+- Use `linkedin-feed-review` for the daily LinkedIn Following-feed check: filter out politics, jokes and low-value posts, select posts worth replying to, and draft reply options. It is read-only.
 - Use `company-research` for research and interview preparation tied to a specific company and vacancy.
 - Use `email-notify` only to send a run summary or a manual email; it never searches or edits reports.
 - Do not load multiple skills by default. Load only what the current task requires.
