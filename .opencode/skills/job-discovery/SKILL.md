@@ -138,7 +138,7 @@ Also while the page is open, record two application-process fields for every ins
 
 Keep `matched` and `review` in the report; exclude `not_matched` from the main report. Never rank, score or label fit; the only priority signal is the platform's own prompt, quoted as shown. Do not filter on years, salary, visa, candidate language proficiency, industry, architecture or company size. Record only facts visible on the page; never infer a missing field.
 
-**Cover letter gating (config):** Read `isNeededCover` from `job-hunter.config.json` (boolean, default `false`). When `true`, draft cover letters for matched jobs where `coverLetter` is `yes`. When `false`, do not draft cover letters even if a JD requires one.
+**Cover letter gating (config + JD):** Read `isNeededCover` from `job-hunter.config.json` (boolean, default `false`) and `coverLetter` from the job page. Generate a cover letter for a vacancy that remains in the report (`matched` or `review`) only when `isNeededCover` is `true` and `coverLetter` is `yes`. The decision uses only those two inputs; do not add extra criteria. The user's template `cover-letter-template.md` is the single source of truth: copy its structure, sections, wording and order exactly, and fill only the placeholders it contains. Do not rewrite, restructure, add or remove sections, or add content the template does not ask for. When `isNeededCover` is `false`, or `coverLetter` is `no`/`unknown`, do not generate one.
 
 ## 4. Follow the daily report reference
 
@@ -181,15 +181,16 @@ After the report is written:
 
 ### Draft cover letters (when needed)
 
-4. Read `isNeededCover` from `job-hunter.config.json` (default `false`). When `true`, for every matched vacancy inspected today where `coverLetter` is `yes`, draft a cover letter from the root template `cover-letter-template.md` and save it locally under:
+4. Read `isNeededCover` from `job-hunter.config.json` (default `false`). Generate a cover letter for a vacancy that remains in the report (`matched` or `review`) only when `isNeededCover` is `true` and `coverLetter` is `yes`. The decision uses only those two inputs; do not add extra criteria. Use `cover-letter-template.md` exactly as the user wrote it: keep its structure, sections, wording and order, and replace only the placeholders that exist in it. Do not rewrite, restructure, add or remove sections, or add content the template does not ask for. Save it locally under:
 
    `reports/cover-letters/<company-slug>/<jobId>.md`
 
    - `<company-slug>`: lowercase, spaces and punctuation replaced by `-`, e.g. `clickhouse`, `zimbra-ag`.
-   - Fill in every bracketed placeholder in the template using facts from the JD page: company name, job title, job URL, source platform, matched keywords, and relevant requirements from the JD.
+   - Fill only the placeholders present in the template, using facts from the job page. Map each placeholder by the wording around it (job title, team, product, city, JD requirement) and never change the surrounding text. Do not add extra paragraphs, sections or requirements. If a placeholder cannot be filled from the page, leave it unchanged and tell the user; do not guess.
    - Never fabricate experience, achievements, or motivations. Only use what is verifiable from the JD and your own background.
    - Do not submit the application automatically. The drafted cover letter is for manual review and sending.
-   - When `isNeededCover` is `false`, do not draft cover letters even if a JD requires one.
+   - When `isNeededCover` is `false`, or `coverLetter` is `no`/`unknown`, do not draft a cover letter.
+   - If `cover-letter-template.md` is missing, do not invent or reuse another template. Stop that step and tell the user to copy `cover-letter-template-example.md` to `cover-letter-template.md` first.
 
 If `notifications.email.enabled` is `true`, load the `email-notify` skill and send one run summary after steps 1 and 2. Do not send when it is `false` or absent.
 
