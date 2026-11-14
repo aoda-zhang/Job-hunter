@@ -1,53 +1,48 @@
 # Daily report format
 
-This document is the **single format baseline** for every report under `reports/daily/`. The `job-discovery` skill must read it before creating or updating any daily report. If this document conflicts with the skill body or another note, this document wins on structure; the skill still wins on matching logic.
+Format baseline for `reports/daily/`. Read before writing or updating a report. This file wins on structure; the skill wins on matching logic.
 
-## File location and updates
+## 1. File and language
 
-- One file per local calendar day: `reports/daily/YYYY-MM-DD.md`
-- Create the directory if it does not exist
-- When today's file already exists, **keep existing content** and only append new findings or new evidence; never overwrite, delete or silently downgrade an entry that was already confirmed
-- Deduplication key: the job's canonical URL (within a platform and across platforms); when no canonical URL exists, fall back to `source + company + title + location` and flag a possible duplicate
+- One file per local date: `reports/daily/YYYY-MM-DD.md`.
+- Create the directory when missing.
+- Merge into an existing file; never overwrite, delete or downgrade a confirmed entry.
+- Deduplicate by canonical URL; without one, use `source + company + title + location` and flag a possible duplicate.
+- Keep `job-index.json` and `runs/` out of the report and out of `reportRepo`.
 
-Cross-day memory, application records and the run audit live in `reports/job-index.json` and `reports/runs/YYYY-MM-DD.jsonl`; their rules are in `job-index-and-audit.md`. They are not part of the daily report and are never pushed to `reportRepo`.
+Write human-readable text in `preferredReportLanguage`; fall back to English when absent or unsupported.
 
-## Language and presentation
+Translate: title, headings, table headers, labels, relative times, annotation markers.
 
-- Write all human-readable text in `preferredReportLanguage` from `job-hunter.config.json`. Default to **English** when the field is absent, empty or unsupported, and say so in the final summary.
-- Translate the human-readable layer only: title, section headings, table headers, labels (e.g. `Not specified`, `All Germany`, `Exception note`), relative times (e.g. `2 days ago`) and annotation markers (e.g. `[reported MM-DD]`, `[applied MM-DD]`, `⚠️ possible duplicate`, `⚠️ possibly applied MM-DD`).
-- Do not translate company names, job titles, technical terms, posted keywords, URLs, dates in `YYYY-MM-DD` or `MM-DD`, index/audit field names, or the priority prompt (`You'd be a top applicant`) and marker `Top applicant`.
-- The structure is fixed regardless of language: the same section order, table columns, column order and counts.
-- Use **tables** as the main presentation so the report is scannable
-- Do not restate long JD passages; do not paste full JDs
-- Do not add match scores, rankings, recommendation levels or star ratings, and do not evaluate the candidate profile. The only ordering exception is the platform's own prompt (section 2); never compute one
+Do not translate: company names, job titles, technical terms, URLs, `YYYY-MM-DD` / `MM-DD`, field names, `You'd be a top applicant`.
 
-## Section order
+Use tables. Do not paste full JDs. Do not add scores, rankings, recommendations or candidate-fit judgments.
 
-The body starts at the title line and goes straight into tables; no metadata table and no search-scope table:
+## 2. Section order
 
 ```markdown
 # Daily Job Findings — YYYY-MM-DD
 ```
 
-The title is part of the human-readable layer: translate `Daily Job Findings` into `preferredReportLanguage` and keep the ` — YYYY-MM-DD` suffix unchanged. The section names below are written in English for reference and are translated the same way.
+Translate `Daily Job Findings`; keep ` — YYYY-MM-DD`.
 
 1. Run summary
 2. Matched jobs
-3. Feed-sourced jobs — **only when matching feed hiring posts exist**
-4. Needs manual review — **only when there are entries**
-5. Excluded jobs — **always the last job table**, after matched, feed and review
-6. Exception note — **only when the run failed or was largely unusable**, at the very end
+3. Feed-sourced jobs — only with matching feed hiring posts
+4. Needs manual review — only with entries
+5. Excluded jobs — always last job table
+6. Exception note — only on failure
 
-A normal run has only sections 1, 2 and 5; sections 3, 4 and 6 appear conditionally and must never be written as an empty "None". Excluded jobs always come last among the job tables so the actionable rows stay on top.
+A normal run has sections 1, 2 and 5. Never write an empty section or "None".
 
-After that, append "Evidence and consistency rules" and "Cross-day repeats and updates", in that fixed order.
+Apply the evidence rules (section 9) and cross-day rules (section 10) to the report.
 
-### 1. Run summary
+## 3. Run summary
 
 ```markdown
 | Metric | Value |
 |---|---|
-| Search sources | LinkedIn (list the platforms actually searched per `sources`) |
+| Search sources | LinkedIn |
 | Result pages opened | N |
 | Cards skipped before opening | N |
 | Expired / closed (skipped) | N |
@@ -61,85 +56,69 @@ After that, append "Evidence and consistency rules" and "Cross-day repeats and u
 | Of which cross-day repeats | N |
 ```
 
-- Only fill numbers the browser session can support; write `cannot determine` when unknown, and **never estimate**
-- Search-result card count ≠ opened job pages; never mix them
-- "Cards skipped before opening" counts only cards whose title clearly names a different role family, or that are clearly outside the configured country/location, and that were therefore not opened. They never appear in the excluded table
-- "Expired / closed" counts only links that turned out to be 404, redirected away from the job, or explicitly stopped accepting applications. They never appear in the excluded table
-- Self-check: matched + review + excluded = pages with a successfully read JD
-- `Feed-sourced jobs` are post-only matches from the LinkedIn feed; they are not part of the JD inspection sum
-- "Already applied" and "Expired / closed" both stay out of that sum: the first is decided by the index, the second by the page
+- Write `cannot determine` when unsupported; never estimate.
+- Do not mix result cards with opened pages.
+- `Cards skipped before opening`: clearly wrong role family or outside `countries`/`locations`. Never in the excluded table.
+- `Expired / closed`: 404, redirect away, or no longer accepting. Never in the excluded table.
+- Check: matched + review + excluded = pages with a successfully read JD.
+- `Feed-sourced jobs` are post-only matches; they are not in the JD sum.
+- `Already applied` and `Expired / closed` are outside the JD sum.
 
-### 2. Matched jobs
+## 4. Matched jobs
 
-Group by **city** (`### Munich (13/30)`, `### Berlin (13/30)`, `### Hamburg (4/30)` …), and order each city by **company size**, never by a computed match quality. Matched vacancies that carry the platform's priority prompt go into one leading group first (see below).
+Group by city: `### Munich (13/30)`. Use configured city names when `locations` is set. For a nationwide run, use the city on each page; use `### All Germany` or `### All Germany (Remote)` when no city is shown. Never invent a city.
 
-- When `locations` is configured, use the configured city names as headings.
-- When `locations` is missing or empty (nationwide run), the city comes from each job page; group by the cities actually found. When a page shows only a country (e.g. `Germany`) or is nationwide remote, use `### All Germany` or `### All Germany (Remote)`. Never invent a city to fit an old heading.
+The number is `city matches / total matched rows today`. Cities without matches do not appear.
 
-The number in parentheses after a city heading is that city's **share of matches**: `matches in this city / total matches today`. The denominator counts only rows in today's matched table, excluding excluded and review rows. Cities without matches do not appear here.
-
-#### Priority group: `You'd be a top applicant`
-
-Matched jobs with the verified prompt (currently LinkedIn Premium, `linkedinPremium: true`) form one group at the top of section 2, before all city groups:
+Priority group: matched jobs with the verified `You'd be a top applicant` prompt go first:
 
 ```markdown
 ### You'd be a top applicant (3/30)
 ```
 
-- Use the fixed heading `You'd be a top applicant` in every language; the number is `rows with the prompt / total matches today`.
-- Same columns; sort by `sortBy` / `sortDirection` inside the group.
-- City is not a column: start each Notes cell with the city, e.g. `Berlin; English JD; Full-time`. The row still counts in its city's share heading.
-- Omit the group when empty. The prompt never creates a match; a failed job goes to the excluded table instead.
+- Keep the heading text in every language. Number = prompted rows / total matches.
+- Start Notes with the city; the row still counts in its city share.
+- Omit the group when empty. The prompt never creates a match.
 
-Ordering rules:
+Ordering:
 
-- Follow `sortBy` (currently only `companySize`) and `sortDirection` (`asc` / `desc`, default `asc`)
-- Company size uses the range shown on the page and compares the **lower bound**: `11-50` → 11, `10001+` → 10001, `9,000` → 9000
-- Rows with the same size keep discovery order
-- When `sortBy` is missing or unknown, keep discovery order
-- After sorting, renumber the `#` column sequentially in the final display order across the priority group and all city groups, and update any internal references (e.g. "same JD as #22")
+- Follow `sortBy` (currently `companySize`) and `sortDirection` (`asc` default).
+- Compare the lower bound: `11-50` → 11, `10001+` → 10001, `9,000` → 9000.
+- Ties keep discovery order. Unknown `sortBy` keeps discovery order.
+- Renumber `#` across the priority group and all city groups; update internal references.
 
-Fixed columns:
+Columns:
 
 ```markdown
 | # | Source | Company | Size | Title | Mode | Posted | Matched keywords | Easy Apply | Cover letter | Notes | Link |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 ```
 
-Column rules:
-
 | Column | Rule |
 |---|---|
-| # | Sequential in final display order, across the priority group and after city grouping and sorting |
-| Source | Platform name from `sources`, e.g. `LinkedIn`, `Indeed`; add the domain when the name alone is ambiguous |
-| Company | The company field on the job page; when the poster ≠ the actual employer, put the poster here and the employer in Notes |
-| Size | The company size shown on the page, e.g. `51-200`, `9,000`, `10001+`; write `Not specified` when absent |
-| Title | Keep as published, including (m/f/d), (all genders) and similar suffixes; never put a pipe `|` inside a title, use `·` instead |
-| Mode | `On-site` / `Hybrid` / `Remote` as shown; when the page has no such field write `Not specified` and move the row to the review table; add ⚠️ and explain in Notes when it conflicts with the JD body |
-| Posted | Relative time (`2 days ago`, `19 hours ago`); mark reposts as `(reposted)` |
-| Matched keywords | Only **configured** terms that actually appear in the JD, comma-separated; never add unconfigured technologies |
-| Easy Apply | `Yes` when the page shows a one-click apply button on the platform (e.g. LinkedIn "Easy Apply", Indeed "Indeed Apply"), `No` when the apply path clearly leaves the platform or requires an external form, `Unknown` when it cannot be determined |
-| Cover letter | `Yes` when the page or application form explicitly says a cover letter is required, `No` when it explicitly says cover letter is optional or not needed, `Unknown` when neither is stated. When the job remains in the report, the value is `Yes`, and `isNeededCover` is `true` in config, the agent copies `cover-letter-template.md` as-is and fills only its placeholders; the result is saved under `reports/cover-letters/<company-slug>/<jobId>.md`. The decision uses only config + this field |
-| Notes | Only facts verifiable on the page: main stack, level, contract arrangement, poster/employer mismatch, field conflicts; ≤ about 60 characters; no "great fit" or "recommended" language. Markers follow "Cross-day repeats and updates". Start Notes with the city in the priority group; elsewhere a prompted row adds `Top applicant` |
-| Link | `[Open](URL)`, pointing to the canonical job URL actually visited in this run |
+| # | Sequential in final display order |
+| Source | Platform name from `sources`; add the domain when ambiguous |
+| Company | Company on the page; if poster ≠ employer, put the poster here and the employer in Notes |
+| Size | Range shown on the page, e.g. `51-200`, `9,000`, `10001+`; `Not specified` when absent |
+| Title | As published, including `(m/f/d)` and `(all genders)`; replace `|` with `·` |
+| Mode | `On-site` / `Hybrid` / `Remote`; `Not specified` + review when absent; add ⚠️ when it conflicts with the JD |
+| Posted | Relative time; mark reposts `(reposted)` |
+| Matched keywords | Only configured terms actually in the JD, comma-separated |
+| Easy Apply | `Yes` for a one-click platform apply, `No` for an external form, `Unknown` otherwise |
+| Cover letter | `Yes` / `No` / `Unknown` from the page or form; draft only when `Yes` and `isNeededCover` is `true` |
+| Notes | Verifiable facts only: stack, level, contract, poster/employer mismatch, conflicts; ≤ about 60 characters; no fit language |
+| Link | `[Open](canonical URL)` actually visited in this run |
 
-City is not a table column: it comes from the section heading (`### Munich (13/30)`), or from the start of Notes inside the priority group. Location details that disagree with the heading (e.g. a role in Pullach, or a remote scope limited to EMEA) go into Notes.
+City is not a column. Put location conflicts in Notes. Employment type and JD language are filters, not columns; put relevant evidence in Notes. For a German JD with English as the working language, state that evidence; never infer it.
 
-Employment type is a filter, not a column; when it matters for judgment (contract work, parental-leave cover, part-time) write it in Notes.
+## 5. Feed-sourced jobs
 
-JD language is also a filter, not a column: matched jobs already satisfy `jdLanguages.include`. When the language cannot be determined and the job goes to the review table, Notes must say "language unknown" and why.
+Only with at least one matching feed hiring post. Never write an empty section. `job-discovery` must preserve this section.
 
-When a job matched because of "German JD + JD explicitly names English as the working language", Notes must state that evidence (e.g. "German JD, names English as team language"); never infer it from the company's international profile.
-
-### 3. Feed-sourced jobs
-
-**Only when at least one matching feed hiring post exists.** Do not write an empty section. This section is filled by the `linkedin-feed-jobs` skill and must be preserved by `job-discovery`.
-
-- Only confirmed matches: the role and location match the config. Non-matching hiring posts are not listed here, not in the review table and not in the excluded table.
-- The author does not need to be in the user's following list; a matching job from a stranger, a 2nd/3rd-degree contact or a company page still counts.
-- Only role and location are mandatory. A post that names only those two is included; a conflicting stack, work mode, employment type, seniority or language goes into Notes, never into a drop.
-- Do not infer a company, role or location the post does not state.
-- Fixed columns:
+- Only confirmed matches; non-matching hiring posts appear nowhere.
+- Following status is irrelevant.
+- Role and location are mandatory; conflicting stack, mode, employment type, seniority or language goes in Notes, never a drop.
+- Never infer company, role or location.
 
 ```markdown
 | # | Source | Company | Title | Location | Mode | Posted | Matched keywords | Notes | Link |
@@ -147,113 +126,78 @@ When a job matched because of "German JD + JD explicitly names English as the wo
 | 1 | LinkedIn Feed | Example GmbH | Senior Frontend Engineer | Berlin | Hybrid | 2h ago | React, TypeScript | 来自 feed; hiring manager post | [Open](URL) |
 ```
 
-- `Source` is always `LinkedIn Feed`.
-- `Matched keywords` lists only configured terms actually named; write `None matched` when the post names a stack but no configured term matches, and `Not stated` when no stack is named.
-- `Notes` must start with `来自 feed` (use `From feed` when the report language is not Chinese), followed by one short verifiable fact.
-- `Link` is the post permalink; write `Link unavailable` when no permalink exists.
-- Deduplicate against matched, review and existing feed rows. A job appears in only one section.
-- Renumber the `#` column after merging.
+- `Source`: `LinkedIn Feed`.
+- `Matched keywords`: configured terms named; `None matched` when a stack is named but no term matches; `Not stated` when no stack.
+- `Notes`: start with `来自 feed` (`From feed` for non-Chinese), then one verifiable fact.
+- `Link`: copied permalink or `Link unavailable`.
+- Deduplicate against matched, review and existing feed rows. One job = one section.
+- Renumber `#` after merging.
 
-### 4. Needs manual review
+## 6. Needs manual review
 
-**Only when there are entries**. When empty, omit the whole section; never write "None".
+Only with entries. Use the matched table. In Notes, name the unknown check (title / language / keywords / work mode / employment type) and the concrete reason (JD did not load, too short, truncated, mixed language, field not exposed). Prompted rows first, starting Notes with `Top applicant`. An unknown check never becomes a match or an exclusion.
 
-Use the same table structure as section 2, and state in **Notes**:
+## 7. Excluded jobs
 
-- which check is unknown (title / language / keywords / work mode / employment type)
-- the concrete reason it is missing or ambiguous (JD did not load, too short, truncated, mixed language, page does not expose the field, …)
-
-Prompted rows come first in discovery order and start Notes with `Top applicant`; the prompt never makes an unknown check a match.
-
-Unknown items **must not** be written as matched or excluded.
-
-### 5. Excluded jobs
-
-**Always the last job table**, written after matched, feed and review. A separate section, not counted in the main table. Fixed columns:
+Always the last job table.
 
 ```markdown
 | # | Source | Company | Title | City | Mode | Posted | Easy Apply | Cover letter | Exclusion reason | Link |
 |---|---|---|---|---|---|---|---|---|---|---|
 ```
 
-- Posted: relative time (`2 days ago`, `19 hours ago`), mark reposts as `(reposted)`; write `Not specified` when the page does not show it
-- City: the location shown on the job page; write `Not specified` when absent, never infer
-- Exclusion reason must name the **dimension** (JD language / job title / technical keywords / work mode / employment type / seniority (when enabled) / poster type (staffing agency)) plus one short piece of evidence (e.g. the German original fragment, the missing keyword, the mode or type shown on the page, the industry, or an "our client" phrase in the JD)
-- Group similar reasons together (e.g. all German JDs) so the table is scannable
-- Do not paste long JD passages
-- Duplicate relationships (same role in different cities, bilingual copies) may be noted, but must never be double-counted as matches
-- A prompted job that failed a check is listed here with only the failed dimension; the prompt is never an exclusion reason
-- Jobs skipped at the card stage (clearly wrong title or out of scope) and never opened **do not appear here**; they count only in "Cards skipped before opening"
-- **The link column is mandatory**, format `[Open](URL)`, pointing to the job page actually opened in this run, so every row can be checked
-- Excluded-table URLs are for manual checking only and **must never be used as a cross-day dedup key** (see "Cross-day repeats and updates")
+- `City`: page location; `Not specified` when absent.
+- `Posted`: relative time; `(reposted)`; `Not specified` when absent.
+- `Exclusion reason`: name the dimension (JD language / title / keywords / work mode / employment type / seniority / poster type) plus one short evidence fragment.
+- Group similar reasons. Do not paste long JD passages.
+- Duplicate relationships may be noted; never double-count.
+- A prompted job that failed a check lists only the failed dimension.
+- Cards skipped before opening never appear here.
+- `Link` is mandatory: `[Open](URL)` for the page opened in this run.
+- Never use excluded URLs as a cross-day dedup key.
 
-### 6. Exception note
+## 8. Exception note
 
-**Only when one of these happens, and always at the very end**; a normal run never includes it, and routine search parameters (city radius, paging method, time zone) are never listed:
+Only on a failed, interrupted or largely unusable run; always at the end. Cover what happened, how many rows it affected, and where it stopped. Maximum 3 lines. Never list routine parameters.
 
-- the run failed or stopped: expired login, CAPTCHA, rate limit, no browser tool
-- the run did not finish: result pages left unread, stopped early
-- widespread failure: a large share of jobs could not be judged because JDs were unreadable, truncated or missing key fields
+## 9. Evidence and consistency
 
-Length limit: 3 lines, covering only three things — what happened, how many rows it affected, where it stopped. No disclaimer-style essay.
+- Use only facts visible on the page or verified in the browser.
+- Mark `matched` only when every active dimension is confirmed.
+- Write `Not specified` for missing fields; never infer location, mode, type or date.
+- Keep URLs exactly as found; never assemble one.
+- One job appears at most once in a report; a match and an exclusion never both count.
+- Feed jobs use post text only; never open external links to verify.
+- Feed jobs match on role + location only; other dimensions never exclude.
+- A non-matching feed hiring post appears nowhere, including the excluded table.
+- A feed job appears only in the feed section; do not duplicate a matched or review row.
+- The priority prompt is ordering metadata only.
+- Never output candidate-fit, salary or visa judgments.
 
-## Evidence and consistency rules
+## 10. Cross-day repeats
 
-- Use only facts visible on the job page or verified in the browser session
-- Every active matching dimension must be independent and traceable to concrete evidence
-- Mark a job as matched only when every active dimension is confirmed
-- Write `Not specified` for missing fields; never infer location, work mode, employment type or posting date
-- Keep URLs exactly as found; never assemble or invent one
-- A job appears at most once in the same report; a match and an exclusion never both count
-- `Feed-sourced jobs` use only the post text. Never open an external link to verify them.
-- Feed jobs are matched on role + location only; technical keywords, work mode, employment type, seniority and JD language never exclude a row.
-- A non-matching feed hiring post is ignored and must never be listed in any section, including the excluded table.
-- A feed job appears only in the feed section; if the same job is already in matched or review, do not duplicate it.
-- The priority prompt is personal Premium UI text: ordering metadata only, never a matching dimension or an inferred signal
-- Every daily report uses the same section order and table columns so reports stay comparable
-- Do not output candidate-fit, salary-expectation or visa judgments
+A report is a daily snapshot. List repeats and annotate them; never remove them.
 
-## Cross-day repeats and updates
-
-A daily report is a **snapshot of that day**, not a cumulative list. Cross-day repeats are still listed; they are only annotated, never removed.
-
-Comparison baseline: prefer `reports/job-index.json`, which covers all history; when the index is missing, fall back to the previous 7 local dates under `reports/daily/`. Only jobs that ever entered the **matched table** or the **review table** count as already reported; excluded and expired entries do not.
+Use `job-index.json`; if missing, use the previous 7 daily reports. Only jobs that entered a matched or review table count as reported; excluded and expired do not.
 
 | Situation | Handling |
 |---|---|
-| `firstReportedOn` is set in the index | List the job in today's report as usual and append `[reported MM-DD]` (from `firstReportedOn`) to Notes; never delete it, reclassify it or move it to the excluded table |
-| `appliedOn` is set in the index | Do not open or judge it; count it under "Already applied (skipped)" only; it must not appear in any job table |
-| Previously appeared only in the excluded table | Not part of dedup; re-evaluate it today |
-| No index and no earlier reports | Skip this step and add no marker |
+| `firstReportedOn` set | List normally; append `[reported MM-DD]` to Notes; never delete or reclassify |
+| `appliedOn` set | Do not open or judge; count as applied-skipped; never list |
+| Excluded only before | Not a repeat; re-evaluate today |
+| No index or reports | Skip and add no marker |
 
-- Markers affect readability only and never reduce the number of jobs actually opened today
-- The same URL still appears at most once in today's report
-- "Of which cross-day repeats" = rows in today's matched table carrying `[reported …]`
-- Always use `MM-DD` in historical markers to avoid cross-year ambiguity
+- Markers never reduce today's opened count.
+- The same URL appears once.
+- `Of which cross-day repeats` = matched rows with `[reported …]`.
+- Use `MM-DD` to avoid cross-year ambiguity.
 
-### Same role, different ID
+Soft duplicates: same normalized company + title + city with a different ID → `⚠️ possible duplicate`, or `⚠️ possibly applied MM-DD` when applied. Annotate only; never merge or change counts. Normalization rules are in `job-index-and-audit.md`.
 
-The same job may exist on one platform under several job IDs, in multi-city versions or in bilingual versions; the same job may also appear on several platforms. Compare `normalized company + normalized title + city`; when it is a match and the job ID differs, write `⚠️ possible duplicate` in Notes, or `⚠️ possibly applied MM-DD` when the other posting was applied to. Annotate only — never merge, delete or change counts. Normalization rules are in `job-index-and-audit.md`.
+Application marker: after the user confirms, append `[applied MM-DD]` to Notes and set `appliedOn`. Do not change the decision or counts.
 
-### Application marker
+Cover letter: draft only when `isNeededCover` is `true` and `coverLetter` is `Yes`, for a matched or review job. Copy `cover-letter-template.md` exactly; fill only its placeholders from the page; leave unfillable placeholders unchanged and tell the user. Save to `reports/cover-letters/<company-slug>/<jobId>.md`. Never fabricate. Do not submit. If the template is missing, stop and tell the user to copy `cover-letter-template-example.md`.
 
-After the user confirms an application, append `[applied MM-DD]` to that job's Notes and write `appliedOn` in the index. The marker does not change today's matched/review decision or any count.
+## 11. Update an existing report
 
-### Cover letter generation
-
-Read `isNeededCover` from `job-hunter.config.json` (default `false`). Generate a cover letter for a job that remains in the report (`matched` or `review`) only when `isNeededCover` is `true` and `coverLetter` is `Yes`. The decision uses only those two inputs; do not add extra criteria. Copy `cover-letter-template.md` exactly as the user wrote it: keep its structure, sections, wording and order, and replace only the placeholders that exist in it. Do not rewrite, restructure, add or remove sections, or add content the template does not ask for. Save it locally under:
-
-`reports/cover-letters/<company-slug>/<jobId>.md`
-
-- Fill only the template's own placeholders using facts from the job page. Map each placeholder by the wording around it (job title, team, product, city, JD requirement) and never change the surrounding text. Do not add extra paragraphs, sections or requirements. If a placeholder cannot be filled from the page, leave it unchanged and tell the user; do not guess.
-- Never fabricate experience, achievements, or motivations.
-- Do not submit automatically — the draft is for manual review and sending.
-- Skip jobs where `coverLetter` is `No` or `Unknown`. When `isNeededCover` is `false`, do not draft a cover letter.
-- If `cover-letter-template.md` is missing, do not invent or reuse another template. Stop that step and tell the user to copy `cover-letter-template-example.md` to `cover-letter-template.md` first.
-
-## Updating an existing report
-
-- Keep existing entries and their evidence
-- Preserve the `Feed-sourced jobs` section and its rows when updating the report
-- Add or correct only when there is new evidence
-- Never silently rewrite an old conclusion because the configuration changed; when new configuration flips a decision, state the reason in the new entry or in Notes
+Keep existing entries and evidence. Preserve `Feed-sourced jobs` and its rows. Add or correct only with new evidence. Never silently rewrite an old conclusion; state the reason when new config changes a decision.

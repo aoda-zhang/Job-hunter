@@ -15,8 +15,8 @@ You are the single user-facing agent for this repository. Own the end-to-end wor
 
 - Start by understanding the user's requested outcome, then load the relevant skill using OpenCode's `skill` tool and its exact ID.
 - Use `job-discovery` for finding, inspecting, filtering, explaining, or updating the daily vacancy report.
-- Use `linkedin-feed-review` for the daily LinkedIn Recent-feed check against the freshly loaded following list: filter out politics, jokes and low-value posts, select posts worth replying to, and draft reply options. It is read-only.
-- Use `linkedin-feed-jobs` together with `linkedin-feed-review` to add only matching hiring posts from the feed to today's daily report under a separate `Feed-sourced jobs` section. Non-matching feed posts are ignored and never enter the excluded table.
+- Use `linkedin-feed-review` for the daily LinkedIn Recent-feed check. Do not load the following list. Apply the configured `excludeTopics`, then enforce both hard gates: the author's current role must match `jobTitles.include` and the author's location must be confirmed inside `countries`/`locations`. There is no daily quota and no minimum; zero selected is valid. Draft reply options for the posts that pass, and publish the report to `reportRepo` when configured. It is read-only.
+- Use `linkedin-feed-jobs` in the same feed pass to add only hiring posts whose title and stated location match the config, after the other configured filters, to today's daily report under `Feed-sourced jobs`. Non-matching feed posts are ignored and never enter the excluded table.
 - Use `company-research` for research and interview preparation tied to a specific company and vacancy.
 - Use `email-notify` only to send a run summary or a manual email; it never searches or edits reports.
 - Do not load multiple skills by default. Load only what the current task requires.
@@ -74,9 +74,9 @@ When the user asks for a test email, a manual summary, or to change how notifica
 
 When the user asks to change search preferences, edit only the relevant fields in the root `job-hunter.config.json`. Preserve unrelated settings, validate the JSON, and explain the exact changes. Do not create parallel configuration files. If the change empties or removes `locations`, say explicitly that the next run will search the whole configured country instead of specific cities. If the user states criteria for a single run instead of asking for a lasting change, apply them to that run only, restate the resolved criteria before searching, and do not rewrite the config.
 
-When the user changes `jobSearchSchedule.times` (an array of `HH:MM` strings) or `.timezone`, edit that block and run `.opencode/scripts/apply-schedule.sh` and report the applied result. Editing the config alone does not change launchd until that script runs. If it reports a timezone mismatch, explain that launchd uses the Mac's local time and do not change the system timezone without explicit consent. An empty `times` array unloads and removes the job search schedule; adding times recreates it.
+When the user changes `jobSearchSchedule.times` (an array of `HH:MM` strings), `.weekdays` (an optional array of launchd weekdays `0`–`7`, where `1` is Monday and `5` is Friday) or `.timezone`, edit that block and run `.opencode/scripts/apply-schedule.sh` and report the applied result. Editing the config alone does not change launchd until that script runs. If it reports a timezone mismatch, explain that launchd uses the Mac's local time and do not change the system timezone without explicit consent. An empty `times` array unloads and removes the job search schedule; adding times recreates it.
 
-When the user changes `linkedinFeedReview.schedule.times` (an array of `HH:MM` strings) or `.timezone`, edit that block and run `.opencode/scripts/apply-schedule.sh`. An empty `times` array unloads and removes the feed review job. The feed review job is separate from the daily job search and never runs `linkedin-feed-jobs`.
+When the user changes `linkedinFeedReview.schedule.times` (an array of `HH:MM` strings), `.weekdays` (an optional array of launchd weekdays `0`–`7`) or `.timezone`, edit that block and run `.opencode/scripts/apply-schedule.sh`. An empty `times` array unloads and removes the feed review job. The feed job is separate from the daily job search; each run reads the Recent feed once and produces both the reply list and the feed-sourced jobs.
 
 ## Shared quality and safety rules
 

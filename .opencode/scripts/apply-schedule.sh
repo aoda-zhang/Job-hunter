@@ -33,6 +33,7 @@ sys_tz="$(readlink /etc/localtime 2>/dev/null | sed 's|.*/zoneinfo/||')"
 [ -n "$sys_tz" ] || sys_tz="$(date +%Z)"
 
 typeset -ga TIMES
+typeset -ga WEEKDAYS
 
 validate_time() {
   case "$1" in
@@ -78,6 +79,70 @@ read_times() {
   done < <(jq -r "${jq_path}[]?" "$CONFIG")
 }
 
+# launchd Weekday values: 0 and 7 = Sunday, 1 = Monday ... 5 = Friday, 6 = Saturday.
+# An empty array means every day (no Weekday key is written).
+read_weekdays() {
+  local jq_path="$1" label="$2"
+  local days_type w
+  days_type="$(jq -r "($jq_path // []) | type" "$CONFIG")"
+  if [ "$days_type" != "array" ]; then
+    print -u2 -- "$label must be an array of launchd weekdays (0-7)"
+    return 1
+  fi
+
+  WEEKDAYS=()
+  while IFS= read -r w; do
+    [ -z "$w" ] && continue
+    if [[ ! "$w" == [0-7] ]]; then
+      print -u2 -- "$label must contain integers 0-7, got: $w"
+      return 1
+    fi
+    WEEKDAYS+=("$w")
+  done < <(jq -r "${jq_path}[]?" "$CONFIG")
+}
+
+emit_calendar_entries() {
+  local t w
+  if [ ${#WEEKDAYS[@]} -eq 0 ]; then
+    for t in "${TIMES[@]}"; do
+      split_time "$t"
+      cat <<EOF
+    <dict>
+      <key>Hour</key>
+      <integer>$HOUR</integer>
+      <key>Minute</key>
+      <integer>$MINUTE</integer>
+    </dict>
+EOF
+    done
+    return 0
+  fi
+
+  for t in "${TIMES[@]}"; do
+    split_time "$t"
+    for w in "${WEEKDAYS[@]}"; do
+      cat <<EOF
+    <dict>
+      <key>Weekday</key>
+      <integer>$w</integer>
+      <key>Hour</key>
+      <integer>$HOUR</integer>
+      <key>Minute</key>
+      <integer>$MINUTE</integer>
+    </dict>
+EOF
+    done
+  done
+}
+
+weekday_label() {
+  if [ ${#WEEKDAYS[@]} -eq 0 ]; then
+    print -r -- "every day"
+  else
+    print -r -- "weekdays ${(j:,:)WEEKDAYS}"
+  fi
+}
+
 disable_job() {
   local label="$1" plist="$2" message="$3"
   if [ "$DRY_RUN" = "1" ]; then
@@ -99,12 +164,13 @@ apply_job_search() {
   tz="$(jq -r '.jobSearchSchedule.timezone // empty' "$CONFIG")"
   check_timezone "$tz" || return 1
   read_times '.jobSearchSchedule.times' 'jobSearchSchedule.times' || return 1
+  read_weekdays '.jobSearchSchedule.weekdays' 'jobSearchSchedule.weekdays' || return 1
 
   if [ "$DRY_RUN" = "1" ]; then
     if [ ${#TIMES[@]} -eq 0 ]; then
       print -r -- "job search job: disabled (empty times), timezone=${tz:-system}, plist=$JOB_PLIST"
     else
-      print -r -- "job search job: times=${(j:,:)TIMES}, timezone=${tz:-system}, plist=$JOB_PLIST"
+      print -r -- "job search job: times=${(j:,:)TIMES}, $(weekday_label), timezone=${tz:-system}, plist=$JOB_PLIST"
     fi
     return 0
   fi
@@ -134,17 +200,7 @@ apply_job_search() {
   <key>StartCalendarInterval</key>
   <array>
 EOF
-    for t in "${TIMES[@]}"; do
-      split_time "$t"
-      cat <<EOF
-    <dict>
-      <key>Hour</key>
-      <integer>$HOUR</integer>
-      <key>Minute</key>
-      <integer>$MINUTE</integer>
-    </dict>
-EOF
-    done
+    emit_calendar_entries
     cat <<EOF
   </array>
   <key>StandardOutPath</key>
@@ -167,7 +223,7 @@ EOF
     return 1
   fi
 
-  print -r -- "job search job applied: ${(j:,:)TIMES} (${tz:-system time}), label $JOB_LABEL"
+  print -r -- "job search job applied: ${(j:,:)TIMES} $(weekday_label) (${tz:-system time}), label $JOB_LABEL"
 }
 
 apply_feed_review() {
@@ -180,12 +236,13 @@ apply_feed_review() {
   tz="$(jq -r '.linkedinFeedReview.schedule.timezone // .jobSearchSchedule.timezone // empty' "$CONFIG")"
   check_timezone "$tz" || return 1
   read_times '.linkedinFeedReview.schedule.times' 'linkedinFeedReview.schedule.times' || return 1
+  read_weekdays '.linkedinFeedReview.schedule.weekdays' 'linkedinFeedReview.schedule.weekdays' || return 1
 
   if [ "$DRY_RUN" = "1" ]; then
     if [ ${#TIMES[@]} -eq 0 ]; then
       print -r -- "feed review job: disabled (empty times), timezone=${tz:-system}, plist=$FEED_PLIST"
     else
-      print -r -- "feed review job: times=${(j:,:)TIMES}, timezone=${tz:-system}, plist=$FEED_PLIST"
+      print -r -- "feed review job: times=${(j:,:)TIMES}, $(weekday_label), timezone=${tz:-system}, plist=$FEED_PLIST"
     fi
     return 0
   fi
@@ -215,17 +272,7 @@ apply_feed_review() {
   <key>StartCalendarInterval</key>
   <array>
 EOF
-    for t in "${TIMES[@]}"; do
-      split_time "$t"
-      cat <<EOF
-    <dict>
-      <key>Hour</key>
-      <integer>$HOUR</integer>
-      <key>Minute</key>
-      <integer>$MINUTE</integer>
-    </dict>
-EOF
-    done
+    emit_calendar_entries
     cat <<EOF
   </array>
   <key>StandardOutPath</key>
@@ -248,7 +295,7 @@ EOF
     return 1
   fi
 
-  print -r -- "feed review job applied: ${(j:,:)TIMES} (${tz:-system time}), label $FEED_LABEL"
+  print -r -- "feed review job applied: ${(j:,:)TIMES} $(weekday_label) (${tz:-system time}), label $FEED_LABEL"
 }
 
 rc=0

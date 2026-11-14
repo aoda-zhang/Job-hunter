@@ -1,17 +1,17 @@
-# Job index, deduplication and run audit
+# Job index and run audit
 
-This document defines Job Hunter's local memory layer. The `job-discovery` skill must follow it on every run; the daily report structure still follows `daily-report-format.md`.
+Local memory layer. Follow this on every `job-discovery` run. Never push these files to `reportRepo`.
 
 ## 1. Files
 
-| File | Purpose | Committed |
-|---|---|---|
-| `reports/job-index.json` | Cross-day job index and application record | No — Git-ignored, local only |
-| `reports/runs/YYYY-MM-DD.jsonl` | Run audit log, one line per run | No — Git-ignored, local only |
+| File | Purpose |
+|---|---|
+| `reports/job-index.json` | Cross-day index and application record |
+| `reports/runs/YYYY-MM-DD.jsonl` | Run audit, one line per run |
 
-Never push these two files to `reportRepo`. `reportRepo` receives only the day's daily report.
+Both are Git-ignored and local only.
 
-## 2. Job index schema
+## 2. Index schema
 
 ```json
 {
@@ -38,59 +38,57 @@ Never push these two files to `reportRepo`. `reportRepo` receives only the day's
 }
 ```
 
-Field rules:
+Rules:
 
-- Keys use `<source>:<jobId>`, e.g. `LinkedIn:4487182341`, `Indeed:7f3c9a1b2d4e5f60`. `source` must match the platform name in `sources`.
-- When the platform exposes no job ID, fall back to `source + canonical URL` as the key; one URL yields exactly one entry.
-- Bare job IDs in an older index are treated as LinkedIn. Keep their keys as they are; do not rewrite them in bulk.
-- `source`: the canonical platform name (`LinkedIn`, `Indeed`, `Glassdoor`), not a configured domain alias; this keeps `glassdoor.de` and `Glassdoor` from creating two entries.
-- `status`: `matched` / `review` / `excluded` / `expired`, recording the **most recent** decision.
-- `firstSeen`: the date the job was first opened.
-- `lastSeen`: the date it was most recently opened or re-confirmed.
-- `firstReportedOn`: the date it first entered the **matched or review table**; `null` if it never did. Excluded days do not count.
-- `appliedOn`: the date the user confirmed an application; `null` otherwise.
-- `easyApply`: whether the posting offers a one-click apply path on the platform (`yes`, `no`, `unknown`). Read from the job page only; never infer from applicant count, search ranking or JD text.
-- `coverLetter`: whether the posting requires a cover letter (`yes`, `no`, `unknown`). Read from the job page or application form only; never infer from company size or industry.
-- `note`: optional, verifiable facts from the page only, no judgment.
-- Update only the relevant fields and preserve unknown fields; never rewrite the whole object or touch other entries.
+- Key: `<source>:<jobId>`, e.g. `LinkedIn:4487182341`, `Indeed:7f3c9a1b2d4e5f60`.
+- With no job ID, use `source + canonical URL`; one URL = one entry.
+- Treat legacy bare IDs as LinkedIn; keep their keys.
+- `source`: canonical name (`LinkedIn`, `Indeed`, `Glassdoor`), not a domain alias.
+- `status`: `matched` / `review` / `excluded` / `expired`, latest decision.
+- `firstSeen`: first opened date. `lastSeen`: latest opened or confirmed date.
+- `firstReportedOn`: first date in a matched or review table; `null` otherwise.
+- `appliedOn`: user-confirmed application date; `null` otherwise.
+- `easyApply`: `yes` / `no` / `unknown` from the page only.
+- `coverLetter`: `yes` / `no` / `unknown` from the page or form only.
+- `note`: verifiable page facts only; no judgment.
+- Update only relevant fields; preserve unknown fields and other entries.
 
-Create the index when missing. When it cannot be parsed, back it up to `reports/job-index.json.bak`, rebuild an empty index, and say so in the run's chat output.
+Create the index when missing. If unparseable, back it up to `reports/job-index.json.bak`, start empty, and say so.
 
 ## 3. Read order
 
-1. Prefer `reports/job-index.json`; it covers all history.
-2. When the index is missing, read the previous 7 local dates under `reports/daily/` as a one-time bootstrap and recover only URLs, status and first-seen dates.
-3. When neither exists, start from an empty index.
+1. `reports/job-index.json`.
+2. If missing, bootstrap from the previous 7 `reports/daily/` dates: URLs, status, first-seen.
+3. If neither exists, start empty.
 
-## 4. Deduplication and reuse rules
+## 4. Dedup
 
-**Hard dedup**: the same job ID or canonical URL on one platform is the same job; an identical canonical URL across platforms is also treated as the same job.
+Hard dedup: same job ID or canonical URL on one platform; same canonical URL across platforms.
 
-- `appliedOn` is set in the index → **do not open, do not judge, do not list in any job table**; count it only as "Already applied (skipped)".
-- Entry exists with latest status `matched` / `review` → still reopen and judge it today (it may have closed or changed), and append `[reported MM-DD]` to Notes using `firstReportedOn`.
-- Entry exists with latest status `excluded` / `expired` → re-evaluate today as usual, add no `[reported]` marker; if it matches today, set `firstReportedOn` to today.
+- `appliedOn` set: do not open, judge or list. Count as "Already applied (skipped)".
+- `matched` / `review`: reopen and judge today; append `[reported MM-DD]` from `firstReportedOn`.
+- `excluded` / `expired`: re-evaluate; no repeat marker. If it matches today, set `firstReportedOn` to today.
 
-**Soft dedup (likely same role, different ID)**: the same role often has multiple job IDs, multi-city versions or bilingual versions on one platform, and is often listed on several platforms.
+Soft dedup: compare `normalized company + normalized title + city`, without the platform name.
 
-- Comparison key: `normalized company + normalized title + city`. When comparing across platforms, **do not** include the platform name in the key.
-- Normalization: lowercase; strip punctuation, extra spaces and gender markers such as `(m/w/d)`, `(f/m/d)`, `(all genders)`; strip legal suffixes (GmbH, AG, SE, Inc, Ltd, LLC, GmbH & Co. KG).
-- Do not strip level words such as Senior / Junior / Lead, and do not merge different cities.
-- On a soft-dedup hit with a different job ID → write `⚠️ possible duplicate` in Notes; when the other posting has `appliedOn`, write `⚠️ possibly applied MM-DD`.
-- Annotate only — never delete, reclassify or merge counts.
+- Normalize: lowercase; strip punctuation, extra spaces, `(m/w/d)`, `(f/m/d)`, `(all genders)`, and GmbH, AG, SE, Inc, Ltd, LLC, GmbH & Co. KG.
+- Keep level words (Senior, Junior, Lead). Never merge different cities.
+- Different ID hit: write `⚠️ possible duplicate`; add `⚠️ possibly applied MM-DD` when the other posting was applied to.
+- Annotate only; never delete, reclassify or merge counts.
 
-## 5. Application recording
+## 5. Record applications
 
-Trigger: the user says "I applied to X", "mark these as applied", or names the jobs explicitly.
+Trigger: the user says they applied, or names the jobs.
 
-1. Locate the job: prefer today's report, then historical reports, then the index by URL or "company + title".
-2. Set `appliedOn` to today and keep `status` unchanged.
-3. If the job already appears in today's report, append `[applied MM-DD]` to Notes; otherwise update the index only.
-4. When it cannot be identified uniquely, ask one clarifying question. Never guess and never mark a batch.
-5. Do not change the daily report's counts or decisions.
+1. Find the job in today's report, historical reports, then the index by URL or company + title.
+2. Set `appliedOn` to today; keep `status`.
+3. If it is in today's report, append `[applied MM-DD]` to Notes; otherwise update the index only.
+4. If ambiguous, ask one question. Never guess or mark a batch.
+5. Do not change report counts or decisions.
 
-## 6. Run audit schema
+## 6. Audit schema
 
-Path: `reports/runs/YYYY-MM-DD.jsonl` (split by local date; several runs in one day append several lines, never overwrite).
+Path: `reports/runs/YYYY-MM-DD.jsonl`. Append one line per run; never overwrite.
 
 ```json
 {
@@ -99,14 +97,7 @@ Path: `reports/runs/YYYY-MM-DD.jsonl` (split by local date; several runs in one 
   "durationSeconds": 1920,
   "scope": { "countries": ["Germany"], "locations": [] },
   "sources": ["LinkedIn"],
-  "uiFilters": {
-    "LinkedIn": {
-      "datePosted": "Past 24 hours",
-      "employmentTypes": ["Full-time"],
-      "workModes": ["Remote", "Hybrid", "On-site"],
-      "seniority": null
-    }
-  },
+  "uiFilters": { "LinkedIn": { "datePosted": "Past 24 hours", "employmentTypes": ["Full-time"], "workModes": ["Remote", "Hybrid", "On-site"], "seniority": null } },
   "prompt": "…verbatim jobSearchPrompt…",
   "resultsBySource": { "LinkedIn": 300 },
   "resultCount": 300,
@@ -129,18 +120,16 @@ Path: `reports/runs/YYYY-MM-DD.jsonl` (split by local date; several runs in one 
 
 Rules:
 
-- `runAt` is when the search **started**, not when the report was written; `finishedAt` is when the report, index and audit were finished; `durationSeconds` is their integer difference.
-- All three use the local time zone with a UTC offset (e.g. `+08:00`). Write `null` when unknown; never estimate.
-- Record only numbers the browser session can support; write `null` when unknown, never estimate.
-- `sources` records the platforms actually attempted, in configured order; `searchedBySource` marks each platform `completed` / `failed` / `skipped` (with the reason).
-- `uiFilters` is grouped by platform and records only the filters that platform actually offered; a platform without UI filters gets an empty object.
-- `resultsBySource` and `resultCount` come from the count the results page displays; write `null` when it shows none. Page counts go into `resultPagesBySource`; `resultPagesOpened` is the total. Older logs used `linkedinResultCount`, which equals today's `resultsBySource.LinkedIn` — read old data compatibly and never rewrite old lines.
-- `stopReason` is a short phrase explaining why paging stopped, e.g. `results older than lookbackHours`, `no more pages`, `login required`, `cap reached`.
-- `limitations` lists only limitations that actually occurred (CAPTCHA, rate limit, filter that could not be applied, …); empty on a normal run.
-- Several runs on one day append several lines; never merge them.
-- `postingsInspected` / `matched` / `review` / `excluded` are **this run's** counts; the daily report's run-summary table is the **day total**. The summary email needs both; never conflate them.
+- `runAt` = search start; `finishedAt` = report, index and audit finished; `durationSeconds` = integer difference.
+- Use local time with UTC offset. Write `null` when unknown; never estimate.
+- `sources` = platforms attempted, in order. `searchedBySource` = `completed` / `failed` / `skipped` with reason.
+- `uiFilters` = only filters the platform offered; otherwise `{}`.
+- `resultsBySource` / `resultCount` = page count; `null` when absent. Page counts go in `resultPagesBySource`; `resultPagesOpened` = total.
+- Older `linkedinResultCount` equals `resultsBySource.LinkedIn`; read compatibly, never rewrite.
+- `stopReason`: short phrase, e.g. `results older than lookbackHours`, `no more pages`, `login required`.
+- `limitations`: only actual limitations; empty on a normal run.
+- `postingsInspected` / `matched` / `review` / `excluded` are this run's counts. The report summary is the day total; never conflate them.
 
-## 7. Retention and cleanup
+## 7. Retention
 
-- Never delete index entries or audit logs automatically.
-- Only export, clean or rebuild when the user asks, and confirm the scope first.
+Never delete entries or audit lines automatically. Export, clean or rebuild only when the user asks and confirms the scope.

@@ -79,11 +79,13 @@
     "replyLanguage": "auto",
     "schedule": {
       "times": [],
+      "weekdays": [1, 2, 3, 4, 5],
       "timezone": "Asia/Shanghai"
     }
   },
   "jobSearchSchedule": {
     "times": [],
+    "weekdays": [1, 2, 3, 4, 5],
     "timezone": "Asia/Shanghai"
   },
   "isNeededCover": false

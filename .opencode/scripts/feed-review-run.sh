@@ -31,8 +31,8 @@ opencode run \
   --model "$MODEL" \
   --auto \
   --archived \
-  --title "LinkedIn Feed Review $(date +%F)" \
-  "Run today's LinkedIn feed review: load linkedin-feed-review and follow it exactly. Refresh the following list from Manage Follows, read the Recent feed, hard-filter politics, jokes, personal life and other low-value posts, select only posts worth replying to, draft primary and backup replies, and write reports/linkedin-feed/$(date +%F).md. Do not run linkedin-feed-jobs; it runs with the daily job search. Do not send email. Never post, comment, react, follow, connect or message. Finally report the report path, counts, following-list refresh time and any access limitation." \
+  --title "LinkedIn Feed Pass $(date +%F)" \
+  "Run today's LinkedIn feed pass: load linkedin-feed-review and linkedin-feed-jobs and follow them exactly. Read the Recent feed once, newest first, without the following list. Apply the config role, location and exclusion gates; zero selected is valid. Write the feed report and, when job rows match, add them to today's daily report. Publish written reports to reportRepo. If notifications.email.enabled is true, send one combined feed email. Never post, comment, react, follow, connect or message. Report both report paths, counts, publish status, email status and limitations." \
   >> "$LOG" 2>&1
 exit_code=$?
 print -r -- "=== $(date) feed review exit $exit_code ===" >> "$LOG"

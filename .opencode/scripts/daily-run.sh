@@ -32,7 +32,7 @@ opencode run \
   --auto \
   --archived \
   --title "Job Hunter + Feed Jobs $(date +%F)" \
-  "Run today's job search: follow the job-discovery flow exactly as job-hunter.config.json specifies; when finished update reports/job-index.json and reports/runs/$(date +%F).jsonl. Then load linkedin-feed-jobs and run its standalone feed pass; do not run linkedin-feed-review because it has its own timer. Add only matching feed hiring posts to reports/daily/$(date +%F).md under the Feed-sourced jobs section, ignore non-matching posts, and do not put them in the excluded table. After adding rows, publish the updated daily report to reportRepo and verify that the remote file contains the Feed-sourced jobs section when rows were added; if not, publish again. If notifications.email.enabled is true, load the email-notify skill and send the job-search run summary. Finally report the report path, matched count, review count, applied-skipped count, possible-duplicate count, feed-jobs added count, publish status, and per-source result counts, pages opened and stop reason." \
+  "Run today's job search: load job-discovery and follow it exactly, then load linkedin-feed-jobs and add matching feed jobs to today's daily report. Update job-index.json and the run audit. Publish the daily report to reportRepo. If notifications.email.enabled is true, send one job-search summary. Report the report path, counts, feed-jobs added, publish status, email status and limitations." \
   >> "$LOG" 2>&1
 exit_code=$?
 print -r -- "=== $(date) exit $exit_code ===" >> "$LOG"

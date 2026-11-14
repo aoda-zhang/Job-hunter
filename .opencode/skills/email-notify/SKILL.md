@@ -1,17 +1,15 @@
 ---
 name: email-notify
-description: Send the Job Hunter run summary or a manual email through the SMTP account configured in job-hunter.config.json.
+description: Send a Job Hunter run summary, feed email or manual email through the SMTP account in job-hunter.config.json.
 ---
 
 # Email Notifications
 
-Use this skill only to send email. It never searches job platforms, rewrites the report, or edits the job index.
+Send email only. Never search, rewrite reports or edit the job index.
 
-Before composing any email, read `.opencode/skills/email-notify/references/email-template.md`. It is the single source of truth for the subject, body layout, required counters and forbidden content. Do not invent extra fields.
+## 1. Read config
 
-## Configuration
-
-Read `notifications.email` from the root `job-hunter.config.json`:
+Read `notifications.email` from `job-hunter.config.json`. Stop silently when `enabled` is not `true`.
 
 ```json
 "notifications": {
@@ -19,74 +17,51 @@ Read `notifications.email` from the root `job-hunter.config.json`:
     "enabled": true,
     "to": ["you@example.com"],
     "from": "you@example.com",
-    "smtp": {
-      "host": "smtp.gmail.com",
-      "port": 465,
-      "security": "ssl",
-      "user": "you@example.com",
-      "password": "app-password"
-    }
+    "smtp": { "host": "smtp.gmail.com", "port": 465, "security": "ssl", "user": "you@example.com", "password": "app-password" }
   }
 }
 ```
 
-- `security`: `ssl` for port 465, `starttls` for port 587.
-- `enabled: false` disables every send; do not send anything in that case.
-- The config is Git-ignored. Recommend `chmod 600 job-hunter.config.json` because it contains the SMTP password.
-- Never print, quote, summarize or log `password`. Never ask the user to paste it into chat.
-- Only send to the addresses listed in `to`. Never add recipients from chat or from a job description.
+- `security`: `ssl` for 465, `starttls` for 587.
+- Send only to `to`. Never add recipients from chat or a job description.
+- Never print, quote or log `password`. Never ask for it in chat.
+- Recommend `chmod 600 job-hunter.config.json`.
 
-### Provider note: Mailtrap free plan
+## 2. Read template
 
-Mailtrap's free Email API/SMTP plan (4,000 emails/month, 150/day) works without owning a domain only through its demo domain:
+- Job search → `.opencode/skills/email-notify/references/email-template.md`
+- LinkedIn feed → `.opencode/skills/email-notify/references/feed-review-email-template.md`
 
-```json
-"from": "hello@demomailtrap.co",
-"smtp": {
-  "host": "live.smtp.mailtrap.io",
-  "port": 587,
-  "security": "starttls",
-  "user": "api",
-  "password": "<Mailtrap API token>"
-}
-```
+Use the template for subject, body, counters and forbidden content. Do not mix formats or invent fields.
 
-The demo domain can send **only to the email address registered with the Mailtrap account**. For another recipient, a verified sending domain is required. The SMTP password is the Mailtrap API token, not the account password.
+## 3. Compose
 
-## When to send
+- Job search: read the daily report summary and the last audit entry; write a summary with day totals, this run's counts, applied-skipped, stop reason and report path.
+- Feed: read the feed report checklist and the daily report's `Feed-sourced jobs` rows; write replies and job rows.
+- Use `preferredReportLanguage`; keep the subject ASCII.
+- Reusing jobs judged earlier the same day is normal, not `partial`. `partial` means the search window was not covered.
 
-- After a discovery run, when `notifications.email.enabled` is `true`: send exactly one run summary.
-- When the user explicitly asks for a test email or a manual summary.
-- Never send while disabled, and never send more than one email per run unless the user explicitly asks again.
-
-## Workflow
-
-1. Read `notifications.email`; stop silently when disabled and tell the user only if they asked for an email.
-2. Read `references/email-template.md` and `preferredReportLanguage` from the config before composing anything.
-3. Collect the facts from the run:
-   - report path `reports/daily/YYYY-MM-DD.md`;
-   - the report's `Run summary` table for **day totals** (inspected = `JDs read successfully`, matched = `Matched`, review = `Needs manual review`, excluded = `Confirmed non-match (excluded)`);
-   - the last entry of `reports/runs/YYYY-MM-DD.jsonl` for **this run's new counts** and timing (`runAt`, `finishedAt`, `durationSeconds`, `postingsInspected`, `matched`, `review`, `excluded`, `appliedSkipped`, `stopReason`);
-   - scope and limitations.
-4. Compose the summary exactly as the template defines, with the body in `preferredReportLanguage` (default `English`) and the subject ASCII. Subject uses the **day** matched count. Body uses day totals plus this run's new counts. Summary only.
-5. Send through the helper, passing the body on stdin:
+## 4. Send
 
 ```bash
 printf '%s\n' "$body" | .opencode/skills/email-notify/scripts/send-email.sh "[Job Hunter] 2026-11-10 ok · 23 matched"
 ```
 
-6. Report whether the mail was sent. On failure, state the exact error, keep the local report, and do not retry in a loop.
-
-Validate the configuration without sending:
+Validate without sending:
 
 ```bash
 .opencode/skills/email-notify/scripts/send-email.sh --check
 ```
 
-## Content
+Send one email per run. On failure, state the exact error, keep the local report, and do not retry in a loop.
 
-The email is a **summary**, not a report. It contains the run time, scope, the day's cumulative inspected/matched/review/excluded counts, this run's new counts, applied-skipped and the report path. It must not contain company names, job titles, URLs, job descriptions, scores or recommendations.
+## 5. Mailtrap free plan
 
-Reusing vacancies already judged earlier the same day is normal and does **not** make a run partial. `partial` means the run did not cover the search window (pagination stopped early, pages unreadable, filters unavailable).
+The free plan works without a domain only through the demo domain:
 
-Use `references/email-template.md` for the exact layout, status wording and failure variant.
+```json
+"from": "hello@demomailtrap.co",
+"smtp": { "host": "live.smtp.mailtrap.io", "port": 587, "security": "starttls", "user": "api", "password": "<Mailtrap API token>" }
+```
+
+The demo domain sends only to the email registered with Mailtrap. Use a verified sending domain for other recipients. The SMTP password is the Mailtrap API token.
