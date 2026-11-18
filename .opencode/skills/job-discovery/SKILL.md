@@ -108,7 +108,7 @@ Follow `.opencode/skills/job-discovery/references/daily-report-format.md` for st
 
 Write `reports/daily/YYYY-MM-DD.md`. Merge with an existing report. Preserve any `Feed-sourced jobs` section and its count. Deduplicate by canonical URL; without one, use company + title + location and flag possible duplicates.
 
-Group matched rows by city. For a nationwide run, use the city on each page. Put prompted matches in one leading group but keep their city share. Sort within each city by `sortBy`/`sortDirection` (`companySize` uses the lower bound; default `asc`; ties keep discovery order). Renumber `#` after sorting.
+Add a `City` column; do not group matched rows by city. Put prompted matches in one leading group, then the remaining rows. Sort each part by `sortBy`/`sortDirection` (`companySize` uses the lower bound; default `asc`; ties keep discovery order). Renumber `#` after sorting.
 
 Before writing, add cross-day repeat annotations from the index. Do not count excluded or expired jobs as repeats.
 

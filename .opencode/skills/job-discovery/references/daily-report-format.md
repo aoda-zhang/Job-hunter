@@ -66,9 +66,7 @@ Apply the evidence rules (section 9) and cross-day rules (section 10) to the rep
 
 ## 4. Matched jobs
 
-Group by city: `### Munich (13/30)`. Use configured city names when `locations` is set. For a nationwide run, use the city on each page; use `### All Germany` or `### All Germany (Remote)` when no city is shown. Never invent a city.
-
-The number is `city matches / total matched rows today`. Cities without matches do not appear.
+Do not group rows by city. Put the page location in the `City` column.
 
 Priority group: matched jobs with the verified `You'd be a top applicant` prompt go first:
 
@@ -77,21 +75,21 @@ Priority group: matched jobs with the verified `You'd be a top applicant` prompt
 ```
 
 - Keep the heading text in every language. Number = prompted rows / total matches.
-- Start Notes with the city; the row still counts in its city share.
 - Omit the group when empty. The prompt never creates a match.
 
 Ordering:
 
-- Follow `sortBy` (currently `companySize`) and `sortDirection` (`asc` default).
+- All prompted rows first, then the remaining matched rows.
+- Within each part, follow `sortBy` (currently `companySize`) and `sortDirection` (`asc` default).
 - Compare the lower bound: `11-50` → 11, `10001+` → 10001, `9,000` → 9000.
 - Ties keep discovery order. Unknown `sortBy` keeps discovery order.
-- Renumber `#` across the priority group and all city groups; update internal references.
+- Renumber `#` across the priority group and the remaining rows; update internal references.
 
 Columns:
 
 ```markdown
-| # | Source | Company | Size | Title | Mode | Posted | Matched keywords | Easy Apply | Cover letter | Notes | Link |
-|---|---|---|---|---|---|---|---|---|---|---|---|
+| # | Source | Company | Size | Title | City | Mode | Posted | Matched keywords | Easy Apply | Cover letter | Notes | Link |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
 ```
 
 | Column | Rule |
@@ -101,6 +99,7 @@ Columns:
 | Company | Company on the page; if poster ≠ employer, put the poster here and the employer in Notes |
 | Size | Range shown on the page, e.g. `51-200`, `9,000`, `10001+`; `Not specified` when absent |
 | Title | As published, including `(m/f/d)` and `(all genders)`; replace `|` with `·` |
+| City | Page location as published; `Not specified` when absent; keep multiple cities in the page's order separated by ` · `; never infer or normalize to a configured city |
 | Mode | `On-site` / `Hybrid` / `Remote`; `Not specified` + review when absent; add ⚠️ when it conflicts with the JD |
 | Posted | Relative time; mark reposts `(reposted)` |
 | Matched keywords | Only configured terms actually in the JD, comma-separated |
@@ -109,7 +108,7 @@ Columns:
 | Notes | Verifiable facts only: stack, level, contract, poster/employer mismatch, conflicts; ≤ about 60 characters; no fit language |
 | Link | `[Open](canonical URL)` actually visited in this run |
 
-City is not a column. Put location conflicts in Notes. Employment type and JD language are filters, not columns; put relevant evidence in Notes. For a German JD with English as the working language, state that evidence; never infer it.
+Put location conflicts in Notes. Employment type and JD language are filters, not columns; put relevant evidence in Notes. For a German JD with English as the working language, state that evidence; never infer it.
 
 ## 5. Feed-sourced jobs
 
