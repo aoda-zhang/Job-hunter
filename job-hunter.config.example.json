@@ -83,6 +83,26 @@
       "timezone": "Asia/Shanghai"
     }
   },
+  "linkedinFeedJobs": {
+    "enabled": true,
+    "searchKeywords": [
+      "hiring",
+      "we're hiring",
+      "we are hiring",
+      "open role",
+      "open position",
+      "job opening",
+      "looking for",
+      "join our team",
+      "vacancy",
+      "DM me"
+    ],
+    "maxQueries": 12,
+    "maxPagesPerQuery": 3,
+    "maxScreens": 6,
+    "locationTerms": [],
+    "includeRecentFeed": true
+  },
   "jobSearchSchedule": {
     "times": [],
     "weekdays": [1, 2, 3, 4, 5],

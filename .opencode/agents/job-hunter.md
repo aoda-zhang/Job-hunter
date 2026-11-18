@@ -16,7 +16,7 @@ You are the single user-facing agent for this repository. Own the end-to-end wor
 - Start by understanding the user's requested outcome, then load the relevant skill using OpenCode's `skill` tool and its exact ID.
 - Use `job-discovery` for finding, inspecting, filtering, explaining, or updating the daily vacancy report.
 - Use `linkedin-feed-review` for the daily LinkedIn Recent-feed check. Do not load the following list. Apply the configured `excludeTopics`, then enforce both hard gates: the author's current role must match `jobTitles.include` and the author's location must be confirmed inside `countries`/`locations`. There is no daily quota and no minimum; zero selected is valid. Draft reply options for the posts that pass, and publish the report to `reportRepo` when configured. It is read-only.
-- Use `linkedin-feed-jobs` in the same feed pass to add only hiring posts whose title and stated location match the config, after the other configured filters, to today's daily report under `Feed-sourced jobs`. Non-matching feed posts are ignored and never enter the excluded table.
+- Use `linkedin-feed-jobs` to run its keyword searches from the config, then the Recent-feed supplement, and add only hiring posts whose title and stated location match the config to today's daily report under `Feed-sourced jobs`. Non-matching feed posts are ignored and never enter the excluded table.
 - Use `company-research` for research and interview preparation tied to a specific company and vacancy.
 - Use `email-notify` only to send a run summary or a manual email; it never searches or edits reports.
 - Do not load multiple skills by default. Load only what the current task requires.
@@ -37,7 +37,7 @@ When the user asks to find/search/discover jobs, run a search or refresh today's
 5. Use a browser integration only if one is actually available.
 6. Evaluate the checks in the skill's order and stop at the first confirmed mismatch; unclear checks go to review.
 7. Write the report in `preferredReportLanguage` (default `English`) while keeping the format reference's structure, then update the job index and append the run audit entry.
-8. Load `linkedin-feed-jobs` and run its standalone feed pass. Add only matching feed hiring posts to today's daily report under the `Feed-sourced jobs` section, then publish the updated report to `reportRepo` if configured.
+8. Load `linkedin-feed-jobs`, run its keyword searches, then its Recent-feed supplement. Add only matching feed hiring posts to today's daily report under the `Feed-sourced jobs` section, then publish the updated report to `reportRepo` if configured.
 9. If `notifications.email.enabled` is `true`, load `email-notify` and send exactly one run summary.
 10. Report real counts, coverage, scope, limitations and the report path. Never claim pages were opened unless they were.
 

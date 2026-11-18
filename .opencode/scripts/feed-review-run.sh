@@ -32,7 +32,7 @@ opencode run \
   --auto \
   --archived \
   --title "LinkedIn Feed Pass $(date +%F)" \
-  "Run today's LinkedIn feed pass: load linkedin-feed-review and linkedin-feed-jobs and follow them exactly. Read the Recent feed once, newest first, without the following list. Apply the config role, location and exclusion gates; zero selected is valid. Write the feed report and, when job rows match, add them to today's daily report. Publish written reports to reportRepo. If notifications.email.enabled is true, send one combined feed email. Never post, comment, react, follow, connect or message. Report both report paths, counts, publish status, email status and limitations." \
+  "Run today's LinkedIn feed pass: load linkedin-feed-review and linkedin-feed-jobs and follow them exactly. linkedin-feed-jobs runs its keyword searches from job-hunter.config.json first, then the configured Recent feed supplement. linkedin-feed-review reads the Recent feed once, newest first, without the following list. Apply each skill's config gates; zero selected is valid. Write the feed report and, when job rows match, add them to today's daily report. Publish written reports to reportRepo. If notifications.email.enabled is true, send one combined feed email. Never post, comment, react, follow, connect or message. Report both report paths, counts, publish status, email status and limitations." \
   >> "$LOG" 2>&1
 exit_code=$?
 print -r -- "=== $(date) feed review exit $exit_code ===" >> "$LOG"
