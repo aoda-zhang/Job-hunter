@@ -24,6 +24,7 @@ Fields:
 - `jobSearchPrompt` — required query, used verbatim.
 - `jobTitles.include` — title matching.
 - `jdLanguages.include`, `.acceptGermanJdWithEnglishWorkingLanguage` — JD language.
+- `jdLanguages.maxRequiredLevel` — optional map such as `{"German": "A2", "English": "C1"}`. Active only for the languages listed. It is a hard filter on explicit JD language requirements.
 - `technicalKeywords.include`, `.matchMode` — stack matching.
 - `preferredReportLanguage`, `reportRepo`, `notifications.email`, `sortBy`, `sortDirection`, `isNeededCover`.
 
@@ -85,8 +86,9 @@ Open the posting and confirm it is still open. Evaluate in order and stop at the
 
 0. **Validity** — 404, redirect, or "no longer accepting applications" → skip as expired/closed.
 1. **Job title** — same role family as `jobTitles.include`. Page title wins over card title.
-2. **Poster type** — classify from the posting as `direct`, `third_party` or `unknown`. `third_party` means a staffing firm, headhunter, agency portal, "our client", "on behalf of", or the local-language equivalent (e.g. `im Auftrag`, `für unseren Kunden`, `Arbeitnehmerüberlassung`). A consultancy hiring for its own projects is `direct`. Unclear → `unknown`. With `thirdPartyPostings: exclude`, a confirmed `third_party` is `not_matched` and stops here; with `separate` or `include`, continue and let the remaining checks decide.
+2. **Poster type** — classify from the posting as `direct`, `third_party` or `unknown`. `third_party` means a staffing firm, headhunter, agency portal, "our client", "on behalf of", or the local-language equivalent (e.g. `im Auftrag`, `für unseren Kunden`, `Arbeitnehmerüberlassung`). A consultancy hiring for its own projects is `direct`. Unclear → `unknown`. With `thirdPartyPostings: exclude`, a confirmed `third_party` is `not_matched` and stops here; with `separate` or `include`, continue and let the remaining checks decide. `third_party` is never a bypass: steps 3–7 must still confirm every active filter.
 3. **JD language** — in `jdLanguages.include`. A German JD matches when `acceptGermanJdWithEnglishWorkingLanguage` is `true` and the JD names English as the working language. Mixed, short or truncated → `unknown`.
+3b. **Language requirement level** — only when `jdLanguages.maxRequiredLevel` has an entry for that language. Extract explicit requirements from the JD, e.g. `German C1`, `Deutschkenntnisse B2`, `fließend Deutsch`, `verhandlungssicher`, `English fluent`, `business fluent`. Map to CEFR: A1 < A2 < B1 < B2 < C1 < C2. `basic`/`Grundkenntnisse` → A2; `good`/`gute`/`solid` → B1; `business fluent` → B2; `fluent`/`fließend`/`verhandlungssicher` → C1; `native`/`muttersprachlich` → C2. A bare `German required` / `Deutsch erforderlich` / `Deutschkenntnisse` with no level counts as B1. A phrase such as `nice to have`, `plus`, `von Vorteil` or `optional` is not a requirement. Use the highest requirement stated for that language. A requirement strictly above the configured level is a confirmed mismatch → `not_matched` with reason `language requirement: <language> <required> > <configured>`. A requirement at or below the configured level passes. Ambiguous wording that cannot be mapped to a level → `unknown` → review, not matched.
 4. **Technical keywords** — follow `matchMode`; accept JS/JavaScript, TS/TypeScript, NodeJS/Node.js, ReactJS/React. With `any`, stop at the first hit.
 5. **Work mode** — only when `workModes` is a real subset. Missing → `unknown`.
 6. **Employment type** — only when `employmentTypes` is a real subset. Missing → `unknown`.
@@ -95,13 +97,15 @@ Open the posting and confirm it is still open. Evaluate in order and stop at the
 
 Disabled checks are skipped. Confirmed mismatch → `not_matched`, stop. Any `unknown` with no mismatch → `review`. Otherwise `matched`.
 
+**Third-party gate.** Only a `third_party` posting with a confirmed `matched` result on every active dimension may enter `代招岗位`. A confirmed mismatch in title, JD language, language requirement level, technical keywords, work mode, employment type or seniority sends it to Excluded with that reason. An `unknown` in any of those dimensions sends it to review, never to `代招岗位`. Never assume full-time, English JD, on-site/hybrid, a seniority level or a language from the poster type alone.
+
 Record `easyApply` (`yes`/`no`/`unknown`), `applyType` (`easy_apply` when the button applies inside the platform, `external` when it clearly redirects to an employer/ATS page, `unknown` otherwise) and `coverLetter` (`yes`/`no`/`unknown`) for every inspected vacancy. These are informational and never affect classification. Do not click Apply during discovery; classify from the visible button and page only.
 
 Record `posterType` for every inspected vacancy that reaches the report. Record `business` only from an explicit JD statement. For a `third_party` posting, `business` describes the client employer's business when the JD states it; the client employer goes in Notes.
 
 Record the platform priority prompt when the reference defines one and the config enables it (LinkedIn: `linkedinPremium`). It only orders rows. Recorded `easyApply` is also ordering metadata only and never a filter.
 
-Keep `matched` and `review`; exclude `not_matched` from the main report. Never score fit. Do not filter on years, salary, visa, language proficiency, industry, architecture or company size. Record only page facts.
+Keep `matched` and `review`; exclude `not_matched` from the main report. Never score fit. Do not filter on years, salary, visa, industry, architecture or company size. The only language-level filter is the explicit `jdLanguages.maxRequiredLevel` rule above; never infer a language level from the JD language, the company or the candidate's nationality. Record only page facts.
 
 Draft a cover letter only when `isNeededCover` is `true` and `coverLetter` is `yes`, for a `matched` or `review` vacancy. Use `cover-letter-template.md` exactly: keep structure, sections, wording and order; fill only its placeholders from the page; leave unfillable placeholders unchanged and tell the user. Never fabricate. Save to `reports/cover-letters/<company-slug>/<jobId>.md` (`<company-slug>`: lowercase, spaces/punctuation → `-`). Do not submit. If the template is missing, stop that step and tell the user to copy `cover-letter-template-example.md`.
 
@@ -111,7 +115,7 @@ Follow `.opencode/skills/job-discovery/references/daily-report-format.md` for st
 
 Write `reports/daily/YYYY-MM-DD.md`. Merge with an existing report. Preserve any `代招岗位` and `Feed-sourced jobs` sections and their counts. Deduplicate by canonical URL; without one, use company + title + location and flag possible duplicates.
 
-When `thirdPartyPostings` is `separate`, put confirmed `third_party` postings that passed every other check in the dedicated `代招岗位` section, with the same columns, keyword evidence, ordering and checks as matched jobs. They count as matched in the summary. A `third_party` posting that fails another dimension goes to the excluded table with that reason, never to `代招岗位`.
+When `thirdPartyPostings` is `separate`, put only confirmed `third_party` postings that pass every active filter in the dedicated `代招岗位` section, with the same columns, keyword evidence, ordering and checks as matched jobs. They count as matched in the summary. A `third_party` posting that fails title, JD language, language requirement level, technical keywords, work mode, employment type or seniority goes to the excluded table with that reason, never to `代招岗位`. A third-party posting with `unknown` on an active dimension goes to review, never to `代招岗位`.
 
 Add a `City` column; do not group matched rows by city. Split matched rows into exactly two parts: `Easy Apply` (`easyApply: yes`) and `No Easy Apply` (everything else, including `unknown`). Within each part, put prompted rows first; in the No Easy Apply part prefix their Notes with `Top applicant`. Sort each part by `sortBy`/`sortDirection` (`companySize` uses the lower bound; default `asc`; ties keep discovery order). Renumber `#` after sorting. The split is a workflow split and never a filter. Easy Apply rows stay for the user; No Easy Apply rows are the ones `job-apply` fills.
 

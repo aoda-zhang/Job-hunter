@@ -137,7 +137,7 @@ Put location conflicts in Notes. Employment type and JD language are filters, no
 
 ## 5. 代招岗位 (third-party postings)
 
-Only with at least one confirmed third-party posting that passed every other active check. Never write an empty section.
+Only with at least one confirmed third-party posting that passed every active check. Never write an empty section.
 
 - Heading: `代招岗位` in a Chinese report; `Agency / third-party postings` in other report languages.
 - Same columns, evidence rules, keyword matching, two-part split (Easy Apply, then No Easy Apply) and ordering as Matched jobs. Number `#` from 1 inside this section; both heading denominators use this section's total.
@@ -145,7 +145,8 @@ Only with at least one confirmed third-party posting that passed every other act
 - Confirm the poster is a staffing firm, headhunter, agency or platform posting for a client. "Clearly" means the JD states the relation; unclear goes to review.
 - `Company`: the posting company (the agency or platform). Notes start with `代招：<client>` or `代招（客户未注明）` (`Third party: <client>` / `Third party: client not stated`), then one verifiable fact.
 - `Business`: the client employer's product, market or industry when the JD states it; `Not stated` otherwise.
-- A third-party posting that fails title, JD language, keywords, work mode, employment type or seniority goes to Excluded with that reason, never here.
+- Gate: a third-party posting must match every active filter exactly like a direct posting. A confirmed mismatch in title, JD language, language requirement level, keywords, work mode, employment type or seniority goes to Excluded with that reason, never here. An `unknown` on any active filter goes to Needs manual review, never here.
+- Never infer full-time, English JD, on-site/hybrid or a seniority level from the poster type; read it from the posting.
 - These rows count as matched in the summary, cross-day repeats and possible-duplicate checks.
 
 ## 6. Feed-sourced jobs
@@ -185,7 +186,7 @@ Always the last job table.
 
 - `City`: page location; `Not specified` when absent.
 - `Posted`: relative time; `(reposted)`; `Not specified` when absent.
-- `Exclusion reason`: name the dimension (JD language / title / keywords / work mode / employment type / seniority / poster type) plus one short evidence fragment.
+- `Exclusion reason`: name the dimension (JD language / language requirement / title / keywords / work mode / employment type / seniority / poster type) plus one short evidence fragment.
 - `poster type` is a valid reason only when `thirdPartyPostings` is `exclude`; in `separate` or `include` mode a third-party posting is judged on the other dimensions.
 - Group similar reasons. Do not paste long JD passages.
 - Duplicate relationships may be noted; never double-count.

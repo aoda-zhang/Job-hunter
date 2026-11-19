@@ -82,6 +82,7 @@ Du sprichst immer nur mit dem Job-Hunter-Agenten. Er lädt `job-discovery` selbs
 | `jobTitles.include` | ja | Akzeptierte Titelvarianten, für Abgleich und Karten-Vorfilter. |
 | `jdLanguages.include` | ja | Akzeptierte Sprachen der Stellenbeschreibung, z. B. `["English"]`. |
 | `jdLanguages.acceptGermanJdWithEnglishWorkingLanguage` | nein | Bei `true` zählt eine deutsche JD, wenn sie Englisch ausdrücklich als Arbeits-, Team- oder Unternehmenssprache nennt. |
+| `jdLanguages.maxRequiredLevel` | nein | Optionale Sprachlevel-Grenzen, z. B. `{"German": "A2", "English": "C1"}`. Verlangt die JD ein höheres Level, wird die Stelle als `language requirement` ausgeschlossen. Ein bloßes "German required" zählt als B1; "nice to have/plus/optional" ist keine Anforderung. |
 | `technicalKeywords.include` | ja | Technologien, die in der JD gesucht werden. |
 | `technicalKeywords.matchMode` | ja | `any` = ein Begriff genügt; `all` = jeder Begriff muss vorkommen. |
 | `workModes` | nein | `Remote` / `Hybrid` / `On-site`. Alle drei, leer oder fehlend = kein Filter. |
@@ -114,6 +115,7 @@ Die Prüfungen laufen in dieser Reihenfolge und enden beim ersten bestätigten W
 2. Stellentitel – gleiche Rollenfamilie wie `jobTitles.include`.
 3. Anbietertyp – direkt, Drittkunde oder unklar erfassen; bestätigte Drittkunden-Stellen laufen durch die übrigen Prüfungen und erscheinen in der eigenen Tabelle (bei `exclude` ausgeschlossen).
 4. JD-Sprache – die tatsächlich verwendete Sprache der Beschreibung.
+4b. Sprachlevel – wenn `jdLanguages.maxRequiredLevel` gesetzt ist, ist eine ausdrücklich höhere Anforderung ein Widerspruch (`language requirement`).
 5. Technische Keywords – gemäß `matchMode`.
 6. Arbeitsmodell – nur wenn `workModes` eine echte Teilmenge ist.
 7. Anstellungsart – nur wenn `employmentTypes` eine echte Teilmenge ist.

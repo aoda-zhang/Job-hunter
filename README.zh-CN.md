@@ -82,6 +82,7 @@ cp job-hunter.config.example.json job-hunter.config.json
 | `jobTitles.include` | 是 | 接受的职位名称变体，用于匹配和卡片预筛。 |
 | `jdLanguages.include` | 是 | 接受的 JD 语言，例如 `["English"]`。 |
 | `jdLanguages.acceptGermanJdWithEnglishWorkingLanguage` | 否 | 为 `true` 时，德语 JD 只要明确写明英语是工作/团队/公司语言，也算命中。 |
+| `jdLanguages.maxRequiredLevel` | 否 | 可选的语言等级上限，例如 `{"German": "A2", "English": "C1"}`。JD 明确要求高于该等级时，按 `language requirement` 排除。只写“German required”按 B1 计算；“nice to have/plus/optional”不算要求。 |
 | `technicalKeywords.include` | 是 | 要在 JD 中查找的技术关键词。 |
 | `technicalKeywords.matchMode` | 是 | `any`：命中任意一个即可；`all`：必须全部命中。 |
 | `workModes` | 否 | `Remote` / `Hybrid` / `On-site`。三项全列、为空或缺失 = 不筛选。 |
@@ -118,6 +119,7 @@ LinkedIn feed 有独立的定时器。把 `linkedinFeedReview.schedule.times` �
 2. 职位名称——与 `jobTitles.include` 属于同一岗位族。
 3. 发布方类型——记录为直招、代招或不明；确认代招的岗位照常通过其余检查，并放进独立「代招岗位」表（配置为 `exclude` 时排除）。
 4. JD 语言——以 JD 实际使用的语言为准。
+4b. 语言等级要求——配置了 `jdLanguages.maxRequiredLevel` 时，JD 明确要求高于你的等级即判定不符（`language requirement`）。
 5. 技术关键词——按 `matchMode` 判断。
 6. 工作模式——仅当 `workModes` 是真正的子集时启用。
 7. 雇佣类型——仅当 `employmentTypes` 是真正的子集时启用。

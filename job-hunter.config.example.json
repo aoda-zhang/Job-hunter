@@ -79,7 +79,8 @@
   },
   "jdLanguages": {
     "include": ["English"],
-    "acceptGermanJdWithEnglishWorkingLanguage": false
+    "acceptGermanJdWithEnglishWorkingLanguage": false,
+    "maxRequiredLevel": {}
   },
   "technicalKeywords": {
     "include": [

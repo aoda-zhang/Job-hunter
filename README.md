@@ -82,6 +82,7 @@ You only ever talk to the Job Hunter agent. It loads `job-discovery` by itself; 
 | `jobTitles.include` | yes | Accepted title variants, used for matching and the card pre-filter. |
 | `jdLanguages.include` | yes | Accepted JD languages, e.g. `["English"]`. |
 | `jdLanguages.acceptGermanJdWithEnglishWorkingLanguage` | no | When `true`, a German JD still matches if it explicitly names English as the working, team or company language. |
+| `jdLanguages.maxRequiredLevel` | no | Optional explicit language-level limits, e.g. `{"German": "A2", "English": "C1"}`. If the JD requires a level above the configured one, the job is excluded as `language requirement`. Bare "German required" counts as B1; "nice to have/plus/optional" is not a requirement. |
 | `technicalKeywords.include` | yes | Technologies to look for in the JD. |
 | `technicalKeywords.matchMode` | yes | `any` = one keyword is enough; `all` = every keyword must appear. |
 | `isNeededCover` | no | When `true`, a job kept in the report (`matched` or `review`) whose JD requires a cover letter gets one. The agent copies `cover-letter-template.md` as-is and fills only its placeholders; it does not rewrite the template. Saved under `reports/cover-letters/<company-slug>/<jobId>.md`. Default `false`. |
@@ -120,6 +121,7 @@ Checks run in this order and stop at the first confirmed mismatch:
 2. Job title — same role family as `jobTitles.include`.
 3. Poster type — record direct, third-party or unclear; a confirmed third-party posting passes and is listed in the separate section (or is excluded when configured).
 4. JD language — the language actually used in the description.
+4b. Language requirement level — when `jdLanguages.maxRequiredLevel` is set, an explicit JD requirement above your configured level is a mismatch (`language requirement`).
 5. Technical keywords — following `matchMode`.
 6. Work mode — only when `workModes` is a real subset.
 7. Employment type — only when `employmentTypes` is a real subset.
