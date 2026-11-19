@@ -39,7 +39,7 @@ Read this only when `linkedinPremium` is `true`. The account then shows a person
 
 - Record it per vacancy for this run only (`topApplicant`, phrase verbatim, `card` / `detail`); do not persist it in the index. The detail page wins; a card-only prompt still counts.
 - Never infer it from applicant counts, Easy Apply, search ranking or JD text. No visible prompt means no flag; `false` or absent skips this section without a limitation.
-- It is ordering metadata, not a check. Classification is unchanged: a prompted job that fails any check (e.g. JD language) is excluded and stays out of the priority group.
+- It is ordering metadata, not a check. Classification is unchanged: a prompted job that fails any check (e.g. JD language) is excluded and stays out of the top-applicant group.
 
 ## 5. Pagination
 

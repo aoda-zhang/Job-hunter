@@ -1,6 +1,6 @@
 ---
 name: job-discovery
-description: Search the platforms in sources with the local browser, inspect real JDs, filter by title, JD language, technical keywords, work mode, employment type, optional seniority and direct-employer requirement, verify the posting is open, and write the daily report.
+description: Search the platforms in sources with the local browser, inspect real JDs, filter by title, JD language, technical keywords, work mode, employment type and optional seniority, separate confirmed third-party postings unless configured otherwise, record explicit company business, verify the posting is open, and write the daily report.
 ---
 
 # Job Discovery
@@ -18,7 +18,7 @@ Fields:
 - `countries` — required scope boundary. It does not build the query.
 - `locations` — optional city refinement. Empty = whole country.
 - `workModes`, `employmentTypes`, `seniority.include` — optional filters.
-- `excludeRecruiters` — exclude agencies hiring for a third party when `true`.
+- `thirdPartyPostings` — how confirmed third-party postings are handled: `separate` (default) keeps them in a dedicated `代招岗位` section, `include` lists them with normal matches, `exclude` drops them.
 - `lookbackHours` — posting window.
 - `sources` — required platform list, in order.
 - `jobSearchPrompt` — required query, used verbatim.
@@ -46,7 +46,7 @@ Resolve scope:
 3. `locations` empty = the entire configured country. Do not narrow silently.
 4. State the resolved scope in the final summary.
 
-Only title, JD language, technical keywords, work modes, employment types, seniority and direct-employer status are matching filters. Country, city and posting date are scope. Validity is a gate.
+Only title, JD language, technical keywords, work modes, employment types and seniority are matching filters. Poster type is a display split for confirmed third-party postings (or an exclusion only when `thirdPartyPostings` is `exclude`). Country, city and posting date are scope. Validity is a gate.
 
 If the user gives one-run criteria in chat, restate them and apply them to that run only.
 
@@ -85,18 +85,21 @@ Open the posting and confirm it is still open. Evaluate in order and stop at the
 
 0. **Validity** — 404, redirect, or "no longer accepting applications" → skip as expired/closed.
 1. **Job title** — same role family as `jobTitles.include`. Page title wins over card title.
-2. **Poster type** — only when `excludeRecruiters` is `true`. Judge from the posting: staffing firm, "our client", or agency portal. A consultancy hiring for its own projects is an employer. Unclear → `unknown`.
+2. **Poster type** — classify from the posting as `direct`, `third_party` or `unknown`. `third_party` means a staffing firm, headhunter, agency portal, "our client", "on behalf of", or the local-language equivalent (e.g. `im Auftrag`, `für unseren Kunden`, `Arbeitnehmerüberlassung`). A consultancy hiring for its own projects is `direct`. Unclear → `unknown`. With `thirdPartyPostings: exclude`, a confirmed `third_party` is `not_matched` and stops here; with `separate` or `include`, continue and let the remaining checks decide.
 3. **JD language** — in `jdLanguages.include`. A German JD matches when `acceptGermanJdWithEnglishWorkingLanguage` is `true` and the JD names English as the working language. Mixed, short or truncated → `unknown`.
 4. **Technical keywords** — follow `matchMode`; accept JS/JavaScript, TS/TypeScript, NodeJS/Node.js, ReactJS/React. With `any`, stop at the first hit.
 5. **Work mode** — only when `workModes` is a real subset. Missing → `unknown`.
 6. **Employment type** — only when `employmentTypes` is a real subset. Missing → `unknown`.
 7. **Seniority** — only when `seniority.include` is a real subset. Use title or explicit level, never bare years. Missing → `unknown`.
+8. **Company business** — informational, never a filter. Record one short phrase only when the JD explicitly states the company's product, market or industry; otherwise `Not stated`. Never infer it from the company name, domain, another page or general knowledge.
 
 Disabled checks are skipped. Confirmed mismatch → `not_matched`, stop. Any `unknown` with no mismatch → `review`. Otherwise `matched`.
 
 Record `easyApply` (`yes`/`no`/`unknown`) and `coverLetter` (`yes`/`no`/`unknown`) for every inspected vacancy. These are informational and never affect classification.
 
-Record the platform priority prompt when the reference defines one and the config enables it (LinkedIn: `linkedinPremium`). It only orders rows.
+Record `posterType` for every inspected vacancy that reaches the report. Record `business` only from an explicit JD statement. For a `third_party` posting, `business` describes the client employer's business when the JD states it; the client employer goes in Notes.
+
+Record the platform priority prompt when the reference defines one and the config enables it (LinkedIn: `linkedinPremium`). It only orders rows. Recorded `easyApply` is also ordering metadata only and never a filter.
 
 Keep `matched` and `review`; exclude `not_matched` from the main report. Never score fit. Do not filter on years, salary, visa, language proficiency, industry, architecture or company size. Record only page facts.
 
@@ -106,20 +109,22 @@ Draft a cover letter only when `isNeededCover` is `true` and `coverLetter` is `y
 
 Follow `.opencode/skills/job-discovery/references/daily-report-format.md` for structure, sections, columns, metadata and summaries. Write human-readable strings in `preferredReportLanguage`; keep structure, order, dates and URLs unchanged.
 
-Write `reports/daily/YYYY-MM-DD.md`. Merge with an existing report. Preserve any `Feed-sourced jobs` section and its count. Deduplicate by canonical URL; without one, use company + title + location and flag possible duplicates.
+Write `reports/daily/YYYY-MM-DD.md`. Merge with an existing report. Preserve any `代招岗位` and `Feed-sourced jobs` sections and their counts. Deduplicate by canonical URL; without one, use company + title + location and flag possible duplicates.
 
-Add a `City` column; do not group matched rows by city. Put prompted matches in one leading group, then the remaining rows. Sort each part by `sortBy`/`sortDirection` (`companySize` uses the lower bound; default `asc`; ties keep discovery order). Renumber `#` after sorting.
+When `thirdPartyPostings` is `separate`, put confirmed `third_party` postings that passed every other check in the dedicated `代招岗位` section, with the same columns, keyword evidence, ordering and checks as matched jobs. They count as matched in the summary. A `third_party` posting that fails another dimension goes to the excluded table with that reason, never to `代招岗位`.
+
+Add a `City` column; do not group matched rows by city. Put confirmed Easy Apply (`easyApply: yes`) rows in the first group, prompted matches that are not Easy Apply in the second group, then the remaining rows; within the Easy Apply group, put prompted rows first. Sort each part by `sortBy`/`sortDirection` (`companySize` uses the lower bound; default `asc`; ties keep discovery order). Renumber `#` after sorting. Easy Apply is ordering only and never a filter.
 
 Before writing, add cross-day repeat annotations from the index. Do not count excluded or expired jobs as repeats.
 
 Publish when `reportRepo` is set: clone/pull it, copy the daily report to `reports/daily/YYYY-MM-DD.md`, commit `docs: add daily job results for YYYY-MM-DD`, push and verify. On failure, report it and keep the local file. Never force-push. Publish only the daily report.
 
-After the report, update `reports/job-index.json`: upsert every inspected vacancy by source-qualified key; set `source`, `lastSeen`, `status`, `firstSeen`, `firstReportedOn`, `easyApply`, `coverLetter`; never clear `appliedOn`; do not write `isNeededCover` per vacancy. Append one JSON line to `reports/runs/YYYY-MM-DD.jsonl` using `runAt`, `finishedAt`, `durationSeconds` and the fields in `.opencode/skills/job-discovery/references/job-index-and-audit.md`. Preserve unknown fields; never delete entries.
+After the report, update `reports/job-index.json`: upsert every inspected vacancy by source-qualified key; set `source`, `lastSeen`, `status`, `firstSeen`, `firstReportedOn`, `easyApply`, `coverLetter`, `posterType`, `business`; never clear `appliedOn`; do not write `isNeededCover` per vacancy. Append one JSON line to `reports/runs/YYYY-MM-DD.jsonl` using `runAt`, `finishedAt`, `durationSeconds` and the fields in `.opencode/skills/job-discovery/references/job-index-and-audit.md`. Preserve unknown fields; never delete entries.
 
 If `notifications.email.enabled`, load `email-notify` and send one summary after the index and audit are written.
 
 ## 6. Report completion
 
-State the report path, resolved scope (say `All Germany` when `locations` was empty), `jobSearchPrompt`, distinct vacancies inspected by source, applied-skipped, cards skipped before opening, expired/closed skipped, matched and prompted-matched, review, excluded, cross-day repeats, possible duplicates, per-source coverage and stop reason, email status and any access limitation.
+State the report path, resolved scope (say `All Germany` when `locations` was empty), `jobSearchPrompt`, distinct vacancies inspected by source, applied-skipped, cards skipped before opening, expired/closed skipped, matched, Easy Apply-matched, prompted-matched, third-party postings (`代招岗位`), review, excluded, cross-day repeats, possible duplicates, per-source coverage and stop reason, email status and any access limitation.
 
 Count only pages actually opened. Distinguish results seen from JDs reviewed. Do not add a limitations section to a normal report; use the exception note only for a failed or interrupted run.

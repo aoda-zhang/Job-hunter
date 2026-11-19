@@ -43,7 +43,7 @@ When the user asks to find/search/discover jobs, run a search or refresh today's
 
 If `reportRepo` is configured, the final daily report must be published after the feed-jobs step; report any push failure without hiding the local result. Never push `reports/job-index.json` or `reports/runs/` — they stay local.
 
-Matching uses only the configured dimensions: title, JD language, technical keywords, work modes, employment types, seniority and direct-employer requirement — each optional dimension is active only when configured. Validity is a gate: skip 404 or closed postings and count them separately. There is no inspection cap; skip a card without opening it only when its title is clearly off-family or it is clearly out of scope.
+Matching uses only the configured dimensions: title, JD language, technical keywords, work modes, employment types and seniority — each optional dimension is active only when configured. Confirmed third-party postings are placed in the separate `代招岗位` section by default (`thirdPartyPostings`), not excluded. In the matched and `代招岗位` tables, confirmed Easy Apply rows are listed first, then prompted matches, then the rest; Easy Apply is ordering only and never a filter. Validity is a gate: skip 404 or closed postings and count them separately. There is no inspection cap; skip a card without opening it only when its title is clearly off-family or it is clearly out of scope.
 
 `countries` and `locations` define scope only; with no `locations` the whole country is in scope. Never invent cities or add candidate-fit scoring.
 

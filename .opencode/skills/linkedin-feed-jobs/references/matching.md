@@ -8,7 +8,7 @@ Reference for `linkedin-feed-jobs`. Every gate reads its values from `job-hunter
 2. Job title
 3. Location
 4. Time window
-5. Direct-employer gate
+5. Third-party gate (only when `thirdPartyPostings` is `exclude`)
 6. Validity
 7. Soft notes
 
@@ -62,11 +62,11 @@ Do not use a hardcoded city or region list. Verify geography from the post text 
 
 Use the post's rendered relative time. Keep `age <= lookbackHours`. Include `1d` when `lookbackHours` is 24 and mark `24h boundary`. Reject older or undated posts.
 
-## 5. Direct-employer gate
+## 5. Third-party gate
 
-When `excludeRecruiters` is `true`, reject a confirmed staffing agency, headhunter, or "our client"/"on behalf of a client" post, including its local-language equivalent. Keep and note `poster type unclear` when the poster's relation to the employer is not stated.
+When `thirdPartyPostings` is `exclude`, reject a confirmed staffing agency, headhunter, or "our client"/"on behalf of a client" post, including its local-language equivalent.
 
-When `excludeRecruiters` is `false`, keep all.
+When `thirdPartyPostings` is `separate` or `include`, keep it and note `third party: <client>` or `third party: client not stated` when the post names or omits the client. Keep and note `poster type unclear` when the poster's relation to the employer is not stated.
 
 ## 6. Validity
 
@@ -83,7 +83,7 @@ Never reject for these. Record the evidence in `Notes`:
 | Employment type | Stated type; `employment not specified` when absent |
 | Seniority | Stated level; `level not specified` when absent |
 | JD language | Full JD outside `jdLanguages.include`; write `JD language: <language>` |
-| Poster type | `poster type unclear` when unknown |
+| Poster type | `third party: <client>` / `third party: client not stated` / `poster type unclear` |
 | Time | `24h boundary` when applicable |
 
 ## 8. Normalization and dedupe
@@ -110,4 +110,4 @@ Skip when the key already appears in today's report, the previous 7 daily report
 
 Start `Notes` with `来自搜索` or `来自 feed` (`From search` / `From feed`), then one verifiable fact such as a stated poster role, an apply instruction, or `multi-city post`. Append soft-note phrases with `;`.
 
-Allowed markers: `stack not stated`, `mode not specified`, `employment not specified`, `level not specified`, `poster type unclear`, `JD language: <language>`, `24h boundary`. Do not invent other status text.
+Allowed markers: `stack not stated`, `mode not specified`, `employment not specified`, `level not specified`, `third party: <client>`, `third party: client not stated`, `poster type unclear`, `JD language: <language>`, `24h boundary`. Do not invent other status text.

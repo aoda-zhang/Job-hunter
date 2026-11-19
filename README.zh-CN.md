@@ -56,7 +56,7 @@ cp job-hunter.config.example.json job-hunter.config.json
 2. **`countries` / `locations`**：搜索范围。`locations` 为空表示搜索整个国家。
 3. **`jobTitles.include`**：你接受的职位名称，用于匹配。
 4. **`jdLanguages.include`** 和 **`technicalKeywords`**：你能接受的语言和技术栈。
-5. 可选：`workModes`、`employmentTypes`、`seniority`、`excludeRecruiters`。
+5. 可选：`workModes`、`employmentTypes`、`seniority`、`thirdPartyPostings`（默认 `separate`）。
 
 接着：
 
@@ -87,14 +87,14 @@ cp job-hunter.config.example.json job-hunter.config.json
 | `workModes` | 否 | `Remote` / `Hybrid` / `On-site`。三项全列、为空或缺失 = 不筛选。 |
 | `employmentTypes` | 否 | `Full-time` / `Part-time` / `Contract` / `Temporary` / `Internship` / `Volunteer`。全列、为空或缺失 = 不筛选。 |
 | `seniority.include` | 否 | `Junior` / `Mid-level` / `Senior` / `Lead`。为空、缺失或全列 = 不筛选。 |
-| `excludeRecruiters` | 否 | 为 `true` 时排除确认为第三方客户招聘的猎头/中介；证据不足的进复核。 |
+| `thirdPartyPostings` | 否 | `separate`（默认）：确认是替第三方客户招聘的猎头/中介岗位，通过其他检查后放进独立的 `代招岗位` 表；`include`：与普通命中混排；`exclude`：排除。证据不足的进复核。 |
 | `sources` | 是 | 要搜索的平台，按顺序排列。内置 `LinkedIn`、`Indeed`、`Glassdoor`（如 `glassdoor.de`）的专用说明。没有说明文件的平台会直接跳过，不会猜测流程；需要时按 `references/_template.md` 新增。 |
-| `linkedinPremium` | 否 | LinkedIn 账号是 Premium 时设为 `true`：带 `You'd be a top applicant` 提示的命中岗位会置顶。`false` 或不填则忽略该提示。 |
+| `linkedinPremium` | 否 | LinkedIn 账号是 Premium 时设为 `true`：带 `You'd be a top applicant` 提示的命中岗位会成为第二优先分组，排在 Easy Apply 之后。`false` 或不填则忽略该提示。 |
 | `reportRepo` | 否 | 可选 Git 地址。配置后每次运行会把当天日报提交并推送到该仓库。 |
 | `notifications.email` | 否 | 可选 SMTP 配置，用于发送运行摘要邮件；默认关闭。`enabled` 为 `true` 时每次运行后发送一封摘要。 |
 | `jobSearchSchedule` | 否 | 每日 job search 的 launchd 定时任务。`times` 是 `HH:MM` 字符串数组；`weekdays` 是可选的 launchd 星期数组（`0`–`7`，`1` 为周一，`5` 为周五，空数组表示每天）；空 `times` 表示不启动。`timezone` 必须和系统时区一致。 |
 | `linkedinFeedReview` | 否 | LinkedIn feed 任务设置：`lookbackHours`、`maxPosts`、`excludeTopics`、`replyLanguage`，以及 `schedule.times` / `schedule.weekdays` / `schedule.timezone`。`schedule.times` 是 `HH:MM` 字符串数组；空数组表示不启动独立的 feed 任务。每次运行不看关注列表，只回复作者岗位匹配 `jobTitles.include` 且作者地点确认在 `countries`/`locations` 内的帖子（没有每日数量要求），把匹配的招聘帖追加到日报，在启用邮件通知时一并发送，并在配置了 `reportRepo` 时推送。 |
-| `sortBy` / `sortDirection` | 否 | 置顶分组与城市内的排序方式。`companySize` 配合 `asc` / `desc`；不填则按发现顺序。 |
+| `sortBy` / `sortDirection` | 否 | 各优先级分组（Easy Apply、Premium 提示、其余）内的排序方式。`companySize` 配合 `asc` / `desc`；不填则按发现顺序。 |
 | `preferredReportLanguage` | 否 | 日报和摘要邮件正文的语言，例如 `English`、`German`、`Chinese`，默认 `English`。不影响搜索语句、匹配逻辑、索引键和审计字段；邮件主题保持英文。 |
 
 补充说明：
@@ -114,7 +114,7 @@ LinkedIn feed 有独立的定时器。把 `linkedinFeedReview.schedule.times` �
 
 1. 职位有效性——404、跳转离开职位页、「不再接受申请」。
 2. 职位名称——与 `jobTitles.include` 属于同一岗位族。
-3. 发布方类型——仅当 `excludeRecruiters` 为 `true` 时启用。
+3. 发布方类型——记录为直招、代招或不明；确认代招的岗位照常通过其余检查，并放进独立「代招岗位」表（配置为 `exclude` 时排除）。
 4. JD 语言——以 JD 实际使用的语言为准。
 5. 技术关键词——按 `matchMode` 判断。
 6. 工作模式——仅当 `workModes` 是真正的子集时启用。
@@ -123,13 +123,13 @@ LinkedIn feed 有独立的定时器。把 `linkedinFeedReview.schedule.times` �
 
 | 结果 | 含义 | 出现在哪 |
 |---|---|---|
-| `matched`（命中） | 所有生效维度都能在页面上确认符合 | 主表，按城市分组 |
+| `matched`（命中） | 所有生效维度都能在页面上确认符合 | 主表；确认代招的岗位进「代招岗位」表 |
 | `review`（待复核） | 页面不足以证明符合或不符合（过短、缺失、截断、中英混排） | 复核表 |
 | `not_matched`（不符） | 至少一个生效维度明确不符合 | 排除表，并写明原因 |
 
 在打开页面之前，Agent 会先做一次卡片预筛：标题明显是其它职能（销售、市场、财务、HR、设计、SAP 运维等），或明显不在配置的国家/城市范围内，才会跳过，并且只计数不列出。标题模糊、被截断或包含多个岗位的，仍然会打开。
 
-没有打分，不按「候选人匹配度」排名，也不按薪资、工作年限、签证或行业额外过滤。唯一的优先级信号来自平台本身：开启 `linkedinPremium` 后，带 **`You'd be a top applicant`** 提示的命中岗位置顶；检查不符仍然排除。
+没有打分，不按「候选人匹配度」排名，也不按薪资、工作年限、签证或行业额外过滤。排序时确认 Easy Apply 的岗位最先，其次是平台本身的提示：开启 `linkedinPremium` 后，带 **`You'd be a top applicant`** 提示的命中岗位进入下一分组；检查不符仍然排除。Easy Apply 只影响排序，不改变岗位是否命中。
 
 ## 7. 报告
 
@@ -139,7 +139,7 @@ LinkedIn feed 有独立的定时器。把 `linkedinFeedReview.schedule.times` �
 | LinkedIn feed 回复机会 | `reports/linkedin-feed/YYYY-MM-DD.md` |
 | 面试准备 | `reports/interviews/<company-slug>/` |
 
-日报包含：运行汇总（含本次搜索的平台）、命中岗位（Premium 提示分组置顶，其余按城市与公司规模排序）、需要时的待复核表，以及最后写明具体原因的排除岗位。每张表都有 `Source` 列，混合平台时也能看清。日报格式由 `.opencode/skills/job-discovery/references/daily-report-format.md` 统一规定，语言由 `preferredReportLanguage` 指定（默认 `English`）。格式文档只固定结构，翻译的只是可读文字。
+日报包含：运行汇总（含本次搜索的平台）、命中岗位（Easy Apply 分组最先，其次 Premium 提示分组，其余按公司规模排序）、确认代招岗位通过同样检查后单独列出的「代招岗位」表、需要时的待复核表，以及最后写明具体原因的排除岗位。命中表和代招表都有「公司业务」列：只有 JD 明确写出公司产品、市场或行业时才记录，否则写「未注明」。每张表都有 `Source` 列，混合平台时也能看清。日报格式由 `.opencode/skills/job-discovery/references/daily-report-format.md` 统一规定，语言由 `preferredReportLanguage` 指定（默认 `English`）。格式文档只固定结构，翻译的只是可读文字。
 
 `job-hunter.config.json` 和 `reports/daily/` 都被 Git 忽略。如果配置了 `reportRepo`，每次运行后只会把当天日报提交并推送到你指定的仓库。
 

@@ -7,7 +7,7 @@
   "seniority": {
     "include": []
   },
-  "excludeRecruiters": false,
+  "thirdPartyPostings": "separate",
   "sources": ["LinkedIn"],
   "linkedinPremium": false,
   "reportRepo": "",

@@ -56,7 +56,7 @@ Edit `job-hunter.config.json` — it is Git-ignored, so your preferences stay lo
 2. **`countries` / `locations`** — where to search. Empty `locations` means the whole country.
 3. **`jobTitles.include`** — the titles you accept; used for matching.
 4. **`jdLanguages.include`** and **`technicalKeywords`** — the language and stack you can work with.
-5. Optionally set `workModes`, `employmentTypes`, `seniority` and `excludeRecruiters`.
+5. Optionally set `workModes`, `employmentTypes`, `seniority` and `thirdPartyPostings` (`separate` by default).
 
 Then:
 
@@ -88,14 +88,14 @@ You only ever talk to the Job Hunter agent. It loads `job-discovery` by itself; 
 | `workModes` | no | `Remote` / `Hybrid` / `On-site`. All three, empty or absent = filter off. |
 | `employmentTypes` | no | `Full-time` / `Part-time` / `Contract` / `Temporary` / `Internship` / `Volunteer`. All of them, empty or absent = filter off. |
 | `seniority.include` | no | `Junior` / `Mid-level` / `Senior` / `Lead`. Empty, absent or all levels = filter off. |
-| `excludeRecruiters` | no | `true` excludes confirmed staffing agencies hiring for a third-party client; unclear cases go to review. |
+| `thirdPartyPostings` | no | `separate` (default) keeps confirmed staffing-agency postings that hire for a third-party client in a dedicated `代招岗位` section; `include` lists them with normal matches; `exclude` drops them. Unclear cases go to review. |
 | `sources` | yes | Platforms to search, in order. Dedicated references ship for `LinkedIn`, `Indeed` and `Glassdoor` (e.g. `glassdoor.de`). A platform without a reference is skipped, not guessed — add one from `references/_template.md`. |
-| `linkedinPremium` | no | Set `true` when your LinkedIn account is Premium: matched jobs showing the `You'd be a top applicant` prompt then form a leading group. `false` or absent ignores the prompt. |
+| `linkedinPremium` | no | Set `true` when your LinkedIn account is Premium: matched jobs showing the `You'd be a top applicant` prompt then form the second group, after Easy Apply. `false` or absent ignores the prompt. |
 | `reportRepo` | no | Optional Git URL. When set, the day's report is committed and pushed there after each run. |
 | `notifications.email` | no | Optional SMTP block for run-summary emails. Off by default; when `enabled`, one summary is sent after each run. |
 | `jobSearchSchedule` | no | Daily job search launchd job. `times` is an array of `HH:MM` strings; `weekdays` is an optional array of launchd weekdays (`0`–`7`, `1` = Monday, `5` = Friday; empty = every day); an empty `times` array disables the job. `timezone` must match the system. |
 | `linkedinFeedReview` | no | Feed pass settings: `lookbackHours`, `maxPosts`, `excludeTopics`, `replyLanguage`, and `schedule.times` / `schedule.weekdays` / `schedule.timezone`. `schedule.times` is an array of `HH:MM` strings; an empty array disables the separate feed job. Each run reads the Recent feed without checking the following list, replies only to posts whose author role matches `jobTitles.include` and whose author location is confirmed inside `countries`/`locations` (no daily quota), adds matching hiring posts to the daily report, emails both when `notifications.email.enabled` is `true`, and publishes to `reportRepo` when configured. |
-| `sortBy` / `sortDirection` | no | Ordering inside the priority group and each city. `companySize` with `asc` or `desc`; omit for discovery order. |
+| `sortBy` / `sortDirection` | no | Ordering inside each priority group (Easy Apply, top applicant, remaining). `companySize` with `asc` or `desc`; omit for discovery order. |
 | `preferredReportLanguage` | no | Language of the daily report and the summary email body, e.g. `English`, `German`, `Chinese`. Defaults to `English`. It never affects the search query, matching, index keys or audit fields; the email subject stays ASCII. |
 
 Notes:
@@ -115,7 +115,7 @@ Checks run in this order and stop at the first confirmed mismatch:
 
 1. Posting validity — 404, redirect away from the job, "no longer accepting applications".
 2. Job title — same role family as `jobTitles.include`.
-3. Poster type — only when `excludeRecruiters` is `true`.
+3. Poster type — record direct, third-party or unclear; a confirmed third-party posting passes and is listed in the separate section (or is excluded when configured).
 4. JD language — the language actually used in the description.
 5. Technical keywords — following `matchMode`.
 6. Work mode — only when `workModes` is a real subset.
@@ -124,13 +124,13 @@ Checks run in this order and stop at the first confirmed mismatch:
 
 | Result | Meaning | Where it appears |
 |---|---|---|
-| `matched` | every active dimension is confirmed on the page | main table, grouped by city |
+| `matched` | every active dimension is confirmed on the page | main table; confirmed third-party postings in `代招岗位` |
 | `review` | the page does not prove match or mismatch (short, missing, truncated, mixed language) | review table |
 | `not_matched` | at least one active dimension clearly fails | excluded table with the exact reason |
 
 Before opening a page, the agent does a cheap card pass: titles that clearly name a different function (sales, marketing, finance, HR, design, SAP admin, …) or that are clearly outside your country/city are skipped and only counted. Ambiguous, truncated or multi-role titles are still opened.
 
-There is no score, no ranking by candidate fit, and no filtering on salary, years of experience, visa or industry. The only priority signal is the platform's own prompt: with `linkedinPremium`, LinkedIn matches showing **`You'd be a top applicant`** are listed first, and a failed check still excludes the job.
+There is no score, no ranking by candidate fit, and no filtering on salary, years of experience, visa or industry. Ordering puts confirmed Easy Apply rows first, then the platform's own prompt: with `linkedinPremium`, LinkedIn matches showing **`You'd be a top applicant`** form the next group, and a failed check still excludes the job. Easy Apply never changes whether a job matches.
 
 ## 7. Reports
 
@@ -141,11 +141,11 @@ There is no score, no ranking by candidate fit, and no filtering on salary, year
 | Cover letter drafts | `reports/cover-letters/<company-slug>/<jobId>.md` |
 | Interview preparation | `reports/interviews/<company-slug>/` |
 
-The daily report lists the platforms searched, then matched jobs (prompted LinkedIn Premium matches first, then the rest grouped by city and sorted by company size), a review table when needed, and the excluded jobs with the exact reason last. Every table has a `Source` column so a mixed-platform run stays readable.
+The daily report lists the platforms searched, then matched jobs (confirmed Easy Apply rows first, then prompted LinkedIn Premium matches, then the rest sorted by company size), a separate `代招岗位` table when confirmed third-party postings pass the same checks, a review table when needed, and the excluded jobs with the exact reason last. The matched and third-party tables include a `Business` column that records the company's product, market or industry only when the JD states it. Every table has a `Source` column so a mixed-platform run stays readable.
 
 **Matched and excluded tables** each include two extra application-process columns:
 
-- **Easy Apply** — `Yes`/`No`/`Unknown`: whether the page shows a one-click apply button on the platform (e.g. LinkedIn "Easy Apply", Indeed "Indeed Apply"). Informational only, never used as a filter.
+- **Easy Apply** — `Yes`/`No`/`Unknown`: whether the page shows a one-click apply button on the platform (e.g. LinkedIn "Easy Apply", Indeed "Indeed Apply"). Used for ordering only (confirmed Easy Apply rows first); never used as a filter.
 - **Cover letter** — `Yes`/`No`/`Unknown`: whether the page or application form explicitly says a cover letter is required. When `Yes`, the job remains in the report, and `isNeededCover` is `true`, the agent copies your `cover-letter-template.md` as-is and fills only its placeholders, saving the result under `reports/cover-letters/<company-slug>/<jobId>.md` for manual review and sending. It never rewrites the template or auto-submits.
 
 Reports follow the fixed format reference at `.opencode/skills/job-discovery/references/daily-report-format.md` and are written in `preferredReportLanguage` (default `English`). The reference fixes the structure; only the human-readable text is translated.

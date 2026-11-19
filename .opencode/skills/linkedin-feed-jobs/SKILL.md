@@ -20,7 +20,7 @@ Read `job-hunter.config.json`:
   - `maxQueries` (default `12`), `maxPagesPerQuery` (default `3`), `maxScreens` (default `6`).
   - `locationTerms` (default empty) — extra search terms; when empty, use `locations`, then `countries`.
   - `includeRecentFeed` (default `true`).
-- `excludeRecruiters` — direct-employer gate.
+- `thirdPartyPostings` — third-party posting handling: `exclude` rejects them, `separate` and `include` keep them and note the client when stated.
 - `technicalKeywords`, `workModes`, `employmentTypes`, `seniority`, `jdLanguages` — soft signals, recorded in Notes; they never drop a post.
 - `preferredReportLanguage`, `reportRepo`.
 
@@ -45,7 +45,7 @@ Do not apply `linkedinFeedReview.excludeTopics` in this skill. Hiring posts are 
 
 Follow `.opencode/skills/linkedin-feed-jobs/references/matching.md`.
 
-Hard gates, stop at the first failure: hiring signal, job title, stated location, time window, direct-employer gate when `excludeRecruiters` is `true`, validity.
+Hard gates, stop at the first failure: hiring signal, job title, stated location, time window, third-party gate only when `thirdPartyPostings` is `exclude`, validity.
 
 Soft signals, never a drop: stack, work mode, employment type, seniority, JD language. Put them in `Notes`.
 
@@ -67,7 +67,7 @@ Skip when:
 
 Edit `reports/daily/YYYY-MM-DD.md`.
 
-- Place a translated `## Feed-sourced jobs` section after matched jobs and before review and excluded.
+- Place a translated `## Feed-sourced jobs` section after matched jobs and the `代招岗位` section, and before review and excluded.
 - If the report is missing, create it with the report title and this section; note that the regular job-discovery run has not written its sections.
 - Merge new rows; never duplicate a row, rewrite a matched/review row or overwrite a user-edited row.
 - If a run summary table exists, set its `Feed-sourced jobs` row to the row count. Do not create a run summary table.

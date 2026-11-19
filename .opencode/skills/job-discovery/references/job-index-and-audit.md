@@ -32,6 +32,8 @@ Both are Git-ignored and local only.
       "appliedOn": null,
       "easyApply": "unknown",
       "coverLetter": "unknown",
+      "posterType": "direct",
+      "business": "",
       "note": ""
     }
   }
@@ -50,6 +52,8 @@ Rules:
 - `appliedOn`: user-confirmed application date; `null` otherwise.
 - `easyApply`: `yes` / `no` / `unknown` from the page only.
 - `coverLetter`: `yes` / `no` / `unknown` from the page or form only.
+- `posterType`: `direct` / `third_party` / `unknown` from the posting; treat missing legacy values as `unknown`.
+- `business`: short phrase only when the JD explicitly states the company's product, market or industry; otherwise `""`. For `third_party`, it describes the client employer.
 - `note`: verifiable page facts only; no judgment.
 - Update only relevant fields; preserve unknown fields and other entries.
 
@@ -109,6 +113,7 @@ Path: `reports/runs/YYYY-MM-DD.jsonl`. Append one line per run; never overwrite.
   "expired": 0,
   "appliedSkipped": 4,
   "matched": 23,
+  "thirdPartyMatched": 5,
   "review": 12,
   "excluded": 85,
   "crossDayRepeats": 10,
@@ -129,6 +134,7 @@ Rules:
 - `stopReason`: short phrase, e.g. `results older than lookbackHours`, `no more pages`, `login required`.
 - `limitations`: only actual limitations; empty on a normal run.
 - `postingsInspected` / `matched` / `review` / `excluded` are this run's counts. The report summary is the day total; never conflate them.
+- `thirdPartyMatched` is a subset of `matched` (the `代招岗位` rows), not an additional count.
 
 ## 7. Retention
 
