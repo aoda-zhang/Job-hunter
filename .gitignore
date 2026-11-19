@@ -22,6 +22,10 @@ reports/job-index.json
 reports/job-index.json.bak
 reports/runs/
 
+# Local application logs and generated cover letters (personal data)
+reports/applications/
+reports/cover-letters/
+
 # Logs and temporary files
 *.log
 logs/

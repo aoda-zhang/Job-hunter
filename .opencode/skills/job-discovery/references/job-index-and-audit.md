@@ -31,6 +31,13 @@ Both are Git-ignored and local only.
       "status": "matched",
       "appliedOn": null,
       "easyApply": "unknown",
+      "applyType": "unknown",
+      "applyStatus": "not_started",
+      "applyChannel": "",
+      "applyUrl": "",
+      "applyAttemptedAt": null,
+      "applicationRef": "",
+      "applyNote": "",
       "coverLetter": "unknown",
       "posterType": "direct",
       "business": "",
@@ -51,6 +58,13 @@ Rules:
 - `firstReportedOn`: first date in a matched or review table; `null` otherwise.
 - `appliedOn`: user-confirmed application date; `null` otherwise.
 - `easyApply`: `yes` / `no` / `unknown` from the page only.
+- `applyType`: `easy_apply` / `external` / `unknown`; `external` only when the button clearly leaves the platform. Never set from a guess.
+- `applyStatus`: `not_started` / `filled` / `submitted` / `blocked` / `failed` / `skipped`; written by `job-apply`.
+- `applyChannel`: ATS name or host actually used, e.g. `Greenhouse`, `Workday`, `Personio`; empty until an attempt.
+- `applyUrl`: final third-party application URL actually opened; never assemble one.
+- `applyAttemptedAt`: ISO date-time of the apply attempt; `null` before any attempt.
+- `applicationRef`: confirmation number/text shown by the site; empty otherwise.
+- `applyNote`: one short verifiable fact, e.g. `blocked: account creation required`; no judgment.
 - `coverLetter`: `yes` / `no` / `unknown` from the page or form only.
 - `posterType`: `direct` / `third_party` / `unknown` from the posting; treat missing legacy values as `unknown`.
 - `business`: short phrase only when the JD explicitly states the company's product, market or industry; otherwise `""`. For `third_party`, it describes the client employer.
@@ -82,13 +96,14 @@ Soft dedup: compare `normalized company + normalized title + city`, without the 
 
 ## 5. Record applications
 
-Trigger: the user says they applied, or names the jobs.
+Triggers: the user says they applied, names the jobs, or `job-apply` confirms a submit.
 
 1. Find the job in today's report, historical reports, then the index by URL or company + title.
 2. Set `appliedOn` to today; keep `status`.
 3. If it is in today's report, append `[applied MM-DD]` to Notes; otherwise update the index only.
 4. If ambiguous, ask one question. Never guess or mark a batch.
 5. Do not change report counts or decisions.
+6. `job-apply` also writes `applyType`, `applyStatus`, `applyChannel`, `applyUrl`, `applyAttemptedAt`, `applicationRef` and `applyNote`. Only a confirmed submit sets `appliedOn`; a filled-but-unsubmitted form stays `applyStatus: "filled"` with `appliedOn: null`.
 
 ## 6. Audit schema
 

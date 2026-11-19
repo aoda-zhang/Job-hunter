@@ -77,7 +77,7 @@ For each source in order:
 
 Use `jobSearchPrompt` verbatim on every platform. Do not rewrite, split, translate or append cities. Put it in the keyword field; set location from `countries`/`locations`.
 
-Do not stop the whole run for one source failure. Record it in `limitations` and `searchedBySource`, continue, and report it. Never guess a private API, bypass login/CAPTCHA, or fabricate results. Never apply, message, save or follow anything.
+Do not stop the whole run for one source failure. Record it in `limitations` and `searchedBySource`, continue, and report it. Never guess a private API, bypass login/CAPTCHA, or fabricate results. Discovery never applies, messages, saves or follows anything: Easy Apply is left to the user, and external applications happen only later in `job-apply`.
 
 ## 4. Inspect and classify
 
@@ -95,7 +95,7 @@ Open the posting and confirm it is still open. Evaluate in order and stop at the
 
 Disabled checks are skipped. Confirmed mismatch → `not_matched`, stop. Any `unknown` with no mismatch → `review`. Otherwise `matched`.
 
-Record `easyApply` (`yes`/`no`/`unknown`) and `coverLetter` (`yes`/`no`/`unknown`) for every inspected vacancy. These are informational and never affect classification.
+Record `easyApply` (`yes`/`no`/`unknown`), `applyType` (`easy_apply` when the button applies inside the platform, `external` when it clearly redirects to an employer/ATS page, `unknown` otherwise) and `coverLetter` (`yes`/`no`/`unknown`) for every inspected vacancy. These are informational and never affect classification. Do not click Apply during discovery; classify from the visible button and page only.
 
 Record `posterType` for every inspected vacancy that reaches the report. Record `business` only from an explicit JD statement. For a `third_party` posting, `business` describes the client employer's business when the JD states it; the client employer goes in Notes.
 
@@ -113,18 +113,20 @@ Write `reports/daily/YYYY-MM-DD.md`. Merge with an existing report. Preserve any
 
 When `thirdPartyPostings` is `separate`, put confirmed `third_party` postings that passed every other check in the dedicated `代招岗位` section, with the same columns, keyword evidence, ordering and checks as matched jobs. They count as matched in the summary. A `third_party` posting that fails another dimension goes to the excluded table with that reason, never to `代招岗位`.
 
-Add a `City` column; do not group matched rows by city. Put confirmed Easy Apply (`easyApply: yes`) rows in the first group, prompted matches that are not Easy Apply in the second group, then the remaining rows; within the Easy Apply group, put prompted rows first. Sort each part by `sortBy`/`sortDirection` (`companySize` uses the lower bound; default `asc`; ties keep discovery order). Renumber `#` after sorting. Easy Apply is ordering only and never a filter.
+Add a `City` column; do not group matched rows by city. Split matched rows into exactly two parts: `Easy Apply` (`easyApply: yes`) and `No Easy Apply` (everything else, including `unknown`). Within each part, put prompted rows first; in the No Easy Apply part prefix their Notes with `Top applicant`. Sort each part by `sortBy`/`sortDirection` (`companySize` uses the lower bound; default `asc`; ties keep discovery order). Renumber `#` after sorting. The split is a workflow split and never a filter. Easy Apply rows stay for the user; No Easy Apply rows are the ones `job-apply` fills.
 
 Before writing, add cross-day repeat annotations from the index. Do not count excluded or expired jobs as repeats.
 
 Publish when `reportRepo` is set: clone/pull it, copy the daily report to `reports/daily/YYYY-MM-DD.md`, commit `docs: add daily job results for YYYY-MM-DD`, push and verify. On failure, report it and keep the local file. Never force-push. Publish only the daily report.
 
-After the report, update `reports/job-index.json`: upsert every inspected vacancy by source-qualified key; set `source`, `lastSeen`, `status`, `firstSeen`, `firstReportedOn`, `easyApply`, `coverLetter`, `posterType`, `business`; never clear `appliedOn`; do not write `isNeededCover` per vacancy. Append one JSON line to `reports/runs/YYYY-MM-DD.jsonl` using `runAt`, `finishedAt`, `durationSeconds` and the fields in `.opencode/skills/job-discovery/references/job-index-and-audit.md`. Preserve unknown fields; never delete entries.
+After the report, update `reports/job-index.json`: upsert every inspected vacancy by source-qualified key; set `source`, `lastSeen`, `status`, `firstSeen`, `firstReportedOn`, `easyApply`, `applyType`, `coverLetter`, `posterType`, `business`; never clear `appliedOn` or any `apply*` field; do not write `isNeededCover` per vacancy. Append one JSON line to `reports/runs/YYYY-MM-DD.jsonl` using `runAt`, `finishedAt`, `durationSeconds` and the fields in `.opencode/skills/job-discovery/references/job-index-and-audit.md`. Preserve unknown fields; never delete entries.
+
+If `applications.enabled` is `true`, load `job-apply` after the report and index are written and before the email summary. Discovery itself never applies.
 
 If `notifications.email.enabled`, load `email-notify` and send one summary after the index and audit are written.
 
 ## 6. Report completion
 
-State the report path, resolved scope (say `All Germany` when `locations` was empty), `jobSearchPrompt`, distinct vacancies inspected by source, applied-skipped, cards skipped before opening, expired/closed skipped, matched, Easy Apply-matched, prompted-matched, third-party postings (`代招岗位`), review, excluded, cross-day repeats, possible duplicates, per-source coverage and stop reason, email status and any access limitation.
+State the report path, resolved scope (say `All Germany` when `locations` was empty), `jobSearchPrompt`, distinct vacancies inspected by source, applied-skipped, cards skipped before opening, expired/closed skipped, matched, Easy Apply-matched, No Easy Apply-matched, external applications filled/blocked, third-party postings (`代招岗位`), review, excluded, cross-day repeats, possible duplicates, per-source coverage and stop reason, email status and any access limitation.
 
 Count only pages actually opened. Distinguish results seen from JDs reviewed. Do not add a limitations section to a normal report; use the exception note only for a failed or interrupted run.

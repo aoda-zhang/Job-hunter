@@ -51,7 +51,11 @@ Apply the evidence rules (section 10) and cross-day rules (section 11) to the re
 | Job detail pages opened | N |
 | JDs read successfully | N |
 | Matched | N |
+| Of which Easy Apply | N |
+| Of which No Easy Apply (external) | N |
 | Of which third-party postings (`代招岗位`) | N |
+| External applications filled (awaiting submit) | N |
+| External applications submitted | N |
 | Feed-sourced jobs | N |
 | Needs manual review | N |
 | Confirmed non-match (excluded) | N |
@@ -64,6 +68,7 @@ Apply the evidence rules (section 10) and cross-day rules (section 11) to the re
 - `Expired / closed`: 404, redirect away, or no longer accepting. Never in the excluded table.
 - Check: matched + review + excluded = pages with a successfully read JD.
 - `Matched` includes confirmed third-party postings listed in `代招岗位`; the third-party row is a subset, not an extra count.
+- `Of which Easy Apply` and `Of which No Easy Apply` add up to `Matched`; they are a workflow split, not extra matches.
 - `Feed-sourced jobs` are post-only matches; they are not in the JD sum.
 - `Already applied` and `Expired / closed` are outside the JD sum.
 
@@ -71,34 +76,38 @@ Apply the evidence rules (section 10) and cross-day rules (section 11) to the re
 
 Do not group rows by city. Put the page location in the `City` column. Confirmed third-party postings go to section 5, not this table.
 
-Priority groups, in this order:
+Split the matched jobs into exactly two parts, in this order. The split is a workflow split, not a filter: it never creates, removes or reclassifies a match.
 
 ```markdown
 ### Easy Apply (5/30)
 ```
 
 - All matched jobs with `Easy Apply = Yes`, including prompted rows.
-- Heading: `Easy Apply` (translate it like the column header in a non-English report). Number = rows in this group / total rows in this section.
-- Omit the group when empty.
-- Ordering only: Easy Apply never creates, removes or reclassifies a match.
+- Keep the heading text `Easy Apply` in every language, or its localized equivalent of the column header.
+- The user applies to these manually. The agent never opens, fills or submits them.
+- Number = rows in this part / total rows in this section.
 
 ```markdown
-### You'd be a top applicant (3/30)
+### No Easy Apply (25/30)
 ```
 
-- Prompted matched jobs that are not already in the Easy Apply group.
-- Keep the heading text in every language. Number = prompted rows in this group / total rows in this section.
-- Omit the group when empty. The prompt never creates a match.
+- Every other matched job: `Easy Apply = No`, plus `Unknown`.
+- These are the external third-party applications. `job-apply` fills the form and leaves the tab open; the user clicks the final Submit.
+- An `Unknown` row is allowed here only with `external redirect not verified` in Notes.
+- Keep the heading text `No Easy Apply` in every language.
+- Number = rows in this part / total rows in this section.
 
 Ordering:
 
-- Easy Apply rows first, then prompted rows outside that group, then the remaining matched rows.
-- Within the Easy Apply group, put prompted rows first.
+- Easy Apply part first, then No Easy Apply part.
+- Within the Easy Apply part, put prompted rows first.
+- Within the No Easy Apply part, put prompted rows first and prefix their Notes with `Top applicant`.
 - Within each part, follow `sortBy` (currently `companySize`) and `sortDirection` (`asc` default).
 - Compare the lower bound: `11-50` → 11, `10001+` → 10001, `9,000` → 9000.
 - Ties keep discovery order. Unknown `sortBy` keeps discovery order.
-- Renumber `#` across all groups; update internal references.
-- Each group is a separate table with the same header row; `#` stays continuous across groups.
+- Renumber `#` across both parts; update internal references.
+- Each part is a separate table with the same header row; `#` stays continuous across parts.
+- Omit a part only when it has zero rows.
 
 Columns:
 
@@ -131,7 +140,7 @@ Put location conflicts in Notes. Employment type and JD language are filters, no
 Only with at least one confirmed third-party posting that passed every other active check. Never write an empty section.
 
 - Heading: `代招岗位` in a Chinese report; `Agency / third-party postings` in other report languages.
-- Same columns, evidence rules, keyword matching, priority groups (Easy Apply, then top applicant) and ordering as Matched jobs. Number `#` from 1 inside this section; both heading denominators use this section's total.
+- Same columns, evidence rules, keyword matching, two-part split (Easy Apply, then No Easy Apply) and ordering as Matched jobs. Number `#` from 1 inside this section; both heading denominators use this section's total.
 - `thirdPartyPostings` decides placement: `separate` = this section, `include` = normal matched rows, `exclude` = excluded table.
 - Confirm the poster is a staffing firm, headhunter, agency or platform posting for a client. "Clearly" means the JD states the relation; unclear goes to review.
 - `Company`: the posting company (the agency or platform). Notes start with `代招：<client>` or `代招（客户未注明）` (`Third party: <client>` / `Third party: client not stated`), then one verifiable fact.
@@ -163,7 +172,7 @@ Only with at least one matching feed hiring post. Never write an empty section. 
 
 ## 7. Needs manual review
 
-Only with entries. Use the matched table. In Notes, name the unknown check (title / language / keywords / work mode / employment type) and the concrete reason (JD did not load, too short, truncated, mixed language, field not exposed). Order rows as in Matched jobs (Easy Apply rows first, then prompted rows) without adding the priority headings; start prompted rows' Notes with `Top applicant`. An unknown check never becomes a match or an exclusion.
+Only with entries. Use the matched table. In Notes, name the unknown check (title / language / keywords / work mode / employment type) and the concrete reason (JD did not load, too short, truncated, mixed language, field not exposed). Order rows as in Matched jobs (Easy Apply first, then No Easy Apply) without adding the two part headings; start prompted rows' Notes with `Top applicant`. An unknown check never becomes a match or an exclusion.
 
 ## 8. Excluded jobs
 
@@ -225,6 +234,13 @@ Use `job-index.json`; if missing, use the previous 7 daily reports. Only jobs th
 Soft duplicates: same normalized company + title + city with a different ID → `⚠️ possible duplicate`, or `⚠️ possibly applied MM-DD` when applied. Annotate only; never merge or change counts. Normalization rules are in `job-index-and-audit.md`.
 
 Application marker: after the user confirms, append `[applied MM-DD]` to Notes and set `appliedOn`. Do not change the decision or counts.
+
+Application staging markers (written by `job-apply` only):
+
+- `[filled MM-DD]` — form complete and waiting for the user's Submit; `applyStatus: "filled"`, `appliedOn` still `null`.
+- `[applied MM-DD]` — submit confirmed on the page; set `appliedOn`.
+- `[apply blocked MM-DD]` — a blocker stopped the attempt; name it briefly.
+- Easy Apply rows never get these markers from the agent; the user applies and confirms them.
 
 Cover letter: draft only when `isNeededCover` is `true` and `coverLetter` is `Yes`, for a matched or review job. Copy `cover-letter-template.md` exactly; fill only its placeholders from the page; leave unfillable placeholders unchanged and tell the user. Save to `reports/cover-letters/<company-slug>/<jobId>.md`. Never fabricate. Do not submit. If the template is missing, stop and tell the user to copy `cover-letter-template-example.md`.
 

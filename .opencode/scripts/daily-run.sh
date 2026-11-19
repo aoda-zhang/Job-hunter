@@ -32,7 +32,7 @@ opencode run \
   --auto \
   --archived \
   --title "Job Hunter + Feed Jobs $(date +%F)" \
-  "Run today's job search: load job-discovery and follow it exactly, then load linkedin-feed-jobs and run its keyword search plus Recent-feed supplement, adding matching feed jobs to today's daily report. Update job-index.json and the run audit. Publish the daily report to reportRepo. If notifications.email.enabled is true, send one job-search summary. Report the report path, counts, feed-jobs added, publish status, email status and limitations." \
+  "Run today's job search: load job-discovery and follow it exactly. If applications.enabled is true, load job-apply and fill only matched, non-third-party jobs whose Apply button redirects to a third-party page; never touch Easy Apply, never click Submit, and leave every filled tab open for the user. Then load linkedin-feed-jobs and run its keyword search plus Recent-feed supplement, adding matching feed jobs to today's daily report. Update job-index.json and the run audit. Publish the daily report to reportRepo. If notifications.email.enabled is true, send one job-search summary. Report the report path, counts, applications filled/blocked, feed-jobs added, publish status, email status and limitations." \
   >> "$LOG" 2>&1
 exit_code=$?
 print -r -- "=== $(date) exit $exit_code ===" >> "$LOG"

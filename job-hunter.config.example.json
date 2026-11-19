@@ -11,6 +11,43 @@
   "sources": ["LinkedIn"],
   "linkedinPremium": false,
   "reportRepo": "",
+  "applicant": {
+    "firstName": "",
+    "lastName": "",
+    "phone": "",
+    "email": "you@example.com",
+    "currentCity": "",
+    "linkedinUrl": "",
+    "portfolioUrl": "",
+    "cvPath": "",
+    "availableInGermanyFrom": "",
+    "governmentEmployee": null
+  },
+  "applications": {
+    "enabled": false,
+    "easyApply": "manual",
+    "external": "fill",
+    "scope": "matched",
+    "excludeThirdParty": true,
+    "requireNoAccount": true,
+    "requireExternalRedirect": true,
+    "maxPerRun": null,
+    "coverLetterMode": "required-only",
+    "screening": {
+      "yearsOfExperience": "",
+      "reactYears": "",
+      "noticePeriod": "",
+      "earliestStartDate": "",
+      "salaryExpectation": "",
+      "workAuthorization": "",
+      "requiresSponsorship": null,
+      "germanLevel": "",
+      "englishLevel": "",
+      "highestEducation": "",
+      "willingToRelocate": true,
+      "howDidYouHear": "LinkedIn"
+    }
+  },
   "notifications": {
     "email": {
       "enabled": false,

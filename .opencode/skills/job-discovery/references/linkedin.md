@@ -39,7 +39,7 @@ Read this only when `linkedinPremium` is `true`. The account then shows a person
 
 - Record it per vacancy for this run only (`topApplicant`, phrase verbatim, `card` / `detail`); do not persist it in the index. The detail page wins; a card-only prompt still counts.
 - Never infer it from applicant counts, Easy Apply, search ranking or JD text. No visible prompt means no flag; `false` or absent skips this section without a limitation.
-- It is ordering metadata, not a check. Classification is unchanged: a prompted job that fails any check (e.g. JD language) is excluded and stays out of the top-applicant group.
+- It is ordering metadata, not a check. Classification is unchanged: a prompted job that fails any check (e.g. JD language) is excluded. Within the matched table it only orders rows inside its Easy Apply / No Easy Apply part.
 
 ## 5. Pagination
 
@@ -54,13 +54,15 @@ Record the displayed result count when the page shows one, plus the number of re
 
 ## 6. Access boundaries
 
-If LinkedIn requires login, shows a CAPTCHA, or blocks the run, stop this source and record it in `limitations`. Never ask for credentials, never bypass access controls, and never apply, message, save or follow anything.
+If LinkedIn requires login, shows a CAPTCHA, or blocks the run, stop this source and record it in `limitations`. Never ask for credentials, never bypass access controls, and never apply, message, save or follow anything. Easy Apply always belongs to the user; the external-application check runs later in `job-apply`.
 
 ## 7. Application-process fields
 
 Record these while the job page is open. They are informational only and never affect match/review/excluded classification.
 
 **Easy Apply:** `Yes` when the detail page shows an "Easy Apply" button that applies within LinkedIn; `No` when the apply button clearly redirects to the employer's site or an external application form; `Unknown` when neither is visible. Never infer it from applicant counts, Easy Apply badges on cards, or JD text.
+
+**Apply type:** derive from the same button — `easy_apply` when it applies inside LinkedIn, `external` when it clearly leaves LinkedIn, `unknown` otherwise. Do not click Apply to check; `job-apply` repeats the click and confirms the destination host before filling anything.
 
 **Cover letter:** `Yes` when the page or the Easy Apply flow explicitly states a cover letter is required; `No` when it explicitly states cover letter is optional or not needed; `Unknown` when neither is stated. Do not open the apply flow just to check — record only what is visible on the job page.
 

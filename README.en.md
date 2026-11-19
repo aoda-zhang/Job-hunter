@@ -20,10 +20,10 @@ First copy `job-hunter.config.example.json` to `job-hunter.config.json`, then cu
 - `seniority.include`: accepted levels (`Junior`, `Mid-level`, `Senior`, `Lead`); absent, empty or listing every level disables this filter.
 - `thirdPartyPostings`: `separate` (default) keeps confirmed staffing or recruiting-agency postings that hire for a third-party client in a dedicated `代招岗位` section; `include` lists them with normal matches; `exclude` drops them; unclear cases go to review.
 - `sources`: job platforms to search, in order. Dedicated references ship for `LinkedIn`, `Indeed` and `Glassdoor`; a platform without a reference is skipped, not guessed — add one from `references/_template.md`.
-- `linkedinPremium`: set `true` when the LinkedIn account is Premium, so matches showing `You'd be a top applicant` form the second group after Easy Apply; `false` or absent ignores the prompt.
+- `linkedinPremium`: set `true` when the LinkedIn account is Premium, so matches showing `You'd be a top applicant` are ordered first inside their Easy Apply / No Easy Apply part; `false` or absent ignores the prompt.
 - `reportRepo`: optional Git URL where the daily report is pushed after each run.
 - `jobTitles.include`: target job-title variants.
-- `sortBy`: how matched rows are ordered inside each priority group (Easy Apply, top applicant, remaining, currently `companySize`); `sortDirection`: `asc` / `desc`.
+- `sortBy`: how matched rows are ordered inside each part (Easy Apply, No Easy Apply), after prompted rows, currently `companySize`; `sortDirection`: `asc` / `desc`.
 - `preferredReportLanguage`: language of the daily report, e.g. `English`, `German`, `Chinese`; defaults to `English`.
 - `jdLanguages.include`: accepted JD languages. `jdLanguages.acceptGermanJdWithEnglishWorkingLanguage`: when `true`, a German-language JD still matches if it explicitly states that English is the working, team or company language.
 - `technicalKeywords.include`: technologies to find in the JD.
@@ -61,7 +61,7 @@ Results:
 - `review`: evidence is missing, short, truncated or ambiguous; retain it for manual review.
 - `not_matched`: at least one dimension has clear mismatch evidence; exclude it from the main report.
 
-Do not filter by years of experience, salary, visa/work authorization, candidate language proficiency, industry or architecture background. Seniority is used only when `seniority.include` is explicitly configured. Do not calculate weighted scores or rank jobs by candidate fit. Ordering puts confirmed Easy Apply rows first, then the platform's own prompt: with `linkedinPremium`, LinkedIn matches showing `You'd be a top applicant` form the next group; a failed check still excludes the job. Easy Apply never changes whether a job matches.
+Do not filter by years of experience, salary, visa/work authorization, candidate language proficiency, industry or architecture background. Seniority is used only when `seniority.include` is explicitly configured. Do not calculate weighted scores or rank jobs by candidate fit. The matched table is split into exactly two workflow parts: **Easy Apply** (you apply manually) and **No Easy Apply** (external forms the agent fills and leaves open for your Submit). With `linkedinPremium`, LinkedIn matches showing `You'd be a top applicant` are ordered first inside their part; a failed check still excludes the job. The split never changes whether a job matches.
 
 ## 4. Phase 2 — Interview preparation
 
