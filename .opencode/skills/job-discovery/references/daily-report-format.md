@@ -29,7 +29,7 @@ Translate `Daily Job Findings`; keep ` — YYYY-MM-DD`.
 1. Run summary
 2. Matched jobs — one section per source, in `sources` order (LinkedIn first, then Indeed)
 3. `代招岗位` (third-party postings) — only with confirmed third-party postings that passed every other check
-4. Apply-form fields — only when a matched external apply form was inspected
+4. Apply-form fields — only for an inspected external apply form that was not submitted successfully
 5. Feed-sourced jobs — only with matching feed hiring posts
 6. Needs manual review — only with entries
 7. Excluded jobs — always last job table
@@ -169,7 +169,9 @@ Only with at least one confirmed third-party posting that passed every active ch
 
 ## 6. Apply-form fields
 
-Only with at least one inspected external apply form. One block per matched `No Easy Apply` vacancy, in the same order as the matched tables and numbered to match them (`<source> #<n>` when the report is split by source).
+Only with at least one inspected external apply form **that was not successfully submitted**. A vacancy whose application was submitted successfully (`applyStatus: "submitted"` / `appliedOn` set) gets **no** block here: its record lives only in `reports/applications/YYYY-MM-DD.md`. In the matched table its `Apply form` cell reads `已提交` (`Submitted`). Keep blocks for every block that is not submitted yet: `blocked`, `filled` (waiting for the user's Submit), `failed`, and inspected-only rows.
+
+One block per non-submitted matched `No Easy Apply` vacancy, in the same order as the matched tables and numbered to match them (`<source> #<n>` when the report is split by source).
 
 ```markdown
 ### 3. Zalando — Software Engineer (Kotlin) - Transport Planning Optimization

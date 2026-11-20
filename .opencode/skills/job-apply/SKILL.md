@@ -159,7 +159,7 @@ Write `reports/applications/YYYY-MM-DD.md` (create the directory when missing), 
 
 Status values: `Inspected`, `Filled (awaiting submit)`, `Submitted`, `Blocked`, `Failed`, `Skipped`. Notes name the exact blocker or missing config key. When `applications.externalApply` is `false` the row is `Inspected` and the daily report carries the field table.
 
-Update today's daily report too: set `External applications filled (awaiting submit)` and `External applications submitted` in the run summary (per-source column plus total), add `[filled MM-DD]`, `[applied MM-DD]` or `[apply blocked MM-DD]` to the job's Notes as defined in `daily-report-format.md`, and write the inspected field table. Never touch one-click apply rows, and never touch a row that was skipped because another platform already had the application.
+Update today's daily report too: set `External applications filled (awaiting submit)` and `External applications submitted` in the run summary (per-source column plus total), add `[filled MM-DD]`, `[applied MM-DD]` or `[apply blocked MM-DD]` to the job's Notes as defined in `daily-report-format.md`, and write the inspected field table **only for jobs that were not successfully submitted**: `blocked`, `filled` (waiting for the user's Submit), `failed` and inspected-only rows keep their block; a job submitted successfully gets no block (its `Apply form` cell reads `已提交` / `Submitted`) and is recorded only in `reports/applications/`. Never touch one-click apply rows, and never touch a row that was skipped because another platform already had the application.
 
 `reports/applications/` is local only. Never publish it to `common.reportRepo`; it contains personal data.
 
