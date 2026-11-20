@@ -163,6 +163,8 @@ Update today's daily report too: set `External applications filled (awaiting sub
 
 `reports/applications/` is local only. Never publish it to `common.reportRepo`; it contains personal data.
 
+Every result other than `submitted` — `blocked`, `filled`, `failed`, or `skipped` because the flow could not be confirmed or the browser failed — must end that job's Notes in today's daily report with `无法自动提交：<reason>`, using the same concrete wording as the applications row. A submitted row never carries the marker, and Easy Apply rows are manual by design and do not need it.
+
 ## 7. Report back
 
 State: attempted, filled, submitted, blocked, failed, skipped; the per-job status list with links; the exact config keys needed to unblock anything; and which tabs are waiting for the user's Submit. Never claim a submit that was not confirmed on the page. Never close a filled tab.

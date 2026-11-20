@@ -146,7 +146,7 @@ Columns:
 |---|---|
 | # | Sequential in final display order |
 | Company | Company on the page; if poster ≠ employer, put the poster here and the employer in Notes |
-| Notes | Verifiable facts only: stack, level, contract, poster/employer mismatch, conflicts; ≤ about 60 characters; no fit language |
+| Notes | Verifiable facts only: stack, level, contract, poster/employer mismatch, conflicts; ≤ about 90 characters; no fit language. Every external row (`Easy Apply` = `No` / `Unknown`) that was not submitted ends with `无法自动提交：<reason>` (`Not auto-submitted: <reason>` in other report languages), naming the concrete cause: login or account creation, a required field the config cannot answer, rejected value, CAPTCHA, expired posting, browser/relay failure, or a policy skip |
 | Apply form | `Inspected (N fields)` linking to the job's block in section 6; `Blocked — <reason>` when the form is login-walled; empty for Easy Apply |
 | Link | `[Open](canonical URL)` actually visited in this run |
 | Size | Range shown on the page, e.g. `51-200`, `9,000`, `10001+`; `Not specified` when absent |
@@ -205,6 +205,7 @@ Draft: reports/cover-letters/zalando/4465977883.md
 - `Login: Yes` means the form was blocked: omit the field table and write `Blocker: <reason>` instead.
 - `Cover letter` is `Required` / `Optional` / `Not shown` / `Message box`. When the field exists, write the saved draft path and export a PDF only for a real upload.
 - Never paste a full JD or free text here; only field labels, types, requirements and mapped values.
+- When the form was not submitted, the job's Notes must also end with `无法自动提交：<reason>`; a `Blocker` line in this block is not enough on its own.
 
 ## 7. Feed-sourced jobs
 
@@ -297,7 +298,7 @@ Application staging markers (written by `job-apply` only):
 
 - `[filled MM-DD]` — form complete and waiting for the user's Submit; `applyStatus: "filled"`, `appliedOn` still `null`.
 - `[applied MM-DD]` — submit confirmed on the page; set `appliedOn`.
-- `[apply blocked MM-DD]` — a blocker stopped the attempt; name it briefly.
+- `[apply blocked MM-DD]` — a blocker stopped the attempt; name it briefly. The same blocker must appear in Notes as `无法自动提交：<reason>`.
 - Easy Apply rows never get these markers from the agent; the user applies and confirms them.
 
 Cover letter: draft only when `common.isNeededCover` is `true` and `coverLetter` is `Yes`, for a matched or review job. Copy `cover-letter-template.md` exactly; fill only its placeholders from the page; leave unfillable placeholders unchanged and tell the user. Save to `reports/cover-letters/<company-slug>/<jobId>.md`. Never fabricate. Do not submit. If the template is missing, stop and tell the user to copy `cover-letter-template-example.md`.
