@@ -98,7 +98,7 @@ cp job-hunter.config.example.json job-hunter.config.json
 | `sortBy` / `sortDirection` | 否 | 各部分（Easy Apply、No Easy Apply）内、Premium 提示行之后的排序方式。`companySize` 配合 `asc` / `desc`；不填则按发现顺序。 |
 | `preferredReportLanguage` | 否 | 日报和摘要邮件正文的语言，例如 `English`、`German`、`Chinese`，默认 `English`。不影响搜索语句、匹配逻辑、索引键和审计字段；邮件主题保持英文。 |
 | `applicant` | 否 | 用于填第三方申请表的身份信息：`firstName`、`lastName`、`phone`、`email`、`currentCity`、`linkedinUrl`、`portfolioUrl`、`cvPath`、`availableInGermanyFrom`、`governmentEmployee`。身份必填项缺失会停止投递；筛选问题缺失只会阻塞对应岗位。 |
-| `applications` | 否 | 外部投递策略：`enabled`；`external`（`off` / `fill` 默认，停在 Submit 前 / `submit` 自动提交）；`scope`（`matched` 默认 / `review` / `all`）；`excludeThirdParty`（默认 `true`）；`requireNoAccount`（默认 `true`）；`requireExternalRedirect`（默认 `true`）；`maxPerRun`（数字或 `null`）；`coverLetterMode`（`never` / `required-only` / `always`）；`screening` 存放申请表答案。Easy Apply 始终由你本人操作。 |
+| `applications` | 否 | 投递策略：`enabled`；`externalApply` = `true`（自动填写并提交）/ `false`（只检查字段）；旧值 `off` / `inspect` / `fill`（填好停在 Submit 前）/ `submit` 仍然兼容；`scope`（`matched` 默认 / `review` / `all`）；`excludeThirdParty`（默认 `true`）；`requireNoAccount`（默认 `true`）；`requireExternalRedirect`（默认 `true`）；`maxPerRun`（数字或 `null`）；`coverLetterMode`（`never` / `required-only` / `always`）；`screening` 存放申请表答案。Easy Apply 没有配置项，永远手动。 |
 
 补充说明：
 
@@ -133,7 +133,7 @@ LinkedIn feed 有独立的定时器。把 `linkedinFeedReview.schedule.times` �
 
 在打开页面之前，Agent 会先做一次卡片预筛：标题明显是其它职能（销售、市场、财务、HR、设计、SAP 运维等），或明显不在配置的国家/城市范围内，才会跳过，并且只计数不列出。标题模糊、被截断或包含多个岗位的，仍然会打开。
 
-没有打分，不按「候选人匹配度」排名，也不按薪资、工作年限、签证或行业额外过滤。命中岗位表固定分成两部分：**Easy Apply**（你本人手动投递）和 **No Easy Apply**（第三方页面，由 agent 填好并保留标签页，你亲自点 Submit）。开启 `linkedinPremium` 后，带 **`You'd be a top applicant`** 提示的命中岗位在所属部分内优先排序；检查不符仍然排除。这个拆分不改变岗位是否命中。
+没有打分，不按「候选人匹配度」排名，也不按薪资、工作年限、签证或行业额外过滤。命中岗位表固定分成两部分：**Easy Apply**（你本人手动投递）和 **No Easy Apply**（第三方页面，由 agent 填写；`externalApply: true` 时也会自动提交）。开启 `linkedinPremium` 后，带 **`You'd be a top applicant`** 提示的命中岗位在所属部分内优先排序；检查不符仍然排除。这个拆分不改变岗位是否命中。
 
 ## 7. 报告
 
@@ -143,7 +143,7 @@ LinkedIn feed 有独立的定时器。把 `linkedinFeedReview.schedule.times` �
 | LinkedIn feed 回复机会 | `reports/linkedin-feed/YYYY-MM-DD.md` |
 | 面试准备 | `reports/interviews/<company-slug>/` |
 
-日报包含：运行汇总（含本次搜索的平台）、命中岗位（分为 **Easy Apply** 和 **No Easy Apply** 两部分，部分内 Premium 提示行优先，再按公司规模排序）、确认代招岗位通过同样检查后单独列出的「代招岗位」表、需要时的待复核表，以及最后写明具体原因的排除岗位。No Easy Apply 部分由 agent 打开第三方页面并填好表单、保留标签页，你亲自点 Submit。命中表和代招表都有「公司业务」列：只有 JD 明确写出公司产品、市场或行业时才记录，否则写「未注明」。每张表都有 `Source` 列，混合平台时也能看清。日报格式由 `.opencode/skills/job-discovery/references/daily-report-format.md` 统一规定，语言由 `preferredReportLanguage` 指定（默认 `English`）。格式文档只固定结构，翻译的只是可读文字。
+日报包含：运行汇总（含本次搜索的平台）、命中岗位（分为 **Easy Apply** 和 **No Easy Apply** 两部分，部分内 Premium 提示行优先，再按公司规模排序）、确认代招岗位通过同样检查后单独列出的「代招岗位」表、需要时的待复核表，以及最后写明具体原因的排除岗位。No Easy Apply 部分由 agent 打开第三方页面并填写表单，`externalApply: true` 时直接提交，`fill` 时保留标签页由你点 Submit。命中表和代招表都有「公司业务」列：只有 JD 明确写出公司产品、市场或行业时才记录，否则写「未注明」。每张表都有 `Source` 列，混合平台时也能看清。日报格式由 `.opencode/skills/job-discovery/references/daily-report-format.md` 统一规定，语言由 `preferredReportLanguage` 指定（默认 `English`）。格式文档只固定结构，翻译的只是可读文字。
 
 `job-hunter.config.json` 和 `reports/daily/` 都被 Git 忽略。如果配置了 `reportRepo`，每次运行后只会把当天日报提交并推送到你指定的仓库。
 

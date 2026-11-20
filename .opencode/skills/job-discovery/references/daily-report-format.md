@@ -29,47 +29,41 @@ Translate `Daily Job Findings`; keep ` — YYYY-MM-DD`.
 1. Run summary
 2. Matched jobs
 3. `代招岗位` (third-party postings) — only with confirmed third-party postings that passed every other check
-4. Feed-sourced jobs — only with matching feed hiring posts
-5. Needs manual review — only with entries
-6. Excluded jobs — always last job table
-7. Exception note — only on failure
+4. Apply-form fields — only when a matched external apply form was inspected
+5. Feed-sourced jobs — only with matching feed hiring posts
+6. Needs manual review — only with entries
+7. Excluded jobs — always last job table
+8. Exception note — only on failure
 
 A normal run has sections 1, 2 and 6. Never write an empty section or "None".
 
-Apply the evidence rules (section 10) and cross-day rules (section 11) to the report.
+Apply the evidence rules (section 11) and cross-day rules (section 12) to the report.
 
 ## 3. Run summary
+
+Keep it short: ten rows are enough. Everything else goes to the audit JSONL.
 
 ```markdown
 | Metric | Value |
 |---|---|
 | Search sources | LinkedIn |
-| Result pages opened | N |
-| Cards skipped before opening | N |
-| Expired / closed (skipped) | N |
-| Already applied (skipped) | N |
-| Job detail pages opened | N |
-| JDs read successfully | N |
+| JDs read | N |
+| Previously reported (skipped) | N |
 | Matched | N |
-| Of which Easy Apply | N |
-| Of which No Easy Apply (external) | N |
+| Of which Easy Apply / No Easy Apply | N / N |
 | Of which third-party postings (`代招岗位`) | N |
-| External applications filled (awaiting submit) | N |
-| External applications submitted | N |
-| Feed-sourced jobs | N |
-| Needs manual review | N |
 | Confirmed non-match (excluded) | N |
-| Of which cross-day repeats | N |
+| Needs manual review | N |
+| Apply forms inspected | N |
+| Feed-sourced jobs | N |
 ```
 
 - Write `cannot determine` when unsupported; never estimate.
-- Do not mix result cards with opened pages.
-- `Cards skipped before opening`: clearly wrong role family or outside `countries`/`locations`. Never in the excluded table.
-- `Expired / closed`: 404, redirect away, or no longer accepting. Never in the excluded table.
-- Check: matched + review + excluded = pages with a successfully read JD.
+- Check: matched + review + excluded = JDs read.
 - `Matched` includes confirmed third-party postings listed in `代招岗位`; the third-party row is a subset, not an extra count.
-- `Of which Easy Apply` and `Of which No Easy Apply` add up to `Matched`; they are a workflow split, not extra matches.
-- `Feed-sourced jobs` are post-only matches; they are not in the JD sum.
+- `Of which Easy Apply / No Easy Apply` adds up to `Matched`; it is a workflow split, not extra matches.
+- `Previously reported (skipped)` and `Feed-sourced jobs` are outside the JD sum.
+
 - `Already applied` and `Expired / closed` are outside the JD sum.
 
 ## 4. Matched jobs
@@ -92,7 +86,7 @@ Split the matched jobs into exactly two parts, in this order. The split is a wor
 ```
 
 - Every other matched job: `Easy Apply = No`, plus `Unknown`.
-- These are the external third-party applications. `job-apply` fills the form and leaves the tab open; the user clicks the final Submit.
+- These are the external applications. The apply form is inspected and its fields are recorded; the user decides whether to file.
 - An `Unknown` row is allowed here only with `external redirect not verified` in Notes.
 - Keep the heading text `No Easy Apply` in every language.
 - Number = rows in this part / total rows in this section.
@@ -112,8 +106,8 @@ Ordering:
 Columns:
 
 ```markdown
-| # | Source | Company | Size | Business | Title | City | Mode | Posted | Matched keywords | Easy Apply | Cover letter | Notes | Link |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| # | Source | Company | Size | Business | Title | City | Mode | Posted | Matched keywords | Easy Apply | Cover letter | Notes | Apply form | Link |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 ```
 
 | Column | Rule |
@@ -129,8 +123,9 @@ Columns:
 | Posted | Relative time; mark reposts `(reposted)` |
 | Matched keywords | Only configured terms actually in the JD, comma-separated |
 | Easy Apply | `Yes` for a one-click platform apply, `No` for an external form, `Unknown` otherwise; ordering only, never a filter |
-| Cover letter | `Yes` / `No` / `Unknown` from the page or form; draft only when `Yes` and `isNeededCover` is `true` |
+| Cover letter | `Yes` / `No` / `Unknown` from the page or form; draft when the form shows the field and `isNeededCover` is `true` |
 | Notes | Verifiable facts only: stack, level, contract, poster/employer mismatch, conflicts; ≤ about 60 characters; no fit language |
+| Apply form | `Inspected (N fields)` linking to the job's block in section 6; `Blocked — <reason>` when the form is login-walled; empty for Easy Apply |
 | Link | `[Open](canonical URL)` actually visited in this run |
 
 Put location conflicts in Notes. Employment type and JD language are filters, not columns; put relevant evidence in Notes. For a German JD with English as the working language, state that evidence; never infer it.
@@ -149,7 +144,34 @@ Only with at least one confirmed third-party posting that passed every active ch
 - Never infer full-time, English JD, on-site/hybrid or a seniority level from the poster type; read it from the posting.
 - These rows count as matched in the summary, cross-day repeats and possible-duplicate checks.
 
-## 6. Feed-sourced jobs
+## 6. Apply-form fields
+
+Only with at least one inspected external apply form. One block per matched `No Easy Apply` vacancy, in the same order as the matched table and numbered to match it.
+
+```markdown
+### 3. Zalando — Software Engineer (Kotlin) - Transport Planning Optimization
+ATS: Zalando Careers · Link: https://jobs.zalando.com/... · Login: No · Cover letter: Optional
+Draft: reports/cover-letters/zalando/4465977883.md
+
+| # | Field | Type | Required | Value to fill |
+|---|---|---|---|---|
+| 1 | First Name | text | Yes | Qi |
+| 2 | Last Name | text | Yes | Zhang |
+| 3 | Email | email | Yes | zhangqi20031994@gmail.com |
+| 4 | Phone | tel | Yes | +86 191 0263 2826 |
+| 5 | Salary expectations | number | Yes | 70000 |
+| 6 | Background check | radio | Yes | needs confirmation (legal declaration) |
+```
+
+- `Value to fill` is the exact config/CV value. When the config lacks it, write `needs confirmation (<config key>)`; never invent.
+- Legal declarations (background check, sanctions, criminal record, disability, veteran status) are always `needs confirmation`.
+- Privacy, data-processing, talent-pool, contact and interview-recording consents are always `同意`.
+- A `Message to the Hiring Team` / `Message to the team` box counts as a cover-letter field: write the shortened 3–5 sentence text in the value cell and save it as `reports/cover-letters/<slug>/<jobId>-message.md`; no PDF.
+- `Login: Yes` means the form was blocked: omit the field table and write `Blocker: <reason>` instead.
+- `Cover letter` is `Required` / `Optional` / `Not shown` / `Message box`. When the field exists, write the saved draft path and export a PDF only for a real upload.
+- Never paste a full JD or free text here; only field labels, types, requirements and mapped values.
+
+## 7. Feed-sourced jobs
 
 Only with at least one matching feed hiring post. Never write an empty section. `job-discovery` must preserve this section.
 
@@ -171,11 +193,11 @@ Only with at least one matching feed hiring post. Never write an empty section. 
 - Deduplicate against matched, review and existing feed rows. One job = one section.
 - Renumber `#` after merging.
 
-## 7. Needs manual review
+## 8. Needs manual review
 
 Only with entries. Use the matched table. In Notes, name the unknown check (title / language / keywords / work mode / employment type) and the concrete reason (JD did not load, too short, truncated, mixed language, field not exposed). Order rows as in Matched jobs (Easy Apply first, then No Easy Apply) without adding the two part headings; start prompted rows' Notes with `Top applicant`. An unknown check never becomes a match or an exclusion.
 
-## 8. Excluded jobs
+## 9. Excluded jobs
 
 Always the last job table.
 
@@ -195,11 +217,11 @@ Always the last job table.
 - `Link` is mandatory: `[Open](URL)` for the page opened in this run.
 - Never use excluded URLs as a cross-day dedup key.
 
-## 9. Exception note
+## 10. Exception note
 
 Only on a failed, interrupted or largely unusable run; always at the end. Cover what happened, how many rows it affected, and where it stopped. Maximum 3 lines. Never list routine parameters.
 
-## 10. Evidence and consistency
+## 11. Evidence and consistency
 
 - Use only facts visible on the page or verified in the browser.
 - Mark `matched` only when every active dimension is confirmed. `matched` includes confirmed third-party rows listed in `代招岗位`.
@@ -214,22 +236,20 @@ Only on a failed, interrupted or largely unusable run; always at the end. Cover 
 - The priority prompt and Easy Apply are ordering metadata only; neither ever creates or removes a job.
 - Never output candidate-fit, salary or visa judgments.
 
-## 11. Cross-day repeats
+## 12. Previous report dedupe
 
-A report is a daily snapshot. List repeats and annotate them; never remove them.
-
-Use `job-index.json`; if missing, use the previous 7 daily reports. Only jobs that entered a matched, `代招岗位` or review table count as reported; excluded and expired do not.
+A report is a daily snapshot. At run start, the previous daily report is the skip source: every job ID / canonical URL in its tables is skipped before opening and appears nowhere in today's report. This prevents overlap from the daily `lookbackHours` window. `job-index.json` is not used for this.
 
 | Situation | Handling |
 |---|---|
-| `firstReportedOn` set | List normally; append `[reported MM-DD]` to Notes; never delete or reclassify |
+| Key in the previous daily report | Do not open, judge or list; count as previously reported (skipped) |
 | `appliedOn` set | Do not open or judge; count as applied-skipped; never list |
-| Excluded only before | Not a repeat; re-evaluate today |
-| No index or reports | Skip and add no marker |
+| Explicit re-check override | Exempt the named keys for that run; list normally and append `[reported MM-DD]` |
+| No previous report | Check every card |
 
 - Markers never reduce today's opened count.
 - The same URL appears once.
-- `Of which cross-day repeats` = matched rows with `[reported …]`, including `代招岗位` rows.
+- `Of which cross-day repeats` = matched rows with `[reported …]`, including `代招岗位` rows. With the default previous-report skip it is normally 0.
 - Use `MM-DD` to avoid cross-year ambiguity.
 
 Soft duplicates: same normalized company + title + city with a different ID → `⚠️ possible duplicate`, or `⚠️ possibly applied MM-DD` when applied. Annotate only; never merge or change counts. Normalization rules are in `job-index-and-audit.md`.
@@ -245,7 +265,7 @@ Application staging markers (written by `job-apply` only):
 
 Cover letter: draft only when `isNeededCover` is `true` and `coverLetter` is `Yes`, for a matched or review job. Copy `cover-letter-template.md` exactly; fill only its placeholders from the page; leave unfillable placeholders unchanged and tell the user. Save to `reports/cover-letters/<company-slug>/<jobId>.md`. Never fabricate. Do not submit. If the template is missing, stop and tell the user to copy `cover-letter-template-example.md`.
 
-## 12. Update an existing report
+## 13. Update an existing report
 
 Keep existing entries and evidence. Preserve `代招岗位` and `Feed-sourced jobs` sections and their rows. Add or correct only with new evidence. Never silently rewrite an old conclusion; state the reason when new config changes a decision.
 

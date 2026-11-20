@@ -54,7 +54,7 @@ Record the displayed result count when the page shows one, plus the number of re
 
 ## 6. Access boundaries
 
-If LinkedIn requires login, shows a CAPTCHA, or blocks the run, stop this source and record it in `limitations`. Never ask for credentials, never bypass access controls, and never apply, message, save or follow anything. Easy Apply always belongs to the user; the external-application check runs later in `job-apply`.
+If LinkedIn requires login, shows a CAPTCHA, or blocks the run, stop this source and record it in `limitations`. Never ask for credentials, never bypass access controls, and never apply, message, save or follow anything. Opening an employer form read-only to inspect its fields is allowed; never fill, upload or submit it.
 
 ## 7. Application-process fields
 
@@ -62,9 +62,11 @@ Record these while the job page is open. They are informational only and never a
 
 **Easy Apply:** `Yes` when the detail page shows an "Easy Apply" button that applies within LinkedIn; `No` when the apply button clearly redirects to the employer's site or an external application form; `Unknown` when neither is visible. Never infer it from applicant counts, Easy Apply badges on cards, or JD text.
 
-**Apply type:** derive from the same button — `easy_apply` when it applies inside LinkedIn, `external` when it clearly leaves LinkedIn, `unknown` otherwise. Do not click Apply to check; `job-apply` repeats the click and confirms the destination host before filling anything.
+**Apply type:** derive from the same button — `easy_apply` when it applies inside LinkedIn, `external` when it clearly leaves LinkedIn, `unknown` otherwise.
 
-**Cover letter:** `Yes` when the page or the Easy Apply flow explicitly states a cover letter is required; `No` when it explicitly states cover letter is optional or not needed; `Unknown` when neither is stated. Do not open the apply flow just to check — record only what is visible on the job page.
+**Apply-form inspection (external only):** for a `matched` posting with an external button, click Apply once, confirm the destination is not `linkedin.com`, and record the ATS, host, final URL, blockers and every form field with its mapped value. If the form shows a cover-letter field, required or optional, draft the cover letter and save it. Never type, upload or submit; close the tab after recording. Never click Apply for Easy Apply.
+
+**Cover letter:** `Yes` when the page or form explicitly requires one, `No` when it is explicitly optional or not needed, `Unknown` when neither is stated. The form's cover-letter field is the authoritative source; a page-only mention is a hint.
 
 ## 8. Known quirks
 

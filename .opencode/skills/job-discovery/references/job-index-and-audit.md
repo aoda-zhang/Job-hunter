@@ -39,8 +39,10 @@ Both are Git-ignored and local only.
       "applicationRef": "",
       "applyNote": "",
       "coverLetter": "unknown",
+      "coverLetterDraft": "",
       "posterType": "direct",
       "business": "",
+      "applyForm": "",
       "note": ""
     }
   }
@@ -66,8 +68,10 @@ Rules:
 - `applicationRef`: confirmation number/text shown by the site; empty otherwise.
 - `applyNote`: one short verifiable fact, e.g. `blocked: account creation required`; no judgment.
 - `coverLetter`: `yes` / `no` / `unknown` from the page or form only.
+- `coverLetterDraft`: saved path under `reports/cover-letters/`, or empty.
 - `posterType`: `direct` / `third_party` / `unknown` from the posting; treat missing legacy values as `unknown`.
 - `business`: short phrase only when the JD explicitly states the company's product, market or industry; otherwise `""`. For `third_party`, it describes the client employer.
+- `applyForm`: `inspected` / `blocked` / `not_external`; empty when no apply form was checked. Discovery records the form read-only; it never fills or submits.
 - `note`: verifiable page facts only; no judgment.
 - Update only relevant fields; preserve unknown fields and other entries.
 
@@ -75,17 +79,21 @@ Create the index when missing. If unparseable, back it up to `reports/job-index.
 
 ## 3. Read order
 
-1. `reports/job-index.json`.
-2. If missing, bootstrap from the previous 7 `reports/daily/` dates: URLs, status, first-seen.
-3. If neither exists, start empty.
+The index is an application/history record, **not** a dedupe source.
+
+1. Read `reports/daily/<previous date>.md` for the previous-report set.
+2. Read `reports/job-index.json` only to preserve existing entries and `appliedOn`.
+3. If the index is missing, create it empty; do not rebuild it from old reports for dedupe.
 
 ## 4. Dedup
 
 Hard dedup: same job ID or canonical URL on one platform; same canonical URL across platforms.
 
-- `appliedOn` set: do not open, judge or list. Count as "Already applied (skipped)".
-- `matched` / `review`: reopen and judge today; append `[reported MM-DD]` from `firstReportedOn`.
-- `excluded` / `expired`: re-evaluate; no repeat marker. If it matches today, set `firstReportedOn` to today.
+- **Previous-report set**: at run start, read the latest `reports/daily/YYYY-MM-DD.md` before today and extract every job ID / canonical URL from all its tables. A card in this set is not opened, not judged and not listed; count it as "Previously reported (skipped)".
+- `appliedOn` jobs count as "Already applied (skipped)".
+- `skipPreviousReport` (config, default `true`) enables this. `reports/job-index.json` is **not** used for the decision.
+- Override only on explicit user request (named jobs, a company, a status); exempt those keys for that run and record the exemption in `limitations`.
+- The first run with no previous report checks everything; later runs only process genuinely new postings. This is what prevents overlap from the daily `lookbackHours` window.
 
 Soft dedup: compare `normalized company + normalized title + city`, without the platform name.
 
@@ -125,8 +133,11 @@ Path: `reports/runs/YYYY-MM-DD.jsonl`. Append one line per run; never overwrite.
   "searchedBySource": { "LinkedIn": "completed" },
   "cardsSkipped": 0,
   "postingsInspected": 120,
+  "applyFormsInspected": 40,
+  "applyBlocked": 3,
   "expired": 0,
   "appliedSkipped": 4,
+  "previouslyReportedSkipped": 180,
   "matched": 23,
   "thirdPartyMatched": 5,
   "review": 12,
@@ -149,6 +160,8 @@ Rules:
 - `stopReason`: short phrase, e.g. `results older than lookbackHours`, `no more pages`, `login required`.
 - `limitations`: only actual limitations; empty on a normal run.
 - `postingsInspected` / `matched` / `review` / `excluded` are this run's counts. The report summary is the day total; never conflate them.
+- `appliedSkipped` = jobs with `appliedOn`; `previouslyReportedSkipped` = other cards found in the previous daily report that were not opened.
+- `applyFormsInspected` = matched external forms actually opened and read; `applyBlocked` = forms stopped by a login, account, CAPTCHA or unconfigured required field.
 - `thirdPartyMatched` is a subset of `matched` (the `代招岗位` rows), not an additional count.
 
 ## 7. Retention

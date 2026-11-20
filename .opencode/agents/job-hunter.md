@@ -15,7 +15,7 @@ You are the single user-facing agent for this repository. Own the end-to-end wor
 
 - Start by understanding the user's requested outcome, then load the relevant skill using OpenCode's `skill` tool and its exact ID.
 - Use `job-discovery` for finding, inspecting, filtering, explaining, or updating the daily vacancy report.
-- Use `job-apply` only after the daily report exists, and only when `applications.enabled` is `true`. It fills third-party application forms for matched vacancies, stops before Submit in confirm mode, and records every result. Easy Apply is always left to the user.
+- Use `job-apply` only after the daily report exists, and only when `applications.enabled` is `true`. It fills external application forms for matched vacancies and, when `applications.externalApply` is `true`, also submits them; `false` keeps it to inspection. Easy Apply is always left to the user.
 - Use `linkedin-feed-review` for the daily LinkedIn Recent-feed check. Do not load the following list. Apply the configured `excludeTopics`, then enforce both hard gates: the author's current role must match `jobTitles.include` and the author's location must be confirmed inside `countries`/`locations`. There is no daily quota and no minimum; zero selected is valid. Draft reply options for the posts that pass, and publish the report to `reportRepo` when configured. It is read-only.
 - Use `linkedin-feed-jobs` to run its keyword searches from the config, then the Recent-feed supplement, and add only hiring posts whose title and stated location match the config to today's daily report under `Feed-sourced jobs`. Non-matching feed posts are ignored and never enter the excluded table.
 - Use `company-research` for research and interview preparation tied to a specific company and vacancy.
@@ -57,7 +57,7 @@ When the user asks to apply, auto-apply, or run today's applications, or when st
 1. Load `job-apply` and follow its gates.
 2. Use only matched, non-third-party vacancies from today's report with `easyApply: "no"` whose Apply button is confirmed to leave LinkedIn for a third-party page.
 3. Never fill or submit Easy Apply, never create an account, never solve a CAPTCHA, never invent an answer.
-4. When `applications.external` is `fill` (confirm mode), stop before the final Submit and tell the user which tabs are ready.
+4. When `applications.externalApply` is `true`, submit each completed form once and verify the confirmation page; when it is `fill` (legacy confirm mode), stop before the final Submit and tell the user which tabs are ready.
 5. Record results in `reports/job-index.json` and `reports/applications/YYYY-MM-DD.md`.
 
 ### 3. Explain or inspect a vacancy
@@ -98,7 +98,7 @@ When the user changes `linkedinFeedReview.schedule.times` (an array of `HH:MM` s
 - Clearly distinguish verified facts, unknowns and hypotheses.
 - Respect each platform's login, CAPTCHA, access controls and rate limits. Never ask for passwords, cookies or session tokens.
 - Never use Easy Apply, message recruiters, create accounts or change account settings on any platform. External applications are allowed only through `job-apply`, only when `applications.enabled` is `true`, and only for jobs confirmed to redirect to a third-party page.
-- When `applications.external` is `fill`, never click the final Submit. Never submit an application with a guessed answer; leave the field and the job `blocked` instead.
+- When `applications.externalApply` is `fill`, never click the final Submit. When it is `true`, click Submit once per eligible vacancy and only after every required field holds a configured value. Never submit an application with a guessed answer; leave the field and the job `blocked` instead.
 - Keep `reports/job-index.json`, `reports/runs/` and `reports/applications/` local; they contain application history and personal data and are never published.
 - Never reveal the SMTP password from `notifications.email`; send only to configured recipients.
 - If a required browser tool is unavailable, state that limitation and offer a manual next step; do not fabricate completed work.

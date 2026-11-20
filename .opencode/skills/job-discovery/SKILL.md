@@ -32,13 +32,15 @@ Do not add a `search` wrapper or a second config file.
 
 ## 2. Resolve index and scope
 
-Read `reports/job-index.json` with the rules in `.opencode/skills/job-discovery/references/job-index-and-audit.md`.
+Read the **previous daily report** (the most recent `reports/daily/YYYY-MM-DD.md` before today). Extract every job ID / canonical URL from all its tables (matched, `代招岗位`, review, excluded) into the **previous-report set**.
 
-- Skip jobs with `appliedOn` and count them as applied-skipped.
-- Re-open `matched` and `review` jobs; annotate repeats with `[reported MM-DD]` from `firstReportedOn`.
-- Re-evaluate `excluded` and `expired` jobs without repeat annotation.
+- Before opening a card, skip it if its job ID or canonical URL is in the previous-report set. Do not open, judge or list it; count it as `上次报告已记录（跳过）` / `previously reported (skipped)`.
+- Applied jobs still count as applied-skipped.
+- `skipPreviousReport` (config, default `true`) controls this. When `false`, no report-based skip.
+- `reports/job-index.json` is **not** used for this decision. It is not a dedupe source.
+- Explicit override: when the user asks to re-check specific jobs, a company or a status, exempt those for that run and record the exemption in `limitations`.
+- If there is no previous daily report, the set is empty and every card is checked.
 - Flag likely duplicates (same company, normalized title, city, different ID) as `⚠️ possible duplicate`; add `possibly applied MM-DD` when the other job was applied to.
-- If the index is missing, rebuild from the previous 7 daily reports; otherwise start empty.
 
 Resolve scope:
 
@@ -72,17 +74,19 @@ For each source in order:
 
 1. Open the reference and submit `jobSearchPrompt` once.
 2. Apply the config filters in the platform UI and verify they are active.
-3. Paginate until results fall outside `lookbackHours`. Deduplicate canonical URLs and skip `appliedOn` jobs. There is no inspection cap.
+3. Paginate until results fall outside `lookbackHours`. Deduplicate canonical URLs, skip jobs in the previous-report set and skip `appliedOn` jobs before opening. There is no inspection cap.
 4. Skip a card without opening it only when its title clearly names another function and contains no configured role noun, or when it is clearly outside `countries`/`locations`. Open everything ambiguous.
 5. Open the rest, prefer the canonical URL, and keep one record per vacancy tagged with `source`.
 
 Use `jobSearchPrompt` verbatim on every platform. Do not rewrite, split, translate or append cities. Put it in the keyword field; set location from `countries`/`locations`.
 
-Do not stop the whole run for one source failure. Record it in `limitations` and `searchedBySource`, continue, and report it. Never guess a private API, bypass login/CAPTCHA, or fabricate results. Discovery never applies, messages, saves or follows anything: Easy Apply is left to the user, and external applications happen only later in `job-apply`.
+Do not stop the whole run for one source failure. Record it in `limitations` and `searchedBySource`, continue, and report it. Never guess a private API, bypass login/CAPTCHA, or fabricate results. Discovery never applies, messages, saves or follows anything: Easy Apply is left to the user. For a matched external posting, discovery may open the employer apply form once to inspect its fields (read-only, no filling, no upload, no submit); filing happens only later in `job-apply`.
 
 ## 4. Inspect and classify
 
-Open the posting and confirm it is still open. Evaluate in order and stop at the first confirmed mismatch.
+Open the posting once and confirm it is still open. In that same visit extract every field the report needs: title, company, company size, city, work mode, employment type, posted age, JD language and explicit language-requirement level, technical keywords (whole-word matches), poster type, business, `easyApply`, `applyType`, the visible cover-letter hint and the priority prompt. Never reopen a JD just to fill a missing report field; record `Not stated` / `unknown` / `review` instead.
+
+Evaluate in order and stop at the first confirmed mismatch.
 
 0. **Validity** — 404, redirect, or "no longer accepting applications" → skip as expired/closed.
 1. **Job title** — same role family as `jobTitles.include`. Page title wins over card title.
@@ -99,7 +103,11 @@ Disabled checks are skipped. Confirmed mismatch → `not_matched`, stop. Any `un
 
 **Third-party gate.** Only a `third_party` posting with a confirmed `matched` result on every active dimension may enter `代招岗位`. A confirmed mismatch in title, JD language, language requirement level, technical keywords, work mode, employment type or seniority sends it to Excluded with that reason. An `unknown` in any of those dimensions sends it to review, never to `代招岗位`. Never assume full-time, English JD, on-site/hybrid, a seniority level or a language from the poster type alone.
 
-Record `easyApply` (`yes`/`no`/`unknown`), `applyType` (`easy_apply` when the button applies inside the platform, `external` when it clearly redirects to an employer/ATS page, `unknown` otherwise) and `coverLetter` (`yes`/`no`/`unknown`) for every inspected vacancy. These are informational and never affect classification. Do not click Apply during discovery; classify from the visible button and page only.
+Record `easyApply` (`yes`/`no`/`unknown`), `applyType` (`easy_apply` when the button applies inside the platform, `external` when it clearly redirects to an employer/ATS page, `unknown` otherwise) and `coverLetter` (`yes`/`no`/`unknown`) for every inspected vacancy. These are informational and never affect classification.
+
+**Apply-form inspection.** For a `matched` vacancy whose Apply control leaves the platform (`applyType: external`), open the employer form once and record: ATS name and host, final `applyUrl`, login/account/CAPTCHA/file blockers, and every visible field with its label, type, required flag, options and the value that would be filled from `applicant`/`applications.screening`. Record the cover-letter field as required, optional or absent. Never type into the form, never upload a file, never click Submit; close the inspection tab when done. If the form cannot be reached or is login-walled, record the blocker and continue. Easy Apply is never opened.
+
+Keep the search tab and reuse one detail tab. Close every JD and apply-form tab immediately after that vacancy's row (including its field table and cover letter) is written to the report; never batch-close at the end. Close the apply-form tab even when the form is blocked.
 
 Record `posterType` for every inspected vacancy that reaches the report. Record `business` only from an explicit JD statement. For a `third_party` posting, `business` describes the client employer's business when the JD states it; the client employer goes in Notes.
 
@@ -107,7 +115,7 @@ Record the platform priority prompt when the reference defines one and the confi
 
 Keep `matched` and `review`; exclude `not_matched` from the main report. Never score fit. Do not filter on years, salary, visa, industry, architecture or company size. The only language-level filter is the explicit `jdLanguages.maxRequiredLevel` rule above; never infer a language level from the JD language, the company or the candidate's nationality. Record only page facts.
 
-Draft a cover letter only when `isNeededCover` is `true` and `coverLetter` is `yes`, for a `matched` or `review` vacancy. Use `cover-letter-template.md` exactly: keep structure, sections, wording and order; fill only its placeholders from the page; leave unfillable placeholders unchanged and tell the user. Never fabricate. Save to `reports/cover-letters/<company-slug>/<jobId>.md` (`<company-slug>`: lowercase, spaces/punctuation → `-`). Do not submit. If the template is missing, stop that step and tell the user to copy `cover-letter-template-example.md`.
+Draft a cover letter for every `matched` or `review` vacancy whose apply form shows a cover-letter field, whether it is required or optional, when `isNeededCover` is `true`. A `Message to the Hiring Team` / `Message to the team` textarea counts as a cover-letter field: write a shortened 3–5 sentence text version, save it as `reports/cover-letters/<company-slug>/<jobId>-message.md`, and put the text in the report; do not create a PDF for it. For a real cover-letter upload, use the `cover-letter` skill and `cover-letter-template.md` exactly: keep structure, sections, wording and order; fill only its placeholders from the page and config; leave unfillable placeholders unchanged and tell the user. Never fabricate. Save `cover-letter.json` plus `<jobId>.pdf` (and `<jobId>.md` when a text-only letter is needed); `<company-slug>`: lowercase, spaces/punctuation → `-`. Record the path in the report and index. Do not upload or submit it. If the template is missing, stop that step and tell the user to copy `cover-letter-template-example.md`.
 
 ## 5. Write the report
 
@@ -117,20 +125,22 @@ Write `reports/daily/YYYY-MM-DD.md`. Merge with an existing report. Preserve any
 
 When `thirdPartyPostings` is `separate`, put only confirmed `third_party` postings that pass every active filter in the dedicated `代招岗位` section, with the same columns, keyword evidence, ordering and checks as matched jobs. They count as matched in the summary. A `third_party` posting that fails title, JD language, language requirement level, technical keywords, work mode, employment type or seniority goes to the excluded table with that reason, never to `代招岗位`. A third-party posting with `unknown` on an active dimension goes to review, never to `代招岗位`.
 
-Add a `City` column; do not group matched rows by city. Split matched rows into exactly two parts: `Easy Apply` (`easyApply: yes`) and `No Easy Apply` (everything else, including `unknown`). Within each part, put prompted rows first; in the No Easy Apply part prefix their Notes with `Top applicant`. Sort each part by `sortBy`/`sortDirection` (`companySize` uses the lower bound; default `asc`; ties keep discovery order). Renumber `#` after sorting. The split is a workflow split and never a filter. Easy Apply rows stay for the user; No Easy Apply rows are the ones `job-apply` fills.
+Add a `City` column; do not group matched rows by city. Split matched rows into exactly two parts: `Easy Apply` (`easyApply: yes`) and `No Easy Apply` (everything else, including `unknown`). Within each part, put prompted rows first; in the No Easy Apply part prefix their Notes with `Top applicant`. Sort each part by `sortBy`/`sortDirection` (`companySize` uses the lower bound; default `asc`; ties keep discovery order). Renumber `#` after sorting. The split is a workflow split and never a filter. Easy Apply rows stay for the user; No Easy Apply rows carry the inspected apply-form fields.
 
-Before writing, add cross-day repeat annotations from the index. Do not count excluded or expired jobs as repeats.
+Before writing, add cross-day repeat annotations only for jobs exempted from the previous-report skip. Do not count excluded or expired jobs as repeats.
 
 Publish when `reportRepo` is set: clone/pull it, copy the daily report to `reports/daily/YYYY-MM-DD.md`, commit `docs: add daily job results for YYYY-MM-DD`, push and verify. On failure, report it and keep the local file. Never force-push. Publish only the daily report.
 
-After the report, update `reports/job-index.json`: upsert every inspected vacancy by source-qualified key; set `source`, `lastSeen`, `status`, `firstSeen`, `firstReportedOn`, `easyApply`, `applyType`, `coverLetter`, `posterType`, `business`; never clear `appliedOn` or any `apply*` field; do not write `isNeededCover` per vacancy. Append one JSON line to `reports/runs/YYYY-MM-DD.jsonl` using `runAt`, `finishedAt`, `durationSeconds` and the fields in `.opencode/skills/job-discovery/references/job-index-and-audit.md`. Preserve unknown fields; never delete entries.
+After the report, update `reports/job-index.json`: upsert every inspected vacancy by source-qualified key; set `source`, `lastSeen`, `status`, `firstSeen`, `firstReportedOn`, `easyApply`, `applyType`, `coverLetter`, `posterType`, `business`, `applyChannel`, `applyUrl`, `applyForm` and `coverLetterDraft`; never clear `appliedOn` or any `apply*` field; do not write `isNeededCover` per vacancy. Append one JSON line to `reports/runs/YYYY-MM-DD.jsonl` using `runAt`, `finishedAt`, `durationSeconds` and the fields in `.opencode/skills/job-discovery/references/job-index-and-audit.md`. Preserve unknown fields; never delete entries.
 
-If `applications.enabled` is `true`, load `job-apply` after the report and index are written and before the email summary. Discovery itself never applies.
+`applyForm` is `inspected` / `blocked` / `not_external`; `coverLetterDraft` is the saved file path or empty. Discovery records the form; it never files it.
+
+If `applications.enabled` is `true` and `applications.externalApply` is `true`, `"fill"` or `"submit"`, load `job-apply` after the report and index are written and before the email summary. With `false`, `"inspect"` or `"off"`, the apply form is inspected inline and `job-apply` is not loaded. Discovery itself never fills or submits, and never opens a LinkedIn Easy Apply form.
 
 If `notifications.email.enabled`, load `email-notify` and send one summary after the index and audit are written.
 
 ## 6. Report completion
 
-State the report path, resolved scope (say `All Germany` when `locations` was empty), `jobSearchPrompt`, distinct vacancies inspected by source, applied-skipped, cards skipped before opening, expired/closed skipped, matched, Easy Apply-matched, No Easy Apply-matched, external applications filled/blocked, third-party postings (`代招岗位`), review, excluded, cross-day repeats, possible duplicates, per-source coverage and stop reason, email status and any access limitation.
+State the report path, resolved scope (say `All Germany` when `locations` was empty), `jobSearchPrompt`, distinct vacancies inspected by source, applied-skipped, previously-checked skipped, cards skipped before opening, expired/closed skipped, matched, Easy Apply-matched, No Easy Apply-matched, external applications filled/blocked, third-party postings (`代招岗位`), review, excluded, cross-day repeats, possible duplicates, per-source coverage and stop reason, email status and any access limitation.
 
 Count only pages actually opened. Distinguish results seen from JDs reviewed. Do not add a limitations section to a normal report; use the exception note only for a failed or interrupted run.

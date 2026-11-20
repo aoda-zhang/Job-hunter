@@ -38,7 +38,7 @@ Field sources:
 | Date | audit `runAt` | `YYYY-MM-DD` |
 | Run time | audit `runAt` / `finishedAt` / `durationSeconds` | `HH:MM – HH:MM (N min)`; omit the end or duration when missing |
 | Scope | audit `scope.countries` / `locations` | No `locations` = `(nationwide)`; list up to five cities, then "etc." |
-| Day total | daily report run summary | inspected = `JDs read successfully`, matched = `Matched`, review = `Needs manual review`, excluded = `Confirmed non-match (excluded)` |
+| Day total | daily report run summary | inspected = `JDs read` / `检查 JD`, matched = `Matched`, review = `Needs manual review`, excluded = `Confirmed non-match (excluded)` |
 | This run | audit | `postingsInspected` / `matched` / `excluded` |
 | Skipped as applied | audit `appliedSkipped` | `0` when absent |
 | Stop reason | audit `stopReason` | One short phrase; `not recorded` when absent |

@@ -83,6 +83,10 @@ python3 .opencode/skills/cover-letter/scripts/render.py reports/cover-letters/ba
 
 State the PDF path and the company/JD fields you filled. The fixed body wording and personal facts must remain unchanged.
 
+## 7. Short hiring-team message
+
+When the form has a `Message to the Hiring Team` / `Message to the team` box, write a shortened 3–5 sentence text from the same JSON fields (`company`, `role`, `tech_points`, `backend_scope`, `team_location`) plus the fixed availability. Save it as `reports/cover-letters/<company-slug>/<jobId>-message.md`; do not render a PDF for it. Put the text in the daily report.
+
 ## Why this stays cheap
 
 The renderer owns layout, fonts, margins, justification and page breaks. The agent only produces the small company/JD JSON.
