@@ -55,21 +55,17 @@ Keep it short: one row group per metric, one column per source plus a total. Eve
 | Applied on another platform (skipped) | N | N | N |
 | Matched | N | N | N |
 | Of which Easy Apply / No Easy Apply | N / N | N / N | N / N |
-| Of which third-party postings (`代招岗位`) | N | N | N |
-| Confirmed non-match (excluded) | N | N | N |
 | Needs manual review | N | N | N |
-| Apply forms inspected | N | N | N |
 | Feed-sourced jobs | N | — | N |
 ```
 
 - Use the source names from `sources`, in order. When a source was disabled or failed, write `—` in its cells and name the reason in the audit/limitations.
 - Write `cannot determine` when unsupported; never estimate.
-- Check per source and in total: matched + review + excluded = JDs read.
-- `Matched` includes confirmed third-party postings listed in `代招岗位`; the third-party row is a subset, not an extra count.
+- The audit JSONL keeps the full counts (excluded, third-party postings, inspected forms); the summary table shows only the rows above.
+- `Matched` includes confirmed third-party postings listed in `代招岗位`.
 - `Of which Easy Apply / No Easy Apply` adds up to `Matched`; it is a workflow split, not extra matches.
 - `Previously reported (skipped)`, `Applied on another platform (skipped)` and `Feed-sourced jobs` are outside the JD sum.
-- `Already applied` and `Expired / closed` are outside the JD sum.
-- When `job-apply` ran after the report was written, add `External applications filled (awaiting submit)` and `External applications submitted` rows with the same per-source columns. They are outside the JD sum.
+- When `job-apply` ran after the report was written, add an `External applications submitted` row with the same per-source columns. It is outside the JD sum.
 
 ## 4. Matched jobs
 
