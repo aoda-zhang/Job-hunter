@@ -13,22 +13,29 @@ Read `job-hunter.config.json`. It is the single runtime config and is Git-ignore
 
 If the personal config is missing, tell the user to copy the example, customize it, and stop.
 
-Fields:
+The config has three layers. Read the layer you need; never invent a parallel key.
 
-- `countries` — required scope boundary. It does not build the query.
-- `locations` — optional city refinement. Empty = whole country.
-- `workModes`, `employmentTypes`, `seniority.include` — optional filters.
-- `thirdPartyPostings` — how confirmed third-party postings are handled: `separate` (default) keeps them in a dedicated `代招岗位` section, `include` lists them with normal matches, `exclude` drops them.
-- `lookbackHours` — posting window.
-- `sources` — required platform list, in order.
-- `jobSearchPrompt` — required query, used verbatim.
-- `jobTitles.include` — title matching.
-- `jdLanguages.include`, `.acceptGermanJdWithEnglishWorkingLanguage` — JD language.
-- `jdLanguages.maxRequiredLevel` — optional map such as `{"German": "A2", "English": "C1"}`. Active only for the languages listed. It is a hard filter on explicit JD language requirements.
-- `technicalKeywords.include`, `.matchMode` — stack matching.
-- `preferredReportLanguage`, `reportRepo`, `notifications.email`, `sortBy`, `sortDirection`, `isNeededCover`.
+1. `sources` — required platform list. **This array is the run order.** Each entry needs a matching `platforms.<name>` block.
+2. `common` — preferences shared by every platform:
+   - `common.countries` — required scope boundary. It does not build the query.
+   - `common.locations` — optional city refinement. Empty = whole country.
+   - `common.lookbackHours`, `common.workModes`, `common.employmentTypes`, `common.seniority.include` — scope and optional filters.
+   - `common.thirdPartyPostings` — `separate` (default) keeps confirmed third-party postings in the dedicated `代招岗位` section, `include` lists them with normal matches, `exclude` drops them.
+   - `common.skipPreviousReport` (default `true`).
+   - `common.jobSearchPrompt` — the natural-language query used by platforms whose `queryMode` is `prompt`.
+   - `common.jobTitles.include`, `common.jdLanguages.*`, `common.technicalKeywords.*` — matching dimensions.
+   - `common.sortBy`, `common.sortDirection`, `common.preferredReportLanguage`, `common.reportRepo`, `common.isNeededCover`.
+   - `common.dedupe.crossSource` (default `true`) — treat the same company + title + city on two platforms as one vacancy.
+   - `common.dedupe.skipApplied` (default `true`) — once a vacancy is applied to on any platform, skip it on every other platform and never apply again.
+   - `common.report.splitBySource` (default `true`) — group the daily report by source, in `sources` order.
+3. `platforms.<name>` — platform-only settings:
+   - `platforms.LinkedIn`: `enabled`, `premium`, `search.queryMode`, `feedReview`, `feedJobs`.
+   - `platforms.Indeed`: `enabled`, `domain`, `search.queryMode`, `search.queries`, `search.maxQueries`, `search.maxPagesPerQuery`, `search.lookbackHours`, `search.filters` (`date`, `employmentType`, `language`, `remote`, `quickApply`).
+   - `search.queryMode` is `prompt` (use `common.jobSearchPrompt` verbatim, the default), `titles` (one query per `common.jobTitles.include` entry) or `custom` (use `search.queries`). A platform's `search.lookbackHours` overrides `common.lookbackHours` for that platform only.
+4. Shared runtime, not search preferences: `applicant`, `applications`, `notifications`.
+5. `schedules.jobSearch`, `schedules.linkedinFeedReview` — launchd blocks. They never change how a run searches.
 
-Do not add a `search` wrapper or a second config file.
+Do not add a second config file. A platform named in `sources` without a `platforms` block is a config error: name it in `limitations` and continue with the others.
 
 ## 2. Resolve index and scope
 
@@ -36,22 +43,39 @@ Read the **previous daily report** (the most recent `reports/daily/YYYY-MM-DD.md
 
 - Before opening a card, skip it if its job ID or canonical URL is in the previous-report set. Do not open, judge or list it; count it as `上次报告已记录（跳过）` / `previously reported (skipped)`.
 - Applied jobs still count as applied-skipped.
-- `skipPreviousReport` (config, default `true`) controls this. When `false`, no report-based skip.
-- `reports/job-index.json` is **not** used for this decision. It is not a dedupe source.
+- `common.skipPreviousReport` (default `true`) controls this. When `false`, no report-based skip.
+- `reports/job-index.json` is **not** the source for this previous-report skip; it is only used for the applied set and cross-source dedup below.
 - Explicit override: when the user asks to re-check specific jobs, a company or a status, exempt those for that run and record the exemption in `limitations`.
 - If there is no previous daily report, the set is empty and every card is checked.
 - Flag likely duplicates (same company, normalized title, city, different ID) as `⚠️ possible duplicate`; add `possibly applied MM-DD` when the other job was applied to.
 
+Read the index once for the whole run and build two in-memory sets before any platform is opened:
+
+- **applied set** — every index job with `appliedOn` set or `applyStatus: "submitted"`, keyed by normalized `company + title + city` (normalization: `job-index-and-audit.md` §4).
+- **known set** — every index job that is `matched` or `review`, same key, used for soft-duplicate annotations.
+
+These sets are shared across platforms and are the basis for the cross-source rule in §2a.
+
 Resolve scope:
 
-1. Require one non-empty `countries` entry; otherwise stop and ask.
-2. `locations` non-empty = those country × city combinations only.
-3. `locations` empty = the entire configured country. Do not narrow silently.
+1. Require one non-empty `common.countries` entry; otherwise stop and ask.
+2. `common.locations` non-empty = those country × city combinations only.
+3. `common.locations` empty = the entire configured country. Do not narrow silently.
 4. State the resolved scope in the final summary.
 
-Only title, JD language, technical keywords, work modes, employment types and seniority are matching filters. Poster type is a display split for confirmed third-party postings (or an exclusion only when `thirdPartyPostings` is `exclude`). Country, city and posting date are scope. Validity is a gate.
+Only title, JD language, technical keywords, work modes, employment types and seniority are matching filters. Poster type is a display split for confirmed third-party postings (or an exclusion only when `common.thirdPartyPostings` is `exclude`). Country, city and posting date are scope. Validity is a gate.
 
 If the user gives one-run criteria in chat, restate them and apply them to that run only.
+
+## 2a. Cross-source rule
+
+`common.dedupe` decides how the same vacancy is treated on two platforms. Both keys default to `true`.
+
+- `crossSource: true` — normalize `company + title + city` and treat the two cards as the same vacancy. Annotate the second one with `⚠️ 同职位已在 <source> 出现` (`⚠️ same job on <source>`) and keep the first one. Never merge rows, never change a decision.
+- `skipApplied: true` — before opening a card on platform B, look its normalized key up in the applied set. When the hit comes from **another** platform, do not open it, do not list it, and never apply again: count it as `已在其他平台投递（跳过）` / `applied on another platform (skipped)`. When the hit comes from the same platform, count it as the normal applied-skip.
+- Build the applied set from the index **before** the first platform and extend it during the run: an application confirmed in platform A's step is immediately visible to platform B, which runs later in `sources` order.
+- The cross-source skip is a scope rule, not a match rule: it never creates a `matched`, `review` or `excluded` row.
+- With `crossSource: false`, only the canonical URL/ID dedupe applies and the two platforms are treated as unrelated.
 
 ## 3. Search sources
 
@@ -61,26 +85,42 @@ Read the platform reference before searching. Use this map:
 |---|---|
 | `LinkedIn` | `references/linkedin.md` |
 | `Indeed` | `references/indeed.md` |
-| `Glassdoor` (e.g. `glassdoor.de`) | `references/glassdoor.md` |
 | new platform | `references/_template.md` |
 
 Match case-insensitively and ignore a country domain. Never improvise a flow for a platform without a reference; skip it, name it and continue.
 
 If no browser tool exists, stop and say so. If `sources` is empty, ask which platforms to use.
 
-Record the start time in ISO 8601 with the local offset as `runAt`.
+Skip a source whose `platforms.<name>.enabled` is not `true`; count it as `skipped (disabled)` and continue. A caller may also scope a pass to a subset of `sources` (for example "LinkedIn only"): process just those in `sources` order, count the rest as `skipped (not in this pass)`, do not mark them failed, and never open a platform outside the pass. Record the start time in ISO 8601 with the local offset as `runAt`.
 
-For each source in order:
+For each source in `sources` order:
 
-1. Open the reference and submit `jobSearchPrompt` once.
-2. Apply the config filters in the platform UI and verify they are active.
-3. Paginate until results fall outside `lookbackHours`. Deduplicate canonical URLs, skip jobs in the previous-report set and skip `appliedOn` jobs before opening. There is no inspection cap.
-4. Skip a card without opening it only when its title clearly names another function and contains no configured role noun, or when it is clearly outside `countries`/`locations`. Open everything ambiguous.
-5. Open the rest, prefer the canonical URL, and keep one record per vacancy tagged with `source`.
+1. Resolve that platform's queries from `platforms.<name>.search`:
+   - `queryMode: "prompt"` — submit `common.jobSearchPrompt` once, verbatim.
+   - `queryMode: "titles"` — submit one short query per entry of `common.jobTitles.include`, in order, capped at `maxQueries`.
+   - `queryMode: "custom"` — submit `search.queries` in order, capped at `maxQueries`.
+   Never rewrite, split or translate a query. Never append cities; the location comes from `common.countries`/`common.locations`.
+2. Apply the date-posted filter from the effective lookback (`search.lookbackHours` when set, otherwise `common.lookbackHours`) and verify it is active — date is scope and is always applied. Then apply only the matching filters this platform enables in `search.filters` (`employmentType`, `language`, `remote`, `quickApply`). Any dimension whose flag is `false` is read from each posting instead.
+3. Paginate until results fall outside the window, up to `maxPagesPerQuery` when set. Deduplicate canonical URLs and job IDs, skip jobs in the previous-report set, skip `appliedOn` jobs and skip cross-source applied jobs (§2a) before opening. There is no inspection cap beyond the per-platform page cap.
+4. Skip a card without opening it only when its title clearly names another function and contains no configured role noun, or when it is clearly outside `common.countries`/`common.locations`. Open everything ambiguous.
+5. Open the rest, prefer the canonical URL, and keep one record per vacancy tagged with `source`. Finish every platform before starting the next one.
 
-Use `jobSearchPrompt` verbatim on every platform. Do not rewrite, split, translate or append cities. Put it in the keyword field; set location from `countries`/`locations`.
+**Strictly sequential — one query, one posting, one tab.** This is mandatory on every platform, Indeed included:
 
-Do not stop the whole run for one source failure. Record it in `limitations` and `searchedBySource`, continue, and report it. Never guess a private API, bypass login/CAPTCHA, or fabricate results. Discovery never applies, messages, saves or follows anything: Easy Apply is left to the user. For a matched external posting, discovery may open the employer apply form once to inspect its fields (read-only, no filling, no upload, no submit); filing happens only later in `job-apply`.
+- One query at a time. Finish all its pages before submitting the next query.
+- One posting at a time. Open exactly one detail tab, read the JD, classify it, take the apply/inspect action, write the row, close that tab, then open the next posting.
+- Never batch-open cards or collect several job URLs and open them together.
+- Never loop over multiple job IDs inside a single tool call or script.
+- Never run two browser actions in parallel and never keep more than one job tab open.
+- A slow, serial pass is correct; a fast batch pass is a defect even when it produces the same rows.
+
+A platform's search results are not proof of a match: recommendation and fallback blocks ignore the active filters. Always judge each posting from its own page.
+
+Do not stop the whole run for one source failure. Record it in `limitations` and `searchedBySource`, continue, and report it. Never guess a private API, bypass login/CAPTCHA, or fabricate results.
+
+**Exception — stop everything.** A platform trust or automation-suspicion signal (`verify you are human`, CAPTCHA, `unusual activity` / `unusual traffic`, `automated access`, `are you a robot`, an AI-agent warning, or a forced re-login/2FA triggered mid-run) is not a normal source failure. Stop the entire run immediately: do not open another card, do not search another query or platform, do not apply, do not retry. Keep everything already written, record the platform plus the exact dialog text in `limitations` and the exception note, and tell the user to take over.
+
+Discovery never applies, messages, saves or follows anything: a platform's own one-click apply is left to the user. For a matched external posting, discovery may open the employer apply form once to inspect its fields (read-only, no filling, no upload, no submit); filing happens only later in `job-apply`.
 
 ## 4. Inspect and classify
 
@@ -89,14 +129,14 @@ Open the posting once and confirm it is still open. In that same visit extract e
 Evaluate in order and stop at the first confirmed mismatch.
 
 0. **Validity** — 404, redirect, or "no longer accepting applications" → skip as expired/closed.
-1. **Job title** — same role family as `jobTitles.include`. Page title wins over card title.
-2. **Poster type** — classify from the posting as `direct`, `third_party` or `unknown`. `third_party` means a staffing firm, headhunter, agency portal, "our client", "on behalf of", or the local-language equivalent (e.g. `im Auftrag`, `für unseren Kunden`, `Arbeitnehmerüberlassung`). A consultancy hiring for its own projects is `direct`. Unclear → `unknown`. With `thirdPartyPostings: exclude`, a confirmed `third_party` is `not_matched` and stops here; with `separate` or `include`, continue and let the remaining checks decide. `third_party` is never a bypass: steps 3–7 must still confirm every active filter.
-3. **JD language** — in `jdLanguages.include`. A German JD matches when `acceptGermanJdWithEnglishWorkingLanguage` is `true` and the JD names English as the working language. Mixed, short or truncated → `unknown`.
-3b. **Language requirement level** — only when `jdLanguages.maxRequiredLevel` has an entry for that language. Extract explicit requirements from the JD, e.g. `German C1`, `Deutschkenntnisse B2`, `fließend Deutsch`, `verhandlungssicher`, `English fluent`, `business fluent`. Map to CEFR: A1 < A2 < B1 < B2 < C1 < C2. `basic`/`Grundkenntnisse` → A2; `good`/`gute`/`solid` → B1; `business fluent` → B2; `fluent`/`fließend`/`verhandlungssicher` → C1; `native`/`muttersprachlich` → C2. A bare `German required` / `Deutsch erforderlich` / `Deutschkenntnisse` with no level counts as B1. A phrase such as `nice to have`, `plus`, `von Vorteil` or `optional` is not a requirement. Use the highest requirement stated for that language. A requirement strictly above the configured level is a confirmed mismatch → `not_matched` with reason `language requirement: <language> <required> > <configured>`. A requirement at or below the configured level passes. Ambiguous wording that cannot be mapped to a level → `unknown` → review, not matched.
-4. **Technical keywords** — follow `matchMode`; accept JS/JavaScript, TS/TypeScript, NodeJS/Node.js, ReactJS/React. With `any`, stop at the first hit.
-5. **Work mode** — only when `workModes` is a real subset. Missing → `unknown`.
-6. **Employment type** — only when `employmentTypes` is a real subset. Missing → `unknown`.
-7. **Seniority** — only when `seniority.include` is a real subset. Use title or explicit level, never bare years. Missing → `unknown`.
+1. **Job title** — same role family as `common.jobTitles.include`. Page title wins over card title.
+2. **Poster type** — classify from the posting as `direct`, `third_party` or `unknown`. `third_party` means a staffing firm, headhunter, agency portal, "our client", "on behalf of", or the local-language equivalent (e.g. `im Auftrag`, `für unseren Kunden`, `Arbeitnehmerüberlassung`). A consultancy hiring for its own projects is `direct`. Unclear → `unknown`. With `common.thirdPartyPostings: exclude`, a confirmed `third_party` is `not_matched` and stops here; with `separate` or `include`, continue and let the remaining checks decide. `third_party` is never a bypass: steps 3–7 must still confirm every active filter.
+3. **JD language** — in `common.jdLanguages.include`. A German JD matches when `common.jdLanguages.acceptGermanJdWithEnglishWorkingLanguage` is `true` and the JD names English as the working language. Mixed, short or truncated → `unknown`.
+3b. **Language requirement level** — only when `common.jdLanguages.maxRequiredLevel` has an entry for that language. Extract explicit requirements from the JD, e.g. `German C1`, `Deutschkenntnisse B2`, `fließend Deutsch`, `verhandlungssicher`, `English fluent`, `business fluent`. Map to CEFR: A1 < A2 < B1 < B2 < C1 < C2. `basic`/`Grundkenntnisse` → A2; `good`/`gute`/`solid` → B1; `business fluent` → B2; `fluent`/`fließend`/`verhandlungssicher` → C1; `native`/`muttersprachlich` → C2. A bare `German required` / `Deutsch erforderlich` / `Deutschkenntnisse` with no level counts as B1. A phrase such as `nice to have`, `plus`, `von Vorteil` or `optional` is not a requirement. Use the highest requirement stated for that language. A requirement strictly above the configured level is a confirmed mismatch → `not_matched` with reason `language requirement: <language> <required> > <configured>`. A requirement at or below the configured level passes. Ambiguous wording that cannot be mapped to a level → `unknown` → review, not matched.
+4. **Technical keywords** — follow `common.technicalKeywords.matchMode`; accept JS/JavaScript, TS/TypeScript, NodeJS/Node.js, ReactJS/React. With `any`, stop at the first hit.
+5. **Work mode** — only when `common.workModes` is a real subset. Missing → `unknown`.
+6. **Employment type** — only when `common.employmentTypes` is a real subset. Missing → `unknown`.
+7. **Seniority** — only when `common.seniority.include` is a real subset. Use title or explicit level, never bare years. Missing → `unknown`.
 8. **Company business** — informational, never a filter. Record one short phrase only when the JD explicitly states the company's product, market or industry; otherwise `Not stated`. Never infer it from the company name, domain, another page or general knowledge.
 
 Disabled checks are skipped. Confirmed mismatch → `not_matched`, stop. Any `unknown` with no mismatch → `review`. Otherwise `matched`.
@@ -105,42 +145,46 @@ Disabled checks are skipped. Confirmed mismatch → `not_matched`, stop. Any `un
 
 Record `easyApply` (`yes`/`no`/`unknown`), `applyType` (`easy_apply` when the button applies inside the platform, `external` when it clearly redirects to an employer/ATS page, `unknown` otherwise) and `coverLetter` (`yes`/`no`/`unknown`) for every inspected vacancy. These are informational and never affect classification.
 
-**Apply-form inspection.** For a `matched` vacancy whose Apply control leaves the platform (`applyType: external`), open the employer form once and record: ATS name and host, final `applyUrl`, login/account/CAPTCHA/file blockers, and every visible field with its label, type, required flag, options and the value that would be filled from `applicant`/`applications.screening`. Record the cover-letter field as required, optional or absent. Never type into the form, never upload a file, never click Submit; close the inspection tab when done. If the form cannot be reached or is login-walled, record the blocker and continue. Easy Apply is never opened.
+**Apply-form inspection.** For a `matched` vacancy whose Apply control leaves the platform (`applyType: external`), open the employer form once and record: ATS name and host, final `applyUrl`, login/account/CAPTCHA/file blockers, and every visible field with its label, type, required flag, options and the value that would be filled from `applicant`/`applications.screening`. Record the cover-letter field as required, optional or absent. Never type into the form, never upload a file, never click Submit; close the inspection tab when done. If the form cannot be reached or is login-walled, record the blocker and continue. A platform one-click apply form is never opened.
 
 Keep the search tab and reuse one detail tab. Close every JD and apply-form tab immediately after that vacancy's row (including its field table and cover letter) is written to the report; never batch-close at the end. Close the apply-form tab even when the form is blocked.
 
 Record `posterType` for every inspected vacancy that reaches the report. Record `business` only from an explicit JD statement. For a `third_party` posting, `business` describes the client employer's business when the JD states it; the client employer goes in Notes.
 
-Record the platform priority prompt when the reference defines one and the config enables it (LinkedIn: `linkedinPremium`). It only orders rows. Recorded `easyApply` is also ordering metadata only and never a filter.
+Record the platform priority prompt when the reference defines one and the config enables it (LinkedIn: `platforms.LinkedIn.premium`). It only orders rows. Recorded `easyApply` is also ordering metadata only and never a filter.
 
-Keep `matched` and `review`; exclude `not_matched` from the main report. Never score fit. Do not filter on years, salary, visa, industry, architecture or company size. The only language-level filter is the explicit `jdLanguages.maxRequiredLevel` rule above; never infer a language level from the JD language, the company or the candidate's nationality. Record only page facts.
+Keep `matched` and `review`; exclude `not_matched` from the main report. Never score fit. Do not filter on years, salary, visa, industry, architecture or company size. The only language-level filter is the explicit `common.jdLanguages.maxRequiredLevel` rule above; never infer a language level from the JD language, the company or the candidate's nationality. Record only page facts.
 
-Draft a cover letter for every `matched` or `review` vacancy whose apply form shows a cover-letter field, whether it is required or optional, when `isNeededCover` is `true`. A `Message to the Hiring Team` / `Message to the team` textarea counts as a cover-letter field: write a shortened 3–5 sentence text version, save it as `reports/cover-letters/<company-slug>/<jobId>-message.md`, and put the text in the report; do not create a PDF for it. For a real cover-letter upload, use the `cover-letter` skill and `cover-letter-template.md` exactly: keep structure, sections, wording and order; fill only its placeholders from the page and config; leave unfillable placeholders unchanged and tell the user. Never fabricate. Save `cover-letter.json` plus `<jobId>.pdf` (and `<jobId>.md` when a text-only letter is needed); `<company-slug>`: lowercase, spaces/punctuation → `-`. Record the path in the report and index. Do not upload or submit it. If the template is missing, stop that step and tell the user to copy `cover-letter-template-example.md`.
+Draft a cover letter for every `matched` or `review` vacancy whose apply form shows a cover-letter field, whether it is required or optional, when `common.isNeededCover` is `true`. A `Message to the Hiring Team` / `Message to the team` textarea counts as a cover-letter field: write a shortened 3–5 sentence text version, save it as `reports/cover-letters/<company-slug>/<jobId>-message.md`, and put the text in the report; do not create a PDF for it. For a real cover-letter upload, use the `cover-letter` skill and `cover-letter-template.md` exactly: keep structure, sections, wording and order; fill only its placeholders from the page and config; leave unfillable placeholders unchanged and tell the user. Never fabricate. Save `cover-letter.json` plus `<jobId>.pdf` (and `<jobId>.md` when a text-only letter is needed); `<company-slug>`: lowercase, spaces/punctuation → `-`. Record the path in the report and index. Do not upload or submit it. If the template is missing, stop that step and tell the user to copy `cover-letter-template-example.md`.
 
 ## 5. Write the report
 
-Follow `.opencode/skills/job-discovery/references/daily-report-format.md` for structure, sections, columns, metadata and summaries. Write human-readable strings in `preferredReportLanguage`; keep structure, order, dates and URLs unchanged.
+Follow `.opencode/skills/job-discovery/references/daily-report-format.md` for structure, sections, columns, metadata and summaries. Write human-readable strings in `common.preferredReportLanguage`; keep structure, order, dates and URLs unchanged.
 
 Write `reports/daily/YYYY-MM-DD.md`. Merge with an existing report. Preserve any `代招岗位` and `Feed-sourced jobs` sections and their counts. Deduplicate by canonical URL; without one, use company + title + location and flag possible duplicates.
 
-When `thirdPartyPostings` is `separate`, put only confirmed `third_party` postings that pass every active filter in the dedicated `代招岗位` section, with the same columns, keyword evidence, ordering and checks as matched jobs. They count as matched in the summary. A `third_party` posting that fails title, JD language, language requirement level, technical keywords, work mode, employment type or seniority goes to the excluded table with that reason, never to `代招岗位`. A third-party posting with `unknown` on an active dimension goes to review, never to `代招岗位`.
+When `common.thirdPartyPostings` is `separate`, put only confirmed `third_party` postings that pass every active filter in the dedicated `代招岗位` section, with the same columns, keyword evidence, ordering and checks as matched jobs. They count as matched in the summary. A `third_party` posting that fails title, JD language, language requirement level, technical keywords, work mode, employment type or seniority goes to the excluded table with that reason, never to `代招岗位`. A third-party posting with `unknown` on an active dimension goes to review, never to `代招岗位`.
 
-Add a `City` column; do not group matched rows by city. Split matched rows into exactly two parts: `Easy Apply` (`easyApply: yes`) and `No Easy Apply` (everything else, including `unknown`). Within each part, put prompted rows first; in the No Easy Apply part prefix their Notes with `Top applicant`. Sort each part by `sortBy`/`sortDirection` (`companySize` uses the lower bound; default `asc`; ties keep discovery order). Renumber `#` after sorting. The split is a workflow split and never a filter. Easy Apply rows stay for the user; No Easy Apply rows carry the inspected apply-form fields.
+Add a `City` column; do not group matched rows by city. When `common.report.splitBySource` is `true` (default), write one section per source **in `sources` order** (LinkedIn first, then Indeed), and inside each source split matched rows into exactly two parts: `Easy Apply` (`easyApply: yes`) and `No Easy Apply` (everything else, including `unknown`). `#` restarts at 1 in every source section. When the flag is `false`, keep the single merged matched table with the same two parts and continuous numbering.
+
+Within each part, put prompted rows first; in the No Easy Apply part prefix their Notes with `Top applicant`. Sort each part by `common.sortBy`/`common.sortDirection` (`companySize` uses the lower bound; default `asc`; ties keep discovery order). Renumber `#` after sorting. The split is a workflow split and never a filter. Easy Apply rows stay for the user; No Easy Apply rows carry the inspected apply-form fields.
+
+Cross-source rows follow §2a: a vacancy already applied to on another platform is counted as skipped and never listed; a cross-source duplicate that was not applied to is annotated, never merged.
 
 Before writing, add cross-day repeat annotations only for jobs exempted from the previous-report skip. Do not count excluded or expired jobs as repeats.
 
-Publish when `reportRepo` is set: clone/pull it, copy the daily report to `reports/daily/YYYY-MM-DD.md`, commit `docs: add daily job results for YYYY-MM-DD`, push and verify. On failure, report it and keep the local file. Never force-push. Publish only the daily report.
+Publish when `common.reportRepo` is set: clone/pull it, copy the daily report to `reports/daily/YYYY-MM-DD.md`, commit `docs: add daily job results for YYYY-MM-DD`, push and verify. On failure, report it and keep the local file. Never force-push. Publish only the daily report.
 
-After the report, update `reports/job-index.json`: upsert every inspected vacancy by source-qualified key; set `source`, `lastSeen`, `status`, `firstSeen`, `firstReportedOn`, `easyApply`, `applyType`, `coverLetter`, `posterType`, `business`, `applyChannel`, `applyUrl`, `applyForm` and `coverLetterDraft`; never clear `appliedOn` or any `apply*` field; do not write `isNeededCover` per vacancy. Append one JSON line to `reports/runs/YYYY-MM-DD.jsonl` using `runAt`, `finishedAt`, `durationSeconds` and the fields in `.opencode/skills/job-discovery/references/job-index-and-audit.md`. Preserve unknown fields; never delete entries.
+After the report, update `reports/job-index.json`: upsert every inspected vacancy by source-qualified key; set `source`, `lastSeen`, `status`, `firstSeen`, `firstReportedOn`, `easyApply`, `applyType`, `coverLetter`, `posterType`, `business`, `applyChannel`, `applyUrl`, `applyForm` and `coverLetterDraft`; never clear `appliedOn` or any `apply*` field; do not write `common.isNeededCover` per vacancy. Append one JSON line to `reports/runs/YYYY-MM-DD.jsonl` using `runAt`, `finishedAt`, `durationSeconds` and the fields in `.opencode/skills/job-discovery/references/job-index-and-audit.md`. Preserve unknown fields; never delete entries.
 
 `applyForm` is `inspected` / `blocked` / `not_external`; `coverLetterDraft` is the saved file path or empty. Discovery records the form; it never files it.
 
-If `applications.enabled` is `true` and `applications.externalApply` is `true`, `"fill"` or `"submit"`, load `job-apply` after the report and index are written and before the email summary. With `false`, `"inspect"` or `"off"`, the apply form is inspected inline and `job-apply` is not loaded. Discovery itself never fills or submits, and never opens a LinkedIn Easy Apply form.
+If `applications.enabled` is `true` and `applications.externalApply` is `true`, `"fill"` or `"submit"`, load `job-apply` after the report and index are written and before the email summary. With `false`, `"inspect"` or `"off"`, the apply form is inspected inline and `job-apply` is not loaded. Discovery itself never fills or submits, and never opens a platform one-click apply form (LinkedIn Easy Apply, Indeed Apply / Schnellbewerbung).
 
 If `notifications.email.enabled`, load `email-notify` and send one summary after the index and audit are written.
 
 ## 6. Report completion
 
-State the report path, resolved scope (say `All Germany` when `locations` was empty), `jobSearchPrompt`, distinct vacancies inspected by source, applied-skipped, previously-checked skipped, cards skipped before opening, expired/closed skipped, matched, Easy Apply-matched, No Easy Apply-matched, external applications filled/blocked, third-party postings (`代招岗位`), review, excluded, cross-day repeats, possible duplicates, per-source coverage and stop reason, email status and any access limitation.
+State the report path, resolved scope (say `All Germany` when `common.locations` was empty), the resolved queries per source, distinct vacancies inspected by source, applied-skipped, applied-on-another-platform skipped, previously-checked skipped, cards skipped before opening, expired/closed skipped, matched, Easy Apply-matched, No Easy Apply-matched, external applications filled/blocked, third-party postings (`代招岗位`), review, excluded, cross-day repeats, possible duplicates, per-source coverage and stop reason, email status and any access limitation. Give the counts per source and as a total.
 
 Count only pages actually opened. Distinguish results seen from JDs reviewed. Do not add a limitations section to a normal report; use the exception note only for a failed or interrupted run.

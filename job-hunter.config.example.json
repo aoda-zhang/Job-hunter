@@ -1,16 +1,72 @@
 {
-  "countries": ["Germany"],
-  "locations": [],
-  "lookbackHours": 48,
-  "workModes": ["Remote", "Hybrid", "On-site"],
-  "employmentTypes": ["Full-time"],
-  "seniority": {
-    "include": []
+  "sources": [
+    "LinkedIn",
+    "Indeed"
+  ],
+  "common": {
+    "countries": [
+      "Germany"
+    ],
+    "locations": [],
+    "lookbackHours": 24,
+    "workModes": [
+      "Remote",
+      "Hybrid",
+      "On-site"
+    ],
+    "employmentTypes": [
+      "Full-time"
+    ],
+    "seniority": {
+      "include": []
+    },
+    "thirdPartyPostings": "separate",
+    "skipPreviousReport": true,
+    "jobSearchPrompt": "Find English-speaking software engineering jobs across all of Germany, posted in the last 48 hours.",
+    "jobTitles": {
+      "include": [
+        "Frontend Engineer",
+        "Senior Frontend Engineer",
+        "Frontend Developer",
+        "Senior Frontend Developer",
+        "React Developer",
+        "Senior React Developer"
+      ]
+    },
+    "jdLanguages": {
+      "include": [
+        "English"
+      ],
+      "acceptGermanJdWithEnglishWorkingLanguage": false,
+      "maxRequiredLevel": {}
+    },
+    "technicalKeywords": {
+      "include": [
+        "React",
+        "TypeScript",
+        "JavaScript",
+        "HTML",
+        "CSS",
+        "Node.js",
+        "NestJS",
+        "Express",
+        "Redux"
+      ],
+      "matchMode": "any"
+    },
+    "sortBy": "companySize",
+    "sortDirection": "desc",
+    "preferredReportLanguage": "English",
+    "reportRepo": "",
+    "isNeededCover": false,
+    "dedupe": {
+      "crossSource": true,
+      "skipApplied": true
+    },
+    "report": {
+      "splitBySource": true
+    }
   },
-  "thirdPartyPostings": "separate",
-  "sources": ["LinkedIn"],
-  "linkedinPremium": false,
-  "reportRepo": "",
   "applicant": {
     "firstName": "",
     "lastName": "",
@@ -51,7 +107,9 @@
     "email": {
       "enabled": false,
       "backend": "smtp",
-      "to": ["you@example.com"],
+      "to": [
+        "you@example.com"
+      ],
       "from": "you@example.com",
       "smtp": {
         "host": "smtp.gmail.com",
@@ -62,88 +120,109 @@
       }
     }
   },
-  "sortBy": "companySize",
-  "preferredReportLanguage": "English",
-  "sortDirection": "desc",
-  "jobSearchPrompt": "Find English-speaking software engineering jobs across all of Germany, posted in the last 48 hours.",
-  "jobTitles": {
-    "include": [
-      "Frontend Engineer",
-      "Senior Frontend Engineer",
-      "Frontend Developer",
-      "Senior Frontend Developer",
-      "React Developer",
-      "Senior React Developer"
-    ]
-  },
-  "jdLanguages": {
-    "include": ["English"],
-    "acceptGermanJdWithEnglishWorkingLanguage": false,
-    "maxRequiredLevel": {}
-  },
-  "technicalKeywords": {
-    "include": [
-      "React",
-      "TypeScript",
-      "JavaScript",
-      "HTML",
-      "CSS",
-      "Node.js",
-      "NestJS",
-      "Express",
-      "Redux"
-    ],
-    "matchMode": "any"
-  },
-  "linkedinFeedReview": {
-    "lookbackHours": 24,
-    "maxPosts": 10,
-    "excludeTopics": [
-      "politics",
-      "jokes and memes",
-      "personal life",
-      "sports and entertainment",
-      "religion",
-      "war and conflict",
-      "crypto and hustle culture",
-      "ads, sponsored or promoted posts, and pure product marketing",
-      "pure link, article or video shares with no commentary",
-      "reposts with no added commentary",
-      "job ads, recruiter posts, and we are hiring / apply here posts",
-      "engagement bait such as Agree? or Thoughts? with no substance",
-      "pure announcements or low-effort posts with nothing to reply to"
-    ],
-    "replyLanguage": "auto",
-    "schedule": {
-      "times": [],
-      "weekdays": [1, 2, 3, 4, 5],
-      "timezone": "Asia/Shanghai"
+  "platforms": {
+    "LinkedIn": {
+      "enabled": true,
+      "premium": false,
+      "search": {
+        "queryMode": "prompt"
+      },
+      "feedReview": {
+        "lookbackHours": 24,
+        "maxPosts": 10,
+        "excludeTopics": [
+          "politics",
+          "jokes and memes",
+          "personal life",
+          "sports and entertainment",
+          "religion",
+          "war and conflict",
+          "crypto and hustle culture",
+          "ads, sponsored or promoted posts, and pure product marketing",
+          "pure link, article or video shares with no commentary",
+          "reposts with no added commentary",
+          "job ads, recruiter posts, and we are hiring / apply here posts",
+          "engagement bait such as Agree? or Thoughts? with no substance",
+          "pure announcements or low-effort posts with nothing to reply to"
+        ],
+        "replyLanguage": "auto"
+      },
+      "feedJobs": {
+        "enabled": true,
+        "lookbackHours": 24,
+        "searchKeywords": [
+          "hiring",
+          "we're hiring",
+          "we are hiring",
+          "open role",
+          "open position",
+          "job opening",
+          "looking for",
+          "join our team",
+          "vacancy",
+          "DM me"
+        ],
+        "maxQueries": 12,
+        "maxPagesPerQuery": 3,
+        "maxScreens": 6,
+        "locationTerms": [],
+        "includeRecentFeed": true
+      }
+    },
+    "Indeed": {
+      "enabled": true,
+      "domain": "de.indeed.com",
+      "search": {
+        "queryMode": "custom",
+        "queries": [
+          "Frontend Developer",
+          "React Developer",
+          "Fullstack Developer"
+        ],
+        "maxQueries": 3,
+        "maxPagesPerQuery": 2,
+        "lookbackHours": 48,
+        "filters": {
+          "date": true,
+          "employmentType": true,
+          "language": false,
+          "remote": false,
+          "quickApply": false
+        }
+      }
     }
   },
-  "linkedinFeedJobs": {
-    "enabled": true,
-    "searchKeywords": [
-      "hiring",
-      "we're hiring",
-      "we are hiring",
-      "open role",
-      "open position",
-      "job opening",
-      "looking for",
-      "join our team",
-      "vacancy",
-      "DM me"
-    ],
-    "maxQueries": 12,
-    "maxPagesPerQuery": 3,
-    "maxScreens": 6,
-    "locationTerms": [],
-    "includeRecentFeed": true
-  },
-  "jobSearchSchedule": {
-    "times": [],
-    "weekdays": [1, 2, 3, 4, 5],
-    "timezone": "Asia/Shanghai"
-  },
-  "isNeededCover": false
+  "schedules": {
+    "jobSearch": {
+      "times": [],
+      "weekdays": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "timezone": "Asia/Shanghai"
+    },
+    "indeedJobSearch": {
+      "times": [
+        "15:00"
+      ],
+      "weekdays": [
+        5
+      ],
+      "timezone": "Asia/Shanghai"
+    },
+    "linkedinFeedReview": {
+      "times": [],
+      "weekdays": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "timezone": "Asia/Shanghai"
+    }
+  }
 }

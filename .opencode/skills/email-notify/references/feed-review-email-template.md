@@ -12,7 +12,7 @@ Use for LinkedIn feed passes only.
 
 ## Body
 
-Write labels in `preferredReportLanguage`; keep dates, times, URLs, paths and numbers unchanged.
+Write labels in `common.preferredReportLanguage`; keep dates, times, URLs, paths and numbers unchanged.
 
 ```text
 LinkedIn Feed results

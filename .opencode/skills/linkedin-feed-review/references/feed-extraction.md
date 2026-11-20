@@ -87,7 +87,7 @@ The copied URL is usually `https://lnkd.in/p/...`. Keep it as-is.
 
 ## 5. Time window
 
-LinkedIn shows `23h` then `1d`. `1d` covers 24–48 hours. With `lookbackHours` 24, include `1d` as the boundary and mark `24h boundary`.
+LinkedIn shows `23h` then `1d`. `1d` covers 24–48 hours. With `common.lookbackHours` 24, include `1d` as the boundary and mark `24h boundary`.
 
 ## 6. Avoid
 

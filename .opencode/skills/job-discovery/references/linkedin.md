@@ -4,23 +4,23 @@ Reference implementation for `sources: ["LinkedIn"]`. Follow this file for the s
 
 ## 1. Search entry
 
-Open LinkedIn Jobs and use its AI job search, entering `jobSearchPrompt` **verbatim**.
+Open LinkedIn Jobs and use its AI job search. With `platforms.LinkedIn.search.queryMode: "prompt"` (default) enter `common.jobSearchPrompt` **verbatim**; with `"titles"` submit one short query per `common.jobTitles.include` entry; with `"custom"` use `platforms.LinkedIn.search.queries`.
 
 - Do not rewrite, split, translate or append cities.
-- Submit once. Re-submitting a changed prompt invalidates the filters you already set.
-- If the AI search is not available in the account's UI, fall back to the plain keyword search with the same prompt text and say so in `limitations`.
+- Submit once per query. Re-submitting a changed prompt invalidates the filters you already set.
+- If the AI search is not available in the account's UI, fall back to the plain keyword search with the same query text and say so in `limitations`.
 
 ## 2. Filter mapping
 
-Text inside `jobSearchPrompt` is not a filter: LinkedIn does not reliably enforce "24 hours", "full-time" or similar wording written in the prompt. Set the filters in LinkedIn's filter bar after submitting, and verify they show as active before reading results.
+Text inside `common.jobSearchPrompt` is not a filter: LinkedIn does not reliably enforce "24 hours", "full-time" or similar wording written in the prompt. Set the filters in LinkedIn's filter bar after submitting, and verify they show as active before reading results.
 
 | Config | LinkedIn control | Mapping |
 |---|---|---|
-| `lookbackHours` | Date posted | ≤24 → `Past 24 hours`; ≤168 → `Past week`; ≤720 → `Past month`; larger → no date filter. Pick the closest bucket that **fully covers** the window, never a narrower one. |
-| `employmentTypes` | Employment type | When it is a real subset, check exactly: `Full-time`, `Part-time`, `Contract`, `Temporary`, `Internship`, `Volunteer`. |
-| `workModes` | Work mode / Remote | When it is a real subset of `Remote` / `Hybrid` / `On-site`, select the matching filter. |
-| `seniority.include` | Experience level | Only when configured and the labels map unambiguously; otherwise skip the UI filter and judge on the page. |
-| `countries`, `locations` | Location | Set the configured country; add cities only when `locations` is non-empty, and only if the location filter supports it. |
+| `common.lookbackHours` | Date posted | ≤24 → `Past 24 hours`; ≤168 → `Past week`; ≤720 → `Past month`; larger → no date filter. Pick the closest bucket that **fully covers** the window, never a narrower one. |
+| `common.employmentTypes` | Employment type | When it is a real subset, check exactly: `Full-time`, `Part-time`, `Contract`, `Temporary`, `Internship`, `Volunteer`. |
+| `common.workModes` | Work mode / Remote | When it is a real subset of `Remote` / `Hybrid` / `On-site`, select the matching filter. |
+| `common.seniority.include` | Experience level | Only when configured and the labels map unambiguously; otherwise skip the UI filter and judge on the page. |
+| `common.countries`, `common.locations` | Location | Set the configured country; add cities only when `common.locations` is non-empty, and only if the location filter supports it. |
 
 Do not add filters that are not in the config, such as salary, company, Easy Apply or applicant count. Use the visible controls; URL parameters like `f_TPR` and `f_JT` may be dropped by the AI search page, so do not rely on them.
 
@@ -35,7 +35,7 @@ If a filter cannot be applied, say so and read that field on each posting instea
 
 ## 4. Premium "You'd be a top applicant" prompt
 
-Read this only when `linkedinPremium` is `true`. The account then shows a personal prompt on some jobs — **"You'd be a top applicant"**, **"You'd be a top applicant for this role"** or a **"Top applicant"** badge — on the result card and/or the detail page. Match it case-insensitively and accept both `'` and `’`; in a non-English UI, match its localized equivalent.
+Read this only when `platforms.LinkedIn.premium` is `true`. The account then shows a personal prompt on some jobs — **"You'd be a top applicant"**, **"You'd be a top applicant for this role"** or a **"Top applicant"** badge — on the result card and/or the detail page. Match it case-insensitively and accept both `'` and `’`; in a non-English UI, match its localized equivalent.
 
 - Record it per vacancy for this run only (`topApplicant`, phrase verbatim, `card` / `detail`); do not persist it in the index. The detail page wins; a card-only prompt still counts.
 - Never infer it from applicant counts, Easy Apply, search ranking or JD text. No visible prompt means no flag; `false` or absent skips this section without a limitation.
@@ -45,7 +45,7 @@ Read this only when `linkedinPremium` is `true`. The account then shows a person
 
 Advance with the results pagination control (or the next-page button). Stop when:
 
-- the next page's postings are older than `lookbackHours`;
+- the next page's postings are older than `common.lookbackHours`;
 - LinkedIn reports no more results;
 - the same postings repeat;
 - a login wall, CAPTCHA or rate limit appears.
@@ -55,6 +55,8 @@ Record the displayed result count when the page shows one, plus the number of re
 ## 6. Access boundaries
 
 If LinkedIn requires login, shows a CAPTCHA, or blocks the run, stop this source and record it in `limitations`. Never ask for credentials, never bypass access controls, and never apply, message, save or follow anything. Opening an employer form read-only to inspect its fields is allowed; never fill, upload or submit it.
+
+**A trust or automation-suspicion signal stops everything.** `verify you are human`, CAPTCHA, `unusual activity` / `unusual traffic`, `automated access`, `are you a robot`, an AI-agent warning, or a forced re-login/2FA prompt triggered mid-run: stop the whole run immediately — no further navigation, no retry, no refresh, no form filling, no Submit. Record the exact dialog text and tell the user to take over.
 
 ## 7. Application-process fields
 

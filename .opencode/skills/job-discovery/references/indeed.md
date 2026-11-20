@@ -1,61 +1,124 @@
 # Indeed
 
-Reference for `sources: ["Indeed"]` (any country domain, e.g. `de.indeed.com`, `indeed.com`).
+Reference for `sources: ["Indeed"]`, configured by `platforms.Indeed` (`enabled`, `domain`, `search.*`). Any country domain works: `de.indeed.com`, `indeed.com`, `uk.indeed.com`.
 
-The UI varies by country and changes often. Confirm a control exists in the live page before relying on it; if a control is missing, use the stated fallback instead of inventing one.
+The UI varies by country, language and A/B test, and changes often. Confirm a control exists on the live page before relying on it; if it is missing, use the stated fallback instead of inventing one.
 
 ## 1. Search entry
 
-Open the Indeed jobs page for the country that matches `countries` and submit `jobSearchPrompt` **verbatim** in the keyword field. Set the location field from `countries`/`locations` only when the site provides one; otherwise let the search run and rely on the page location when judging scope.
-
-- Prefer the visible search form. URL parameters may be used to seed the same search, but only with the unmodified prompt text: `q=<prompt>` and `l=<location>`.
-- Do not translate, shorten or split the prompt.
+- Domain: `platforms.Indeed.domain` when set, otherwise the domain matching `common.countries` (`Germany` → `de.indeed.com`). Never reuse job IDs or URLs across domains.
+- Location field: `common.locations` when non-empty, otherwise the country name or empty for country-wide.
+- Queries: resolve from `platforms.Indeed.search` (`SKILL.md` §3). Indeed takes short keyword phrases; a long natural-language paragraph returns poor results, which is why `queryMode: "custom"` with 4–6 short titles is the default.
+- One query per search. Re-submitting replaces the active filters, so verify them again after every new query.
+- `search.lookbackHours` overrides `common.lookbackHours` for Indeed only.
 
 ## 2. Filter mapping
 
-| Config | Indeed control | Mapping |
+Apply the `Date` filter first and verify it is visibly active next to the search bar — date is scope, so `filters.date` is always on. Then apply only the matching filters enabled in `platforms.Indeed.search.filters`:
+
+| Flag | Indeed control | Current setting |
 |---|---|---|
-| `lookbackHours` | Date posted | ≤24 → `Last 24 hours`; ≤72 → `Last 3 days`; ≤168 → `Last 7 days`; ≤336 → `Last 14 days`; otherwise `Last 30 days` or no filter. Never choose a window narrower than `lookbackHours`. |
-| `employmentTypes` | Job type | `Full-time`, `Part-time`, `Contract`, `Temporary`, `Internship`. Indeed has no reliable `Volunteer` equivalent — skip that value and judge on the page. |
-| `workModes` | Remote | Indeed exposes a `Remote` filter. `Hybrid` and `On-site` usually have no filter: select nothing for them and judge on the page. |
-| `seniority.include` | — | No equivalent. Skip the UI filter and judge from the title or explicit level wording. |
-| `countries`, `locations` | Where | Country comes from the domain; put configured cities in the location field. With no `locations`, leave it at country level. |
+| `date` | `Date` | on |
+| `employmentType` | `Type of employment` → `Full-time` from `common.employmentTypes` | **on** |
+| `language` | `Language` (`lang=en`) | off — read the JD instead |
+| `remote` | `working from home` | off — read the posting |
+| `quickApply` | `Quick application` | off — it hides external-ATS postings |
 
-Do not add filters that are not in the config (salary estimate, company rating, `Easy apply`, urgency). Indeed sometimes carries a URL form of the same filters (`fromage`, `jt`, `sc`); they are acceptable shortcuts only after confirming the page shows the same selection.
+Any dimension whose flag is `false` is judged from the posting itself, exactly like LinkedIn. Turning `employmentType` on does not replace the JD check: a posting that states another employment type is still a mismatch.
 
-Verify the applied filters are visible on the results page. If Indeed drops them, apply them again or fall back to reading each posting.
+| Config | Indeed control | Notes |
+|---|---|---|
+| effective lookback (`common.lookbackHours`, or `search.lookbackHours` when set) | `Date` filter | **Always applied** — date is scope, not match. `Last 24 hours` / `Last 3 days` / `Last 7 days` / `Last 14 days`, never a narrower window than configured. |
+| `common.employmentTypes` | `Type of employment` | Applied only when `filters.employmentType` is `true`. |
+| `common.workModes` | `working from home` (Remote) | Only when `filters.remote` is `true`, and only when the set is exactly `["Remote"]`. |
+| `common.jdLanguages.include` | `Language` | Only when `filters.language` is `true`. Judging the JD itself is always preferred. |
+| `common.technicalKeywords.include` | `Programming language` | Optional convenience filter; never needed, and not mapped by default. |
+| `common.seniority.include` | — | No equivalent. Judge from the title or explicit level wording. |
+| `common.countries`, `common.locations` | location field | Country comes from the domain; put configured cities in the field. |
+
+`filters.date` and `filters.employmentType` are the only two that should normally be on: the date defines scope, and full-time is reliable and cheap to bind. Keep `language`, `remote` and `quickApply` off so no valid JD is silently dropped by Indeed's buckets; judge those on the posting page instead.
+
+Verified URL parameters — valid shortcuts, but only after confirming the page shows the same selection:
+
+| Parameter | Filter | Example |
+|---|---|---|
+| `fromage` | Date posted | `fromage=1` (24h), `3`, `7`, `14` |
+| `lang` | JD Language | `lang=en`, `lang=de` |
+| `jt` + `sc=0kf%3Aattr%28CF3CP%29%3B` | Employment type = Full-time | `jt=fulltime` alone may not register in the UI; pair it with the attribute or select `Full-time` in the panel, then confirm the chip shows a count |
+| `sc` | Home office / remote | `sc=0kf%3Aattr%28DSQF7%29%3B` |
+| `iafilter` | Quick application only | `iafilter=1` |
+| `radius` | Radius in km around the location | `radius=35` |
+| `sort` | Sort order | `sort=date` |
+| `start` | Pagination offset | `start=15`, `start=30` |
+| `vjk` | Job selected in the detail pane | `vjk=<jk>` |
+| `q`, `l` | Query and location | `q=React+Developer&l=Deutschland` |
+
+Do not add filters that are not in the config (salary, company rating, urgency, education, industry).
 
 ## 3. Result extraction
 
-- Job key: the `jk` parameter on the card link or apply button, e.g. `jk=7f3c9a1b2d4e5f60` (usually 16 hex characters). A card without `jk` is not usable — skip it and count it as a card skip.
-- Canonical URL: `https://<country-domain>/viewjob?jk=<jk>`. Strip tracking parameters (`?vjs=`, `?tk=`, `?from=`, `?advn=`, `?xpse=`, `?xkcb=`); keep `jk`.
-- Company and location come from the card; the detail page wins on conflicts.
-- Indeed shows sponsored cards that repeat organic results — deduplicate by `jk` before opening.
+The results page is a split view: a card list on the left, the selected job's description on the right. Selecting a card updates `vjk` in the URL without a page load.
+
+**One query, one posting, one tab.** Run one query at a time and finish its pages before the next query. Process cards strictly in order: select one card (or open one `/viewjob?jk=` tab), read the JD, classify it, take the apply/inspect action, write the row, close the tab, then move to the next. Never batch-open several `jk` values, never loop over multiple job pages inside one script, and never keep more than one job tab open. A batch pass is a defect even if the rows look right.
+
+- Job key: `jk` on the card link or apply button, usually 16 hex characters. Read it from the anchor (`a.jcs-JobTitle`, attribute `data-jk`, or `id` = `job_<jk>` / `sj_<jk>`). A card without `jk` is not usable — skip it and count it as a card skip.
+- Canonical URL: `https://<domain>/viewjob?jk=<jk>`. Strip `pagead`, `rc/clk`, `vjs`, `tk`, `xkcb`, `from`, `vjk` tracking.
+- Card fields: title, company, location or remote wording, salary range when shown, employment type, benefit tags, company rating, `New` badge, `Urgently needed`, `Advertisement` label.
+- Sponsored cards repeat organic results and are labelled `Advertisement`; their links contain `/pagead/clk`. Deduplicate by `jk` before opening anything.
+- Two DOM variants ship in rotation: anchors with `id="job_<jk>"` and `/rc/clk?jk=` hrefs, or `id="sj_<jk>"` with `data-jk` and `/viewjob?jk=`. Never depend on the id prefix; always read `data-jk` or parse `jk` from the href.
+- The detail pane carries the full JD (`Job description` / `Full job description`) and the apply control. Read both there instead of opening a second tab.
 
 ## 4. Pagination
 
-Advance with the results pagination control (or `start=10`, `start=20`, … if the page exposes it). Stop when:
+- About 15 cards per page. Advance with `start=15`, `start=30`, … or with the pagination control when it is rendered.
+- The pagination element is often empty even when thousands of results exist, so never conclude "no more results" from a missing pager. Stop only when the `start` page returns no new `jk` values.
+- Respect `search.maxPagesPerQuery`. Stop earlier when results fall outside the window, the same `jk` set repeats, or an access boundary appears.
+- `search.maxQueries` × `search.maxPagesPerQuery` is the hard page budget for this source.
 
-- postings are older than `lookbackHours`;
-- the page shows no further results;
-- the same `jk` set repeats;
-- a login wall, CAPTCHA or rate limit appears.
+## 5. Freshness
 
-## 5. Access boundaries
+Indeed does not show a posting date on the card or in the detail pane. Freshness therefore comes from three sources only:
 
-Indeed may interrupt with a login prompt, a "verify you are human" challenge or a rate limit after several pages. Stop this source at that boundary, record it in `limitations`, and continue with other sources. Never solve a CAPTCHA, never create an account, never use the "Easy apply" flow.
+1. the `Date` filter (page-level, verified active),
+2. the `New` badge on a card (coarse, undocumented threshold),
+3. the JD text when it names a date.
 
-## 6. Application-process fields
+Write `Posted: Not specified` rather than guessing an age. Never fabricate "2h ago". If the `Date` filter cannot be applied, record the limitation and treat age as `unknown`.
 
-Record these while the job page is open. They are informational only and never affect match/review/excluded classification.
+## 6. Fallback results are not matches
 
-**Easy Apply:** `Yes` when the detail page shows an "Indeed Apply" or "Easy Apply" button that applies within Indeed; `No` when the apply button clearly redirects to the employer's site or an external application form; `Unknown` when neither is visible. Never infer it from badges or search ranking. Never use the "Easy apply" flow itself.
+When a query has no exact hits, Indeed silently appends recommendation blocks such as `Similar jobs` and fills the list with unrelated titles (searching `React Developer` can return AI/ML, security or product roles). Sponsored cards ignore every filter.
 
-**Cover letter:** `Yes` when the page or the application form explicitly states a cover letter is required; `No` when it explicitly states cover letter is optional or not needed; `Unknown` when neither is stated. Do not open the apply flow just to check — record only what is visible on the job page.
+- Never trust the result list as evidence. Judge each posting from its own title, JD and fields.
+- A card whose title is off-family is skipped before opening and counted, never added to the report.
+- An ad card is usable only when its own detail page passes the same checks.
 
-## 7. Known quirks
+## 7. Application-process fields
 
-- Country is encoded in the domain: use `de.indeed.com` for Germany, and so on. Search results and job IDs are not portable across domains.
-- Sponsored and organic cards duplicate each other; deduplicate on `jk`.
-- The job page URL form differs from the card link; always normalise to `/viewjob?jk=<jk>`.
-- Salary and company-rating badges are not filters and must not influence classification.
+Record while the job is open; these are informational and never affect match/review/excluded.
+
+**Easy Apply (`easyApply`)** — `Yes` when the detail pane shows `Quick application` / `Schnellbewerbung` (an `a[href*="smartapply.indeed.com"]` link that applies inside Indeed). `No` when the only control is `Continue to the application` / `Auf der Unternehmensseite bewerben` (`/applystart?jk=...`, which redirects to the employer or ATS). `Unknown` when neither is visible.
+
+**Apply type (`applyType`)** — `easy_apply` for the first case, `external` for the second, `unknown` otherwise.
+
+**Cover letter** — `Yes` only when the page or JD explicitly requires one; `No` when explicitly optional or absent; `Unknown` when unstated. Do not open the apply flow to find out.
+
+Never click `Quick application`, never start the `applystart` redirect chain during discovery. `job-apply` owns external forms.
+
+## 8. Access boundaries
+
+Indeed may return an empty page, a "No jobs were found" page containing only recommendations, a login wall, a `verify you are human` challenge or a rate limit after several queries.
+
+**A trust or automation-suspicion dialog ends the whole run, not just this source.** That includes `verify you are human`, CAPTCHA, `unusual traffic` / `unusual activity`, `automated access`, `are you a robot`, an AI-agent warning, and a forced re-login or 2FA prompt. Stop immediately: no further navigation, no retry, no reload, no form filling, no Submit. Record the platform and the exact dialog text, keep what is already recorded, and tell the user to take over.
+
+Only a plain "no results" page or a single failed page load is treated as a normal source boundary: then stop this source, record it in `limitations` and `searchedBySource`, and continue with the next source. Never solve a CAPTCHA, never create an account, never rotate sessions or proxies.
+
+Keep the query count low and do not reload pages in a loop; a burst of navigations is what triggers the degraded responses.
+
+## 9. Known quirks
+
+- Country is encoded in the domain; job IDs are not portable between domains.
+- The same job appears as organic + sponsored + `Similar jobs` in one page — deduplicate by `jk`.
+- Interface language follows the `lang` parameter and/or the account; a translation browser extension rewrites visible text, so read attributes (`data-jk`, `href`) and JD containers instead of trusting translated `innerText`.
+- The result header may omit the total count. Use the browser tab title when it says "Find N open positions", otherwise record `null`; never estimate.
+- Salary ranges, ratings and benefit tags are display data only and never filters.

@@ -10,7 +10,7 @@ https://www.linkedin.com/search/results/content/?keywords=<query>&datePosted=<bu
 
 - `keywords`: URL-encoded query.
 - `datePosted`: `past-24h`, `past-week` or `past-month`.
-- `sortBy=date_posted`.
+- `common.sortBy=date_posted`.
 - Open in the dedicated feed tab. Do not reuse the feed tab's scroll position.
 
 After load, verify the page shows a date filter matching the bucket and `Sort by: Date posted`. If the URL parameters were dropped, set the same controls in the UI and verify again. If the controls are unavailable, record the limitation and fall back to the Recent feed pass.
@@ -19,17 +19,17 @@ After load, verify the page shows a date filter matching the bucket and `Sort by
 
 | Input | Config key | Use |
 |---|---|---|
-| Titles | `jobTitles.include` | Query terms and the hard title gate |
-| Locations | `locations`, then `countries` | Query terms and the hard location gate |
-| Extra location terms | `linkedinFeedJobs.locationTerms` | Appended only when non-empty |
-| Hiring keywords | `linkedinFeedJobs.searchKeywords` | Query terms |
-| Stack terms | `technicalKeywords.include` | Query terms and `Matched keywords` |
-| Query cap | `linkedinFeedJobs.maxQueries` | Maximum queries per run |
-| Page cap | `linkedinFeedJobs.maxPagesPerQuery` | Pages per query |
+| Titles | `common.jobTitles.include` | Query terms and the hard title gate |
+| Locations | `common.locations`, then `common.countries` | Query terms and the hard location gate |
+| Extra location terms | `platforms.LinkedIn.feedJobs.locationTerms` | Appended only when non-empty |
+| Hiring keywords | `platforms.LinkedIn.feedJobs.searchKeywords` | Query terms |
+| Stack terms | `common.technicalKeywords.include` | Query terms and `Matched keywords` |
+| Query cap | `platforms.LinkedIn.feedJobs.maxQueries` | Maximum queries per run |
+| Page cap | `platforms.LinkedIn.feedJobs.maxPagesPerQuery` | Pages per query |
 
 Read the values at run time. Never copy them into this file or into `SKILL.md`.
 
-When `locations` is empty, the location terms are exactly the configured `countries` values. When `locations` is non-empty, use those values and do not add countries.
+When `common.locations` is empty, the location terms are exactly the configured `common.countries` values. When `common.locations` is non-empty, use those values and do not add countries.
 
 ## 3. Query building
 
@@ -52,7 +52,7 @@ Rules:
 
 ## 4. Time bucket
 
-| `lookbackHours` | `datePosted` |
+| feed window (`feedJobs.lookbackHours`, else `common.lookbackHours`) | `datePosted` |
 |---|---|
 | ≤ 24 | `past-24h` |
 | ≤ 168 | `past-week` |
@@ -70,7 +70,7 @@ const ageHours = (label) => {
 };
 ```
 
-`1d` covers 24–48 hours. When `lookbackHours` is 24, include `1d` as the boundary and mark `24h boundary`.
+`1d` covers 24–48 hours. When the feed window is 24 hours, include `1d` as the boundary and mark `24h boundary`.
 
 ## 5. Collect
 
@@ -125,7 +125,7 @@ Stop when any of these happens:
 
 - `maxPagesPerQuery` pages are read;
 - two consecutive screens add no new card;
-- the next cards are older than `lookbackHours`;
+- the next cards are older than the feed window;
 - results repeat;
 - a login wall, CAPTCHA or rate limit appears.
 
@@ -148,11 +148,11 @@ await page.evaluate(() => {
 
 ## 8. Recent feed supplement
 
-When `linkedinFeedJobs.includeRecentFeed` is `true`, run one Recent-feed pass after the searches:
+When `platforms.LinkedIn.feedJobs.includeRecentFeed` is `true`, run one Recent-feed pass after the searches:
 
 - Follow `.opencode/skills/linkedin-feed-review/references/feed-extraction.md` for opening, sorting, collecting and scrolling.
 - Read at most `maxScreens` screens; stop after two screens with no post in the window.
-- Do not apply `linkedinFeedReview.excludeTopics`; hiring posts are the target here.
+- Do not apply `platforms.LinkedIn.feedReview.excludeTopics`; hiring posts are the target here.
 - Merge results into the same dedupe set.
 
 ## 9. Limits and failures

@@ -14,7 +14,7 @@ Use for job-search run summaries only. Keep the body under 20 lines.
 
 ## Body
 
-Write labels in `preferredReportLanguage`; keep dates, times, numbers, paths and `HH:MM` unchanged.
+Write labels in `common.preferredReportLanguage`; keep dates, times, numbers, paths and `HH:MM` unchanged.
 
 ```text
 Job Hunter daily search summary
@@ -48,7 +48,7 @@ Omit the day-total line when the summary is missing or unreadable.
 
 ## Status
 
-- `completed normally`: report written and paging covered `lookbackHours`.
+- `completed normally`: report written and paging covered `common.lookbackHours`.
 - `partial: <reason>`: pages left unread, pages unreadable, or filters unavailable.
 - `failed: <reason>`: login, CAPTCHA, browser unavailable, or no report.
 

@@ -8,9 +8,9 @@ Format baseline for `reports/daily/`. Read before writing or updating a report. 
 - Create the directory when missing.
 - Merge into an existing file; never overwrite, delete or downgrade a confirmed entry.
 - Deduplicate by canonical URL; without one, use `source + company + title + location` and flag a possible duplicate.
-- Keep `job-index.json` and `runs/` out of the report and out of `reportRepo`.
+- Keep `job-index.json` and `runs/` out of the report and out of `common.reportRepo`.
 
-Write human-readable text in `preferredReportLanguage`; fall back to English when absent or unsupported.
+Write human-readable text in `common.preferredReportLanguage`; fall back to English when absent or unsupported.
 
 Translate: title, headings, table headers, labels, relative times, annotation markers.
 
@@ -27,7 +27,7 @@ Use tables. Do not paste full JDs. Do not add scores, rankings, recommendations 
 Translate `Daily Job Findings`; keep ` — YYYY-MM-DD`.
 
 1. Run summary
-2. Matched jobs
+2. Matched jobs — one section per source, in `sources` order (LinkedIn first, then Indeed)
 3. `代招岗位` (third-party postings) — only with confirmed third-party postings that passed every other check
 4. Apply-form fields — only when a matched external apply form was inspected
 5. Feed-sourced jobs — only with matching feed hiring posts
@@ -37,40 +37,61 @@ Translate `Daily Job Findings`; keep ` — YYYY-MM-DD`.
 
 A normal run has sections 1, 2 and 6. Never write an empty section or "None".
 
+When `common.report.splitBySource` is `false`, section 2 is a single matched section with the same two parts; everything else is unchanged.
+
 Apply the evidence rules (section 11) and cross-day rules (section 12) to the report.
 
 ## 3. Run summary
 
-Keep it short: ten rows are enough. Everything else goes to the audit JSONL.
+Keep it short: one row group per metric, one column per source plus a total. Everything else goes to the audit JSONL.
 
 ```markdown
-| Metric | Value |
-|---|---|
-| Search sources | LinkedIn |
-| JDs read | N |
-| Previously reported (skipped) | N |
-| Matched | N |
-| Of which Easy Apply / No Easy Apply | N / N |
-| Of which third-party postings (`代招岗位`) | N |
-| Confirmed non-match (excluded) | N |
-| Needs manual review | N |
-| Apply forms inspected | N |
-| Feed-sourced jobs | N |
+| Metric | LinkedIn | Indeed | Total |
+|---|---|---|---|
+| Search queries | 1 | 5 | — |
+| JDs read | N | N | N |
+| Previously reported (skipped) | N | N | N |
+| Applied on another platform (skipped) | N | N | N |
+| Matched | N | N | N |
+| Of which Easy Apply / No Easy Apply | N / N | N / N | N / N |
+| Of which third-party postings (`代招岗位`) | N | N | N |
+| Confirmed non-match (excluded) | N | N | N |
+| Needs manual review | N | N | N |
+| Apply forms inspected | N | N | N |
+| Feed-sourced jobs | N | — | N |
 ```
 
+- Use the source names from `sources`, in order. When a source was disabled or failed, write `—` in its cells and name the reason in the audit/limitations.
 - Write `cannot determine` when unsupported; never estimate.
-- Check: matched + review + excluded = JDs read.
+- Check per source and in total: matched + review + excluded = JDs read.
 - `Matched` includes confirmed third-party postings listed in `代招岗位`; the third-party row is a subset, not an extra count.
 - `Of which Easy Apply / No Easy Apply` adds up to `Matched`; it is a workflow split, not extra matches.
-- `Previously reported (skipped)` and `Feed-sourced jobs` are outside the JD sum.
-
+- `Previously reported (skipped)`, `Applied on another platform (skipped)` and `Feed-sourced jobs` are outside the JD sum.
 - `Already applied` and `Expired / closed` are outside the JD sum.
+- When `job-apply` ran after the report was written, add `External applications filled (awaiting submit)` and `External applications submitted` rows with the same per-source columns. They are outside the JD sum.
 
 ## 4. Matched jobs
 
 Do not group rows by city. Put the page location in the `City` column. Confirmed third-party postings go to section 5, not this table.
 
-Split the matched jobs into exactly two parts, in this order. The split is a workflow split, not a filter: it never creates, removes or reclassifies a match.
+### 4.1 Source sections
+
+When `common.report.splitBySource` is `true` (default):
+
+```markdown
+## LinkedIn 职位
+## Indeed 职位
+```
+
+- One section per source that has at least one matched row, in `sources` order (LinkedIn first, then Indeed).
+- Translate the heading in `common.preferredReportLanguage`; keep the platform name as configured.
+- `#` restarts at 1 in every source section; the per-source row total drives that section's part denominators.
+- Do not write an empty source section.
+- With `splitBySource: false`, write a single `## Matched jobs` section and number continuously.
+
+### 4.2 Workflow split inside a source
+
+Split the section's matched jobs into exactly two parts, in this order. The split is a workflow split, not a filter: it never creates, removes or reclassifies a match.
 
 ```markdown
 ### Easy Apply (5/30)
@@ -93,15 +114,16 @@ Split the matched jobs into exactly two parts, in this order. The split is a wor
 
 Ordering:
 
-- Easy Apply part first, then No Easy Apply part.
+- Easy Apply part first, then No Easy Apply part, inside every source section.
 - Within the Easy Apply part, put prompted rows first.
 - Within the No Easy Apply part, put prompted rows first and prefix their Notes with `Top applicant`.
-- Within each part, follow `sortBy` (currently `companySize`) and `sortDirection` (`asc` default).
+- Within each part, follow `common.sortBy` (currently `companySize`) and `common.sortDirection` (`asc` default).
 - Compare the lower bound: `11-50` → 11, `10001+` → 10001, `9,000` → 9000.
-- Ties keep discovery order. Unknown `sortBy` keeps discovery order.
-- Renumber `#` across both parts; update internal references.
-- Each part is a separate table with the same header row; `#` stays continuous across parts.
+- Ties keep discovery order. Unknown `common.sortBy` keeps discovery order.
+- Renumber `#` across both parts inside the source section; update internal references.
+- Each part is a separate table with the same header row; `#` stays continuous across parts of the same source.
 - Omit a part only when it has zero rows.
+- Do not sort across sources: `sources` order always wins.
 
 Columns:
 
@@ -123,7 +145,7 @@ Columns:
 | Posted | Relative time; mark reposts `(reposted)` |
 | Matched keywords | Only configured terms actually in the JD, comma-separated |
 | Easy Apply | `Yes` for a one-click platform apply, `No` for an external form, `Unknown` otherwise; ordering only, never a filter |
-| Cover letter | `Yes` / `No` / `Unknown` from the page or form; draft when the form shows the field and `isNeededCover` is `true` |
+| Cover letter | `Yes` / `No` / `Unknown` from the page or form; draft when the form shows the field and `common.isNeededCover` is `true` |
 | Notes | Verifiable facts only: stack, level, contract, poster/employer mismatch, conflicts; ≤ about 60 characters; no fit language |
 | Apply form | `Inspected (N fields)` linking to the job's block in section 6; `Blocked — <reason>` when the form is login-walled; empty for Easy Apply |
 | Link | `[Open](canonical URL)` actually visited in this run |
@@ -136,7 +158,8 @@ Only with at least one confirmed third-party posting that passed every active ch
 
 - Heading: `代招岗位` in a Chinese report; `Agency / third-party postings` in other report languages.
 - Same columns, evidence rules, keyword matching, two-part split (Easy Apply, then No Easy Apply) and ordering as Matched jobs. Number `#` from 1 inside this section; both heading denominators use this section's total.
-- `thirdPartyPostings` decides placement: `separate` = this section, `include` = normal matched rows, `exclude` = excluded table.
+- Rows from different sources keep `sources` order; the two-part split still comes first.
+- `common.thirdPartyPostings` decides placement: `separate` = this section, `include` = normal matched rows, `exclude` = excluded table.
 - Confirm the poster is a staffing firm, headhunter, agency or platform posting for a client. "Clearly" means the JD states the relation; unclear goes to review.
 - `Company`: the posting company (the agency or platform). Notes start with `代招：<client>` or `代招（客户未注明）` (`Third party: <client>` / `Third party: client not stated`), then one verifiable fact.
 - `Business`: the client employer's product, market or industry when the JD states it; `Not stated` otherwise.
@@ -146,7 +169,7 @@ Only with at least one confirmed third-party posting that passed every active ch
 
 ## 6. Apply-form fields
 
-Only with at least one inspected external apply form. One block per matched `No Easy Apply` vacancy, in the same order as the matched table and numbered to match it.
+Only with at least one inspected external apply form. One block per matched `No Easy Apply` vacancy, in the same order as the matched tables and numbered to match them (`<source> #<n>` when the report is split by source).
 
 ```markdown
 ### 3. Zalando — Software Engineer (Kotlin) - Transport Planning Optimization
@@ -195,7 +218,7 @@ Only with at least one matching feed hiring post. Never write an empty section. 
 
 ## 8. Needs manual review
 
-Only with entries. Use the matched table. In Notes, name the unknown check (title / language / keywords / work mode / employment type) and the concrete reason (JD did not load, too short, truncated, mixed language, field not exposed). Order rows as in Matched jobs (Easy Apply first, then No Easy Apply) without adding the two part headings; start prompted rows' Notes with `Top applicant`. An unknown check never becomes a match or an exclusion.
+Only with entries. Use the matched table. In Notes, name the unknown check (title / language / keywords / work mode / employment type) and the concrete reason (JD did not load, too short, truncated, mixed language, field not exposed). Group rows by source in `sources` order, then order them as in Matched jobs (Easy Apply first, then No Easy Apply) without adding the part headings; start prompted rows' Notes with `Top applicant`. An unknown check never becomes a match or an exclusion.
 
 ## 9. Excluded jobs
 
@@ -209,7 +232,7 @@ Always the last job table.
 - `City`: page location; `Not specified` when absent.
 - `Posted`: relative time; `(reposted)`; `Not specified` when absent.
 - `Exclusion reason`: name the dimension (JD language / language requirement / title / keywords / work mode / employment type / seniority / poster type) plus one short evidence fragment.
-- `poster type` is a valid reason only when `thirdPartyPostings` is `exclude`; in `separate` or `include` mode a third-party posting is judged on the other dimensions.
+- `poster type` is a valid reason only when `common.thirdPartyPostings` is `exclude`; in `separate` or `include` mode a third-party posting is judged on the other dimensions.
 - Group similar reasons. Do not paste long JD passages.
 - Duplicate relationships may be noted; never double-count.
 - A prompted job that failed a check lists only the failed dimension.
@@ -238,12 +261,14 @@ Only on a failed, interrupted or largely unusable run; always at the end. Cover 
 
 ## 12. Previous report dedupe
 
-A report is a daily snapshot. At run start, the previous daily report is the skip source: every job ID / canonical URL in its tables is skipped before opening and appears nowhere in today's report. This prevents overlap from the daily `lookbackHours` window. `job-index.json` is not used for this.
+A report is a daily snapshot. At run start, the previous daily report is the skip source: every job ID / canonical URL in its tables is skipped before opening and appears nowhere in today's report. This prevents overlap from the daily `common.lookbackHours` window. `job-index.json` is not the source for this skip; it only supplies the applied set for the cross-source rule.
 
 | Situation | Handling |
 |---|---|
 | Key in the previous daily report | Do not open, judge or list; count as previously reported (skipped) |
 | `appliedOn` set | Do not open or judge; count as applied-skipped; never list |
+| Applied on another platform (normalized company + title + city) and `common.dedupe.skipApplied` is `true` | Do not open or judge; count as applied on another platform (skipped); never list, never apply again |
+| Same vacancy on two platforms, not applied (and `common.dedupe.crossSource` is `true`) | Keep the first source's row; annotate the second `⚠️ 同职位已在 <source> 出现` when it still appears |
 | Explicit re-check override | Exempt the named keys for that run; list normally and append `[reported MM-DD]` |
 | No previous report | Check every card |
 
@@ -263,7 +288,7 @@ Application staging markers (written by `job-apply` only):
 - `[apply blocked MM-DD]` — a blocker stopped the attempt; name it briefly.
 - Easy Apply rows never get these markers from the agent; the user applies and confirms them.
 
-Cover letter: draft only when `isNeededCover` is `true` and `coverLetter` is `Yes`, for a matched or review job. Copy `cover-letter-template.md` exactly; fill only its placeholders from the page; leave unfillable placeholders unchanged and tell the user. Save to `reports/cover-letters/<company-slug>/<jobId>.md`. Never fabricate. Do not submit. If the template is missing, stop and tell the user to copy `cover-letter-template-example.md`.
+Cover letter: draft only when `common.isNeededCover` is `true` and `coverLetter` is `Yes`, for a matched or review job. Copy `cover-letter-template.md` exactly; fill only its placeholders from the page; leave unfillable placeholders unchanged and tell the user. Save to `reports/cover-letters/<company-slug>/<jobId>.md`. Never fabricate. Do not submit. If the template is missing, stop and tell the user to copy `cover-letter-template-example.md`.
 
 ## 13. Update an existing report
 

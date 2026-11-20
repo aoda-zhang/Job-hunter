@@ -11,20 +11,20 @@ Read-only. Find hiring posts through keyword search plus a Recent-feed pass, mat
 
 Read `job-hunter.config.json`:
 
-- `countries`, `locations` — hard location gate. Empty `locations` = the whole country.
-- `jobTitles.include` — hard role gate, also the source of search terms.
-- `lookbackHours` — hard time gate.
-- `linkedinFeedJobs` — optional search settings:
+- `common.countries`, `common.locations` — hard location gate. Empty `common.locations` = the whole country.
+- `common.jobTitles.include` — hard role gate, also the source of search terms.
+- `platforms.LinkedIn.feedJobs.lookbackHours` (falling back to `common.lookbackHours`) — hard time gate for feed posts.
+- `platforms.LinkedIn.feedJobs` — optional search settings:
   - `enabled` (default `true`).
   - `searchKeywords` — the hiring keywords to search; stop and ask when missing or empty.
   - `maxQueries` (default `12`), `maxPagesPerQuery` (default `3`), `maxScreens` (default `6`).
-  - `locationTerms` (default empty) — extra search terms; when empty, use `locations`, then `countries`.
+  - `locationTerms` (default empty) — extra search terms; when empty, use `common.locations`, then `common.countries`.
   - `includeRecentFeed` (default `true`).
-- `thirdPartyPostings` — third-party posting handling: `exclude` rejects them, `separate` and `include` keep them and note the client when stated.
-- `technicalKeywords`, `workModes`, `employmentTypes`, `seniority`, `jdLanguages` — soft signals, recorded in Notes; they never drop a post.
-- `preferredReportLanguage`, `reportRepo`.
+- `common.thirdPartyPostings` — third-party posting handling: `exclude` rejects them, `separate` and `include` keep them and note the client when stated.
+- `common.technicalKeywords`, `common.workModes`, `common.employmentTypes`, `common.seniority`, `common.jdLanguages` — soft signals, recorded in Notes; they never drop a post.
+- `common.preferredReportLanguage`, `common.reportRepo`.
 
-Stop and ask when `jobTitles.include` or `countries` is empty. When `linkedinFeedJobs.enabled` is `false`, report that the feed job search is disabled and stop.
+Stop and ask when `common.jobTitles.include` or `common.countries` is empty. When `platforms.LinkedIn.feedJobs.enabled` is `false`, report that the feed job search is disabled and stop.
 
 ## 2. Search
 
@@ -32,20 +32,20 @@ Follow `.opencode/skills/linkedin-feed-jobs/references/search.md`.
 
 - Build a prioritized query list from the base titles, `searchKeywords` and location terms.
 - Cap at `maxQueries`; read at most `maxPagesPerQuery` pages per query.
-- Set the `datePosted` bucket from `lookbackHours` and verify it is active before reading.
+- Set the `datePosted` bucket from the feed window (`platforms.LinkedIn.feedJobs.lookbackHours`, else `common.lookbackHours`) and verify it is active before reading.
 - Do not search the following list, apply filters outside the config, or open profiles for discovery.
 
 ## 3. Recent feed supplement
 
 When `includeRecentFeed` is `true`, run one Recent-feed pass after the searches: open `https://www.linkedin.com/feed/`, set `Sort by: Recent`, read `div[role="listitem"][componentkey*="update-card"]`, scroll `#workspace`, read at most `maxScreens` screens.
 
-Do not apply `linkedinFeedReview.excludeTopics` in this skill. Hiring posts are the target.
+Do not apply `platforms.LinkedIn.feedReview.excludeTopics` in this skill. Hiring posts are the target.
 
 ## 4. Match
 
 Follow `.opencode/skills/linkedin-feed-jobs/references/matching.md`.
 
-Hard gates, stop at the first failure: hiring signal, job title, stated location, time window, third-party gate only when `thirdPartyPostings` is `exclude`, validity.
+Hard gates, stop at the first failure: hiring signal, job title, stated location, time window, third-party gate only when `common.thirdPartyPostings` is `exclude`, validity.
 
 Soft signals, never a drop: stack, work mode, employment type, seniority, JD language. Put them in `Notes`.
 
@@ -96,7 +96,7 @@ Renumber `#` after merging.
 
 ## 7. Publish
 
-Only when this skill is the only writer of today's daily report: if `reportRepo` is set, clone/pull it, copy the daily report to `reports/daily/YYYY-MM-DD.md`, merge the `Feed-sourced jobs` section into an existing remote file, commit `docs: add feed-sourced jobs for YYYY-MM-DD`, push and verify. On failure, report it and keep the local file. Never force-push.
+Only when this skill is the only writer of today's daily report: if `common.reportRepo` is set, clone/pull it, copy the daily report to `reports/daily/YYYY-MM-DD.md`, merge the `Feed-sourced jobs` section into an existing remote file, commit `docs: add feed-sourced jobs for YYYY-MM-DD`, push and verify. On failure, report it and keep the local file. Never force-push.
 
 When `job-discovery` runs in the same pass, the orchestrator publishes after this step: do not push. Never send email; the orchestrator sends one run summary.
 

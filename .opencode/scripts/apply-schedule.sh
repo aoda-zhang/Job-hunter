@@ -2,9 +2,10 @@
 # Apply schedule blocks from job-hunter.config.json to launchd.
 # Usage: apply-schedule.sh [--dry-run]
 #
-# Job search:            jobSearchSchedule.times[] / .timezone
-# LinkedIn feed review:  linkedinFeedReview.schedule.times[] / .timezone
-#                        empty times array = no job
+# Job search (LinkedIn phase): schedules.jobSearch.times[] / .timezone
+# Indeed (weekly phase):        schedules.indeedJobSearch.times[] / .timezone
+# LinkedIn feed review:         schedules.linkedinFeedReview.times[] / .timezone
+#                               empty times array = no job
 set -u
 setopt NULL_GLOB
 
@@ -14,6 +15,8 @@ JOB_LABEL="ai.jobhunter.daily"
 JOB_PLIST="${JOB_HUNTER_PLIST:-$HOME/Library/LaunchAgents/${JOB_LABEL}.plist}"
 FEED_LABEL="ai.jobhunter.feedreview"
 FEED_PLIST="${JOB_HUNTER_FEED_PLIST:-$HOME/Library/LaunchAgents/${FEED_LABEL}.plist}"
+INDEED_LABEL="ai.jobhunter.indeed"
+INDEED_PLIST="${JOB_HUNTER_INDEED_PLIST:-$HOME/Library/LaunchAgents/${INDEED_LABEL}.plist}"
 
 DRY_RUN=0
 if [ "${1:-}" = "--dry-run" ]; then
@@ -155,16 +158,16 @@ disable_job() {
 }
 
 apply_job_search() {
-  if [ "$(jq -r '(.jobSearchSchedule // null) != null' "$CONFIG")" != "true" ]; then
-    disable_job "$JOB_LABEL" "$JOB_PLIST" "no jobSearchSchedule block; job search job disabled"
+  if [ "$(jq -r '(.schedules.jobSearch // null) != null' "$CONFIG")" != "true" ]; then
+    disable_job "$JOB_LABEL" "$JOB_PLIST" "no schedules.jobSearch block; job search job disabled"
     return 0
   fi
 
   local tz
-  tz="$(jq -r '.jobSearchSchedule.timezone // empty' "$CONFIG")"
+  tz="$(jq -r '.schedules.jobSearch.timezone // empty' "$CONFIG")"
   check_timezone "$tz" || return 1
-  read_times '.jobSearchSchedule.times' 'jobSearchSchedule.times' || return 1
-  read_weekdays '.jobSearchSchedule.weekdays' 'jobSearchSchedule.weekdays' || return 1
+  read_times '.schedules.jobSearch.times' 'schedules.jobSearch.times' || return 1
+  read_weekdays '.schedules.jobSearch.weekdays' 'schedules.jobSearch.weekdays' || return 1
 
   if [ "$DRY_RUN" = "1" ]; then
     if [ ${#TIMES[@]} -eq 0 ]; then
@@ -197,6 +200,11 @@ apply_job_search() {
   </array>
   <key>WorkingDirectory</key>
   <string>$REPO</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>JOB_HUNTER_PHASES</key>
+    <string>linkedin</string>
+  </dict>
   <key>StartCalendarInterval</key>
   <array>
 EOF
@@ -227,16 +235,16 @@ EOF
 }
 
 apply_feed_review() {
-  if [ "$(jq -r '(.linkedinFeedReview.schedule // null) != null' "$CONFIG")" != "true" ]; then
-    disable_job "$FEED_LABEL" "$FEED_PLIST" "no linkedinFeedReview.schedule block; feed review job disabled"
+  if [ "$(jq -r '(.schedules.linkedinFeedReview // null) != null' "$CONFIG")" != "true" ]; then
+    disable_job "$FEED_LABEL" "$FEED_PLIST" "no schedules.linkedinFeedReview block; feed review job disabled"
     return 0
   fi
 
   local tz
-  tz="$(jq -r '.linkedinFeedReview.schedule.timezone // .jobSearchSchedule.timezone // empty' "$CONFIG")"
+  tz="$(jq -r '.schedules.linkedinFeedReview.timezone // .schedules.jobSearch.timezone // empty' "$CONFIG")"
   check_timezone "$tz" || return 1
-  read_times '.linkedinFeedReview.schedule.times' 'linkedinFeedReview.schedule.times' || return 1
-  read_weekdays '.linkedinFeedReview.schedule.weekdays' 'linkedinFeedReview.schedule.weekdays' || return 1
+  read_times '.schedules.linkedinFeedReview.times' 'schedules.linkedinFeedReview.times' || return 1
+  read_weekdays '.schedules.linkedinFeedReview.weekdays' 'schedules.linkedinFeedReview.weekdays' || return 1
 
   if [ "$DRY_RUN" = "1" ]; then
     if [ ${#TIMES[@]} -eq 0 ]; then
@@ -298,7 +306,85 @@ EOF
   print -r -- "feed review job applied: ${(j:,:)TIMES} $(weekday_label) (${tz:-system time}), label $FEED_LABEL"
 }
 
+apply_indeed_search() {
+  if [ "$(jq -r '(.schedules.indeedJobSearch // null) != null' "$CONFIG")" != "true" ]; then
+    disable_job "$INDEED_LABEL" "$INDEED_PLIST" "no schedules.indeedJobSearch block; indeed job disabled"
+    return 0
+  fi
+
+  local tz
+  tz="$(jq -r '.schedules.indeedJobSearch.timezone // .schedules.jobSearch.timezone // empty' "$CONFIG")"
+  check_timezone "$tz" || return 1
+  read_times '.schedules.indeedJobSearch.times' 'schedules.indeedJobSearch.times' || return 1
+  read_weekdays '.schedules.indeedJobSearch.weekdays' 'schedules.indeedJobSearch.weekdays' || return 1
+
+  if [ "$DRY_RUN" = "1" ]; then
+    if [ ${#TIMES[@]} -eq 0 ]; then
+      print -r -- "indeed job: disabled (empty times), timezone=${tz:-system}, plist=$INDEED_PLIST"
+    else
+      print -r -- "indeed job: times=${(j:,:)TIMES}, $(weekday_label), timezone=${tz:-system}, plist=$INDEED_PLIST"
+    fi
+    return 0
+  fi
+
+  if [ ${#TIMES[@]} -eq 0 ]; then
+    disable_job "$INDEED_LABEL" "$INDEED_PLIST" "indeed times empty; $INDEED_LABEL unloaded and plist removed"
+    return 0
+  fi
+
+  mkdir -p "$(dirname "$INDEED_PLIST")"
+  {
+    cat <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>$INDEED_LABEL</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/zsh</string>
+    <string>$REPO/.opencode/scripts/daily-run.sh</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>$REPO</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>JOB_HUNTER_PHASES</key>
+    <string>indeed</string>
+  </dict>
+  <key>StartCalendarInterval</key>
+  <array>
+EOF
+    emit_calendar_entries
+    cat <<EOF
+  </array>
+  <key>StandardOutPath</key>
+  <string>$HOME/Library/Logs/jobhunter-indeed.launchd.log</string>
+  <key>StandardErrorPath</key>
+  <string>$HOME/Library/Logs/jobhunter-indeed.launchd.err.log</string>
+</dict>
+</plist>
+EOF
+  } > "$INDEED_PLIST"
+
+  if ! plutil -lint "$INDEED_PLIST" >/dev/null 2>&1; then
+    print -u2 -- "generated plist is invalid: $INDEED_PLIST"
+    return 1
+  fi
+
+  launchctl bootout "gui/$(id -u)/$INDEED_LABEL" 2>/dev/null || true
+  if ! launchctl bootstrap "gui/$(id -u)" "$INDEED_PLIST"; then
+    print -u2 -- "launchctl bootstrap failed for $INDEED_PLIST"
+    return 1
+  fi
+
+  print -r -- "indeed job applied: ${(j:,:)TIMES} $(weekday_label) (${tz:-system time}), label $INDEED_LABEL"
+}
+
 rc=0
 apply_job_search || rc=1
+apply_indeed_search || rc=1
 apply_feed_review || rc=1
 exit $rc

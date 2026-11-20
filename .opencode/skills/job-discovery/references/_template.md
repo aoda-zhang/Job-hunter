@@ -1,27 +1,27 @@
 # <Platform>
 
-Reference for `sources: ["<Platform>"]`. File name is the platform name lowercased (`Indeed` → `indeed.md`); a configured country domain such as `glassdoor.de` resolves to `glassdoor.md`.
+Reference for `sources: ["<Platform>"]`. File name is the platform name lowercased (`Indeed` → `indeed.md`); a configured country domain such as `indeed.de` resolves to `indeed.md`.
 
 Replace every `<...>` placeholder and delete the guidance sentences before committing. A reference is complete only when it answers the seven points below; if the platform cannot answer one, say so and describe the fallback.
 
-After adding the file, add the platform to the lookup table in `SKILL.md`.
+After adding the file, add the platform to `sources`, add a matching `platforms.<name>` block (`enabled`, `search.queryMode`, and `search.queries` when the site works best with short keywords), and add the row to the lookup table in `SKILL.md`.
 
 ## 1. Search entry
 
 - URL or navigation path:
 - Country domains, if the platform is split by country:
-- Does the site accept `jobSearchPrompt` verbatim, or only keywords?
+- Does the site accept `common.jobSearchPrompt` verbatim, or only keywords?
 - Does it require sign-in before showing results?
 
 ## 2. Filter mapping
 
 | Config | Platform control | Mapping |
 |---|---|---|
-| `lookbackHours` | Date posted | Exact labels and buckets, always the closest bucket that fully covers the window. |
-| `employmentTypes` | Job type | Exact labels; list values that have no equivalent. |
-| `workModes` | Remote / hybrid / on-site | Exact labels; if a mode has no filter, judge on the page. |
-| `seniority.include` | Experience level | Exact labels; otherwise judge on the page. |
-| `countries`, `locations` | Location | Country and city behaviour, including what happens when `locations` is empty. |
+| `common.lookbackHours` | Date posted | Exact labels and buckets, always the closest bucket that fully covers the window. |
+| `common.employmentTypes` | Job type | Exact labels; list values that have no equivalent. |
+| `common.workModes` | Remote / hybrid / on-site | Exact labels; if a mode has no filter, judge on the page. |
+| `common.seniority.include` | Experience level | Exact labels; otherwise judge on the page. |
+| `common.countries`, `common.locations` | Location | Country and city behaviour, including what happens when `common.locations` is empty. |
 
 List any filter that must not be used even if the platform offers it.
 
@@ -35,7 +35,7 @@ List any filter that must not be used even if the platform offers it.
 ## 4. Pagination
 
 - How to advance:
-- When results are known to be older than `lookbackHours`:
+- When results are known to be older than `common.lookbackHours`:
 - Signals that the list ended:
 - How to read the displayed result count, if any.
 

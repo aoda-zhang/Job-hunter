@@ -38,7 +38,7 @@ Use the template for subject, body, counters and forbidden content. Do not mix f
 
 - Job search: read the daily report summary and the last audit entry; write a summary with day totals, this run's counts, applied-skipped, stop reason and report path.
 - Feed: read the feed report checklist and the daily report's `Feed-sourced jobs` rows; write replies and job rows.
-- Use `preferredReportLanguage`; keep the subject ASCII.
+- Use `common.preferredReportLanguage`; keep the subject ASCII.
 - Reusing jobs judged earlier the same day is normal, not `partial`. `partial` means the search window was not covered.
 
 ## 4. Send

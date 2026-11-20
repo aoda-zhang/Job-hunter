@@ -1,6 +1,6 @@
 # Job index and run audit
 
-Local memory layer. Follow this on every `job-discovery` run. Never push these files to `reportRepo`.
+Local memory layer. Follow this on every `job-discovery` run. Never push these files to `common.reportRepo`.
 
 ## 1. Files
 
@@ -54,7 +54,7 @@ Rules:
 - Key: `<source>:<jobId>`, e.g. `LinkedIn:4487182341`, `Indeed:7f3c9a1b2d4e5f60`.
 - With no job ID, use `source + canonical URL`; one URL = one entry.
 - Treat legacy bare IDs as LinkedIn; keep their keys.
-- `source`: canonical name (`LinkedIn`, `Indeed`, `Glassdoor`), not a domain alias.
+- `source`: canonical name (`LinkedIn`, `Indeed`), not a domain alias.
 - `status`: `matched` / `review` / `excluded` / `expired`, latest decision.
 - `firstSeen`: first opened date. `lastSeen`: latest opened or confirmed date.
 - `firstReportedOn`: first date in a matched or review table; `null` otherwise.
@@ -79,21 +79,21 @@ Create the index when missing. If unparseable, back it up to `reports/job-index.
 
 ## 3. Read order
 
-The index is an application/history record, **not** a dedupe source.
+The index is an application/history record; it is **not** a source for "already listed" decisions.
 
 1. Read `reports/daily/<previous date>.md` for the previous-report set.
-2. Read `reports/job-index.json` only to preserve existing entries and `appliedOn`.
+2. Read `reports/job-index.json` to preserve existing entries, to collect `appliedOn`, and to build the cross-source applied set (§4).
 3. If the index is missing, create it empty; do not rebuild it from old reports for dedupe.
 
 ## 4. Dedup
 
-Hard dedup: same job ID or canonical URL on one platform; same canonical URL across platforms.
+Hard dedup: same job ID or canonical URL on one platform; same canonical URL or normalized identity across platforms.
 
 - **Previous-report set**: at run start, read the latest `reports/daily/YYYY-MM-DD.md` before today and extract every job ID / canonical URL from all its tables. A card in this set is not opened, not judged and not listed; count it as "Previously reported (skipped)".
 - `appliedOn` jobs count as "Already applied (skipped)".
-- `skipPreviousReport` (config, default `true`) enables this. `reports/job-index.json` is **not** used for the decision.
+- `common.skipPreviousReport` (default `true`) enables this. The previous daily report, not the index, drives this skip.
 - Override only on explicit user request (named jobs, a company, a status); exempt those keys for that run and record the exemption in `limitations`.
-- The first run with no previous report checks everything; later runs only process genuinely new postings. This is what prevents overlap from the daily `lookbackHours` window.
+- The first run with no previous report checks everything; later runs only process genuinely new postings. This is what prevents overlap from the daily `common.lookbackHours` window.
 
 Soft dedup: compare `normalized company + normalized title + city`, without the platform name.
 
@@ -101,6 +101,14 @@ Soft dedup: compare `normalized company + normalized title + city`, without the 
 - Keep level words (Senior, Junior, Lead). Never merge different cities.
 - Different ID hit: write `⚠️ possible duplicate`; add `⚠️ possibly applied MM-DD` when the other posting was applied to.
 - Annotate only; never delete, reclassify or merge counts.
+
+Cross-source dedup (`common.dedupe.crossSource` / `.skipApplied`, default `true`):
+
+- Build the applied set at run start: every index entry with `appliedOn` set or `applyStatus: "submitted"`, mapped to the normalized key above. Do not clear or rewrite those entries.
+- Before opening a card on a platform, look up its normalized key. When the applied entry belongs to another platform, skip the card and count it as **applied on another platform (skipped)**. It never becomes a match, review or excluded row, and `job-apply` must never file it again.
+- A cross-source hit that is not applied stays eligible; write `⚠️ same job on <other source>` in Notes and keep both rows only when they are genuinely different postings. Same normalized key + same employer = one vacancy: keep the row of the source that appears first in `sources`.
+- With `skipApplied: false`, cross-source duplicates are still annotated but not skipped.
+- Platform names come from `sources`; `LinkedIn` is the canonical name, not a domain alias.
 
 ## 5. Record applications
 
@@ -123,25 +131,34 @@ Path: `reports/runs/YYYY-MM-DD.jsonl`. Append one line per run; never overwrite.
   "finishedAt": "2026-11-10T10:02:00+01:00",
   "durationSeconds": 1920,
   "scope": { "countries": ["Germany"], "locations": [] },
-  "sources": ["LinkedIn"],
-  "uiFilters": { "LinkedIn": { "datePosted": "Past 24 hours", "employmentTypes": ["Full-time"], "workModes": ["Remote", "Hybrid", "On-site"], "seniority": null } },
-  "prompt": "…verbatim jobSearchPrompt…",
-  "resultsBySource": { "LinkedIn": 300 },
-  "resultCount": 300,
-  "resultPagesOpened": 5,
-  "resultPagesBySource": { "LinkedIn": 5 },
-  "searchedBySource": { "LinkedIn": "completed" },
+  "sources": ["LinkedIn", "Indeed"],
+  "queriesBySource": {
+    "LinkedIn": ["<jobSearchPrompt>"],
+    "Indeed": ["Frontend Developer", "React Developer", "Fullstack Developer"]
+  },
+  "uiFilters": {
+    "LinkedIn": { "datePosted": "Past 24 hours", "employmentTypes": ["Full-time"], "workModes": ["Remote", "Hybrid", "On-site"], "seniority": null },
+    "Indeed": { "datePosted": "Last 7 days", "jt": "fulltime", "lang": null, "remote": false, "quickApply": false }
+  },
+  "resultsBySource": { "LinkedIn": 300, "Indeed": 75 },
+  "resultCount": 375,
+  "resultPagesOpened": 8,
+  "resultPagesBySource": { "LinkedIn": 5, "Indeed": 3 },
+  "searchedBySource": { "LinkedIn": "completed", "Indeed": "completed" },
   "cardsSkipped": 0,
   "postingsInspected": 120,
   "applyFormsInspected": 40,
   "applyBlocked": 3,
   "expired": 0,
   "appliedSkipped": 4,
+  "appliedElsewhereSkipped": 2,
   "previouslyReportedSkipped": 180,
   "matched": 23,
+  "matchedBySource": { "LinkedIn": 15, "Indeed": 8 },
   "thirdPartyMatched": 5,
   "review": 12,
   "excluded": 85,
+  "crossSourceDuplicates": 3,
   "crossDayRepeats": 10,
   "possibleDuplicates": 2,
   "stopReason": "results older than lookbackHours",
@@ -154,15 +171,17 @@ Rules:
 - `runAt` = search start; `finishedAt` = report, index and audit finished; `durationSeconds` = integer difference.
 - Use local time with UTC offset. Write `null` when unknown; never estimate.
 - `sources` = platforms attempted, in order. `searchedBySource` = `completed` / `failed` / `skipped` with reason.
+- `queriesBySource` = the queries actually submitted, per source. Keep the prompt verbatim for `queryMode: "prompt"`.
 - `uiFilters` = only filters the platform offered; otherwise `{}`.
 - `resultsBySource` / `resultCount` = page count; `null` when absent. Page counts go in `resultPagesBySource`; `resultPagesOpened` = total.
 - Older `linkedinResultCount` equals `resultsBySource.LinkedIn`; read compatibly, never rewrite.
 - `stopReason`: short phrase, e.g. `results older than lookbackHours`, `no more pages`, `login required`.
 - `limitations`: only actual limitations; empty on a normal run.
 - `postingsInspected` / `matched` / `review` / `excluded` are this run's counts. The report summary is the day total; never conflate them.
-- `appliedSkipped` = jobs with `appliedOn`; `previouslyReportedSkipped` = other cards found in the previous daily report that were not opened.
+- `appliedSkipped` = jobs with `appliedOn` on the same platform; `appliedElsewhereSkipped` = cards skipped because another platform already had the application; `previouslyReportedSkipped` = other cards found in the previous daily report that were not opened.
 - `applyFormsInspected` = matched external forms actually opened and read; `applyBlocked` = forms stopped by a login, account, CAPTCHA or unconfigured required field.
 - `thirdPartyMatched` is a subset of `matched` (the `代招岗位` rows), not an additional count.
+- `crossSourceDuplicates` = cross-source normalized-key hits this run; `possibleDuplicates` = same-platform soft duplicates.
 
 ## 7. Retention
 

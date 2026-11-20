@@ -8,7 +8,7 @@ Reference for `linkedin-feed-jobs`. Every gate reads its values from `job-hunter
 2. Job title
 3. Location
 4. Time window
-5. Third-party gate (only when `thirdPartyPostings` is `exclude`)
+5. Third-party gate (only when `common.thirdPartyPostings` is `exclude`)
 6. Validity
 7. Soft notes
 
@@ -18,14 +18,14 @@ Hard gates are 1–6. Step 7 never removes a post.
 
 Keep only a post that names a specific role and at least one hiring signal.
 
-- Use `linkedinFeedJobs.searchKeywords` as the canonical signal list.
+- Use `platforms.LinkedIn.feedJobs.searchKeywords` as the canonical signal list.
 - Also accept clear equivalents in the post language: a declaration that the team is hiring or growing, an invitation to apply or send a CV, or an invitation to DM about the role.
 - A generic "we are hiring people" without a specific role fails step 2.
 - A post that only shares a job-board link with no role text fails here.
 
 ## 2. Job title
 
-Require a `jobTitles.include` title, or a variant of one.
+Require a `common.jobTitles.include` title, or a variant of one.
 
 A variant is allowed only when it keeps the configured role's meaning:
 
@@ -40,12 +40,12 @@ Never add a title that is not in the config. Never treat the query terms as the 
 
 ## 3. Location
 
-The post must state a location inside `countries` and, when `locations` is non-empty, inside `locations`.
+The post must state a location inside `common.countries` and, when `common.locations` is non-empty, inside `common.locations`.
 
 Accepted:
 
 - the configured country name or its local-language name;
-- a configured `locations` value, or its local-language variant for the same place;
+- a configured `common.locations` value, or its local-language variant for the same place;
 - a city or region that you can verify lies inside a configured country;
 - a remote or hybrid phrase only when the same post also names a configured country, a configured location, or a place inside a configured country.
 
@@ -60,13 +60,13 @@ Do not use a hardcoded city or region list. Verify geography from the post text 
 
 ## 4. Time window
 
-Use the post's rendered relative time. Keep `age <= lookbackHours`. Include `1d` when `lookbackHours` is 24 and mark `24h boundary`. Reject older or undated posts.
+Use the post's rendered relative time. Keep `age <= feed window`. Include `1d` when the feed window is 24 hours and mark `24h boundary`. Reject older or undated posts.
 
 ## 5. Third-party gate
 
-When `thirdPartyPostings` is `exclude`, reject a confirmed staffing agency, headhunter, or "our client"/"on behalf of a client" post, including its local-language equivalent.
+When `common.thirdPartyPostings` is `exclude`, reject a confirmed staffing agency, headhunter, or "our client"/"on behalf of a client" post, including its local-language equivalent.
 
-When `thirdPartyPostings` is `separate` or `include`, keep it and note `third party: <client>` or `third party: client not stated` when the post names or omits the client. Keep and note `poster type unclear` when the poster's relation to the employer is not stated.
+When `common.thirdPartyPostings` is `separate` or `include`, keep it and note `third party: <client>` or `third party: client not stated` when the post names or omits the client. Keep and note `poster type unclear` when the poster's relation to the employer is not stated.
 
 ## 6. Validity
 
@@ -78,11 +78,11 @@ Never reject for these. Record the evidence in `Notes`:
 
 | Dimension | Keep and note |
 |---|---|
-| Stack | `technicalKeywords.include` terms named; `stack not stated` when none |
+| Stack | `common.technicalKeywords.include` terms named; `stack not stated` when none |
 | Work mode | Stated mode; `mode not specified` when absent |
 | Employment type | Stated type; `employment not specified` when absent |
 | Seniority | Stated level; `level not specified` when absent |
-| JD language | Full JD outside `jdLanguages.include`; write `JD language: <language>` |
+| JD language | Full JD outside `common.jdLanguages.include`; write `JD language: <language>` |
 | Poster type | `third party: <client>` / `third party: client not stated` / `poster type unclear` |
 | Time | `24h boundary` when applicable |
 
