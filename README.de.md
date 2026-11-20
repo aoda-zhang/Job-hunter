@@ -181,6 +181,7 @@ Diese Phase startest du manuell; sie läuft nie während der täglichen Suche.
                                                   _template.md
 .opencode/skills/job-apply/SKILL.md               externe ATS-Formulare ausfüllen, vor Submit stoppen
 .opencode/skills/company-research/SKILL.md        Phase 2: Recherche und Interviewvorbereitung
+.opencode/skills/cover-letter/                     JSON → maßgeschneidertes Anschreiben als PDF
 .opencode/skills/email-notify/                    Zusammenfassungsmail per SMTP
 job-hunter.config.example.json                    Vorlage zum Kopieren
 job-hunter.config.json                            deine Einstellungen (Git ignoriert)

@@ -189,6 +189,7 @@ LinkedIn feed 有独立的定时器。把 `linkedinFeedReview.schedule.times` �
 .opencode/skills/linkedin-feed-review/SKILL.md    值得回复的 feed 帖子
 .opencode/skills/linkedin-feed-jobs/SKILL.md      feed 招聘帖写入日报
 .opencode/skills/company-research/SKILL.md        第二阶段：公司调研与面试准备
+.opencode/skills/cover-letter/                    JSON → 定制 cover letter PDF
 .opencode/skills/email-notify/                    通过 SMTP 发送运行摘要
 job-hunter.config.example.json                    配置模板
 job-hunter.config.json                            你的配置（Git 忽略）

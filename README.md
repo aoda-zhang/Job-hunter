@@ -85,7 +85,7 @@ You only ever talk to the Job Hunter agent. It loads `job-discovery` by itself; 
 | `jdLanguages.maxRequiredLevel` | no | Optional explicit language-level limits, e.g. `{"German": "A2", "English": "C1"}`. If the JD requires a level above the configured one, the job is excluded as `language requirement`. Bare "German required" counts as B1; "nice to have/plus/optional" is not a requirement. |
 | `technicalKeywords.include` | yes | Technologies to look for in the JD. |
 | `technicalKeywords.matchMode` | yes | `any` = one keyword is enough; `all` = every keyword must appear. |
-| `isNeededCover` | no | When `true`, a job kept in the report (`matched` or `review`) whose JD requires a cover letter gets one. The agent copies `cover-letter-template.md` as-is and fills only its placeholders; it does not rewrite the template. Saved under `reports/cover-letters/<company-slug>/<jobId>.md`. Default `false`. |
+| `isNeededCover` | no | When `true`, a job kept in the report (`matched` or `review`) whose JD requires a cover letter gets one. The agent drafts the content from the JD and CV, then can render a PDF with the `cover-letter` skill (`python3 .opencode/skills/cover-letter/scripts/render.py <json>`). The `.md` template remains the content baseline. Default `false`. |
 | `applicant` | no | Identity used to fill external applications: `firstName`, `lastName`, `phone`, `email`, `currentCity`, `linkedinUrl`, `portfolioUrl`, `cvPath`, `availableInGermanyFrom`, `governmentEmployee`. Missing required identity fields stop the apply run; missing screening answers only block the affected job. |
 | `applications` | no | External-application policy. `enabled`; `external` = `off` / `fill` (default, stops before Submit) / `submit`; `scope` = `matched` (default) / `review` / `all`; `excludeThirdParty` (default `true`); `requireNoAccount` (default `true`); `requireExternalRedirect` (default `true`); `maxPerRun` (number or `null`); `coverLetterMode` = `never` / `required-only` / `always`; `screening` holds the answers used on forms. Easy Apply is always manual. |
 | `workModes` | no | `Remote` / `Hybrid` / `On-site`. All three, empty or absent = filter off. |
@@ -143,7 +143,7 @@ There is no score, no ranking by candidate fit, and no filtering on salary, year
 |---|---|
 | Daily discovery | `reports/daily/YYYY-MM-DD.md` |
 | LinkedIn feed review | `reports/linkedin-feed/YYYY-MM-DD.md` |
-| Cover letter drafts | `reports/cover-letters/<company-slug>/<jobId>.md` |
+| Cover letter drafts | `reports/cover-letters/<company-slug>/<jobId>.md` and `<...>.pdf` |
 | Interview preparation | `reports/interviews/<company-slug>/` |
 
 The daily report lists the platforms searched, then matched jobs split into **Easy Apply** and **No Easy Apply** parts (prompted LinkedIn Premium rows first inside each part, then company size), a separate `代招岗位` table when confirmed third-party postings pass the same checks, a review table when needed, and the excluded jobs with the exact reason last. For the No Easy Apply part, the agent fills the third-party form and leaves the tab open; you click the final Submit. The matched and third-party tables include a `Business` column that records the company's product, market or industry only when the JD states it. Every table has a `Source` column so a mixed-platform run stays readable.
@@ -151,7 +151,7 @@ The daily report lists the platforms searched, then matched jobs split into **Ea
 **Matched and excluded tables** each include two extra application-process columns:
 
 - **Easy Apply** — `Yes`/`No`/`Unknown`: whether the page shows a one-click apply button on the platform (e.g. LinkedIn "Easy Apply", Indeed "Indeed Apply"). Used for the workflow split (Easy Apply vs No Easy Apply); the split is never a filter.
-- **Cover letter** — `Yes`/`No`/`Unknown`: whether the page or application form explicitly says a cover letter is required. When `Yes`, the job remains in the report, and `isNeededCover` is `true`, the agent copies your `cover-letter-template.md` as-is and fills only its placeholders, saving the result under `reports/cover-letters/<company-slug>/<jobId>.md` for manual review and sending. It never rewrites the template or auto-submits.
+- **Cover letter** — `Yes`/`No`/`Unknown`: whether the page or application form explicitly says a cover letter is required. When `Yes`, the job remains in the report, and `isNeededCover` is `true`, the agent drafts the content and can render a PDF via the `cover-letter` skill (small JSON + fixed renderer), saving it under `reports/cover-letters/<company-slug>/`. The `.md` template remains the content baseline. It never auto-submits.
 
 Reports follow the fixed format reference at `.opencode/skills/job-discovery/references/daily-report-format.md` and are written in `preferredReportLanguage` (default `English`). The reference fixes the structure; only the human-readable text is translated.
 
@@ -163,7 +163,7 @@ Reports follow the fixed format reference at `.opencode/skills/job-discovery/ref
 |---|---|
 | `reports/job-index.json` | Every vacancy ever inspected, its latest status, `easyApply`, `coverLetter`, and the date you applied |
 | `reports/runs/YYYY-MM-DD.jsonl` | One audit line per run: result count, pages opened, stop reason, all counters |
-| `cover-letter-template.md` | Your personal cover letter template (root). Fill in its placeholders; the agent copies it as-is for jobs that need one |
+| `cover-letter-template.md` | Your personal cover letter content baseline (root). The agent uses it for wording and fills the job-specific parts; the `cover-letter` skill renders the PDF |
 
 The index is what makes daily runs safe: a vacancy you already applied to is skipped before it is opened, repeats from any earlier day are tagged `[reported MM-DD]`, and the same role posted under a different job ID is flagged `⚠️ possible duplicate`. The audit log is what makes coverage measurable: if a platform showed 300 results and only 120 were inspected, the log records where the rest went and why pagination stopped.
 
@@ -200,6 +200,7 @@ This phase is manual and never runs during daily discovery.
 .opencode/skills/linkedin-feed-review/SKILL.md    feed posts worth replying to
 .opencode/skills/linkedin-feed-jobs/SKILL.md      feed hiring posts into the daily report
 .opencode/skills/company-research/SKILL.md        phase 2: research and interview prep
+.opencode/skills/cover-letter/                     JSON → tailored cover letter PDF
 .opencode/skills/email-notify/                    run-summary email via SMTP
 job-hunter.config.example.json                    template to copy
 job-hunter.config.json                            your settings (git-ignored)

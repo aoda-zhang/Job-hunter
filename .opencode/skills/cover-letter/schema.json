@@ -1,0 +1,138 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Cover letter template fields",
+  "type": "object",
+  "required": [
+    "company",
+    "role",
+    "backend_scope",
+    "product",
+    "tech_points",
+    "non_tech_1",
+    "non_tech_2",
+    "jd_quote",
+    "team_location"
+  ],
+  "properties": {
+    "company": {
+      "type": "string",
+      "description": "Company name, also used in the salutation."
+    },
+    "role": {
+      "type": "string",
+      "description": "Job title as published, used in the subject."
+    },
+    "company_street": {
+      "type": "string",
+      "description": "Optional recipient street line."
+    },
+    "company_city": {
+      "type": "string",
+      "description": "Optional recipient city line."
+    },
+    "place": {
+      "type": "string",
+      "description": "Place for the date line. Defaults to applicant.currentCity without the country."
+    },
+    "date": {
+      "type": "string",
+      "description": "DD.MM.YYYY. Defaults to today."
+    },
+    "first_name": {
+      "type": "string",
+      "description": "Defaults to applicant.firstName."
+    },
+    "last_name": {
+      "type": "string",
+      "description": "Defaults to applicant.lastName."
+    },
+    "age": {
+      "type": "string",
+      "description": "Age used in 'I’m a XX-year-old'. Fixed in PERSONAL; override only on explicit request."
+    },
+    "job_title": {
+      "type": "string",
+      "description": "Title used in 'I’m a ...'. Usually the target role or your current level. Optional override; normally fixed in PERSONAL in render.py."
+    },
+    "years_experience": {
+      "type": "string",
+      "description": "Total software-development years, used in 'with over ... years of experience developing and maintaining complex enterprise software'."
+    },
+    "backend_scope": {
+      "type": "string",
+      "description": "What you want to take care of, after 'take care of your'."
+    },
+    "product": {
+      "type": "string",
+      "description": "The company product/platform, after 'sustainable success of your'."
+    },
+    "match_reason": {
+      "type": "string",
+      "default": "I believe we’re a match because"
+    },
+    "current_company": {
+      "type": "string",
+      "description": "After 'In my current position with'. Optional override; normally fixed in PERSONAL in render.py."
+    },
+    "achievement": {
+      "type": "string",
+      "description": "After 'I have ...'. Use a past-tense verb phrase. Optional override; normally fixed in PERSONAL in render.py."
+    },
+    "previous_work": {
+      "type": "string",
+      "description": "After 'Before that I was ...'. Use a gerund phrase, e.g. designing and building. Optional override; normally fixed in PERSONAL in render.py."
+    },
+    "strength_1": {
+      "type": "string",
+      "default": "bring a profound understanding of the entire delivery pipeline"
+    },
+    "strength_2": {
+      "type": "string",
+      "default": "scalable products"
+    },
+    "jd_quote": {
+      "type": "string",
+      "description": "Short quote after 'You write that'."
+    },
+    "team_location": {
+      "type": "string",
+      "description": "After 'join your team in'."
+    },
+    "start_date": {
+      "type": "string",
+      "description": "After 'starting'. Optional override; normally fixed in PERSONAL in render.py."
+    },
+    "closing": {
+      "type": "string",
+      "default": "Kind regards,"
+    },
+    "fill_header": {
+      "type": "boolean",
+      "default": true,
+      "description": "Fill the non-highlighted recipient block, date and signature. Set false to keep the template's literal Company/Street/City/Place/Firstname Lastname lines."
+    },
+    "output": {
+      "type": "string",
+      "description": "Optional output path."
+    },
+    "highlight_fields": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Optional list of field names to highlight in yellow in the output. Used only to build the base template; final letters leave it empty."
+    },
+    "tech_points": {
+      "type": "string",
+      "description": "2-3 technologies extracted from the JD that also appear in the CV, e.g. 'React and TypeScript' or 'React, TypeScript and Node.js'. No more than 3."
+    },
+    "non_tech_1": {
+      "type": "string",
+      "description": "First non-technical strength extracted from the JD, e.g. 'clean, maintainable code' or 'technical ownership'."
+    },
+    "non_tech_2": {
+      "type": "string",
+      "description": "Second non-technical strength extracted from the JD, e.g. 'reliable delivery' or 'cross-functional collaboration'."
+    }
+  }
+}

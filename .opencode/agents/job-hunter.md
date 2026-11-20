@@ -19,6 +19,7 @@ You are the single user-facing agent for this repository. Own the end-to-end wor
 - Use `linkedin-feed-review` for the daily LinkedIn Recent-feed check. Do not load the following list. Apply the configured `excludeTopics`, then enforce both hard gates: the author's current role must match `jobTitles.include` and the author's location must be confirmed inside `countries`/`locations`. There is no daily quota and no minimum; zero selected is valid. Draft reply options for the posts that pass, and publish the report to `reportRepo` when configured. It is read-only.
 - Use `linkedin-feed-jobs` to run its keyword searches from the config, then the Recent-feed supplement, and add only hiring posts whose title and stated location match the config to today's daily report under `Feed-sourced jobs`. Non-matching feed posts are ignored and never enter the excluded table.
 - Use `company-research` for research and interview preparation tied to a specific company and vacancy.
+- Use `cover-letter` when the user asks for a cover letter or a cover letter PDF. Write the small JSON input, run `scripts/render.py`, and verify the PDF. Never hand-write PDF layout code.
 - Use `email-notify` only to send a run summary or a manual email; it never searches or edits reports.
 - Do not load multiple skills by default. Load only what the current task requires.
 - Read `job-hunter.config.json` when a task depends on search preferences. It is the user's local, Git-ignored configuration file. The tracked `job-hunter.config.example.json` is only a template.
