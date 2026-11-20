@@ -32,8 +32,9 @@ Translate `Daily Job Findings`; keep ` — YYYY-MM-DD`.
 4. Apply-form fields — only for an inspected external apply form that was not submitted successfully
 5. Feed-sourced jobs — only with matching feed hiring posts
 6. Needs manual review — only with entries
-7. Excluded jobs — always last job table
-8. Exception note — only on failure
+7. `已提交` (submitted jobs) — only when at least one application was submitted; always immediately before the excluded table
+8. Excluded jobs — always last job table
+9. Exception note — only on failure
 
 A normal run has sections 1, 2 and 6. Never write an empty section or "None".
 
@@ -91,46 +92,36 @@ When `common.report.splitBySource` is `true` (default):
 
 ### 4.2 Workflow split inside a source
 
-Split the section's matched jobs into up to three parts, in this order. The split is a workflow split, not a filter: it never creates, removes or reclassifies a match.
+Split the section's matched jobs into exactly two parts, in this order. The split is a workflow split, not a filter: it never creates, removes or reclassifies a match. Submitted rows are not part of this split; they live in the global `已提交` section (4.3).
 
 ```markdown
-### Easy Apply (5/30)
+### Easy Apply (5/12)
 ```
 
 - All matched jobs with `Easy Apply = Yes` that are not submitted, including prompted rows.
 - Keep the heading text `Easy Apply` in every language, or its localized equivalent of the column header.
 - The user applies to these manually. The agent never opens, fills or submits them.
-- Number = rows in this part / total rows in this section.
+- Number = rows in this part / total non-submitted rows in this section.
 
 ```markdown
-### No Easy Apply (20/30)
+### No Easy Apply (7/12)
 ```
 
 - Every other matched job that is not submitted: `Easy Apply = No`, plus `Unknown`.
 - These are the external applications. The apply form is inspected and its fields are recorded; the user decides whether to file.
 - An `Unknown` row is allowed here only with `external redirect not verified` in Notes.
 - Keep the heading text `No Easy Apply` in every language.
-- Number = rows in this part / total rows in this section.
-
-```markdown
-### 已提交 (5/30)
-```
-
-- Every matched row whose application was submitted (`applyStatus: "submitted"` / `appliedOn` set, `Apply form` = `已提交`), whatever its Easy Apply value.
-- This part is always the last part of the section, so rows that still need action stay on top and nothing is interleaved with submitted rows.
-- Heading text: `已提交` in a Chinese report, `Submitted` otherwise.
-- A row moves here when its application is submitted; it leaves its Easy Apply / No Easy Apply part. Renumber `#` and the apply-form block headings afterwards.
-- Number = rows in this part / total rows in this section.
+- Number = rows in this part / total non-submitted rows in this section.
 
 Ordering:
 
-- Easy Apply part first, then No Easy Apply part, then the submitted part, inside every source section.
-- Within the Easy Apply and No Easy Apply parts, put prompted rows first.
+- Easy Apply part first, then No Easy Apply part, inside every source section.
+- Within each part, put prompted rows first.
 - Within the No Easy Apply part, prefix prompted rows' Notes with `Top applicant`.
-- Within each part, follow `common.sortBy` (currently `companySize`) and `common.sortDirection` (`asc` default). The submitted part has no prompted ordering.
+- Within each part, follow `common.sortBy` (currently `companySize`) and `common.sortDirection` (`asc` default).
 - Compare the lower bound: `11-50` → 11, `10001+` → 10001, `9,000` → 9000.
 - Ties keep discovery order. Unknown `common.sortBy` keeps discovery order.
-- Renumber `#` across all parts inside the source section; update internal references.
+- Renumber `#` across both parts inside the source section; update internal references.
 - Each part is a separate table with the same header row; `#` stays continuous across parts of the same source.
 - Omit a part only when it has zero rows.
 - Do not sort across sources: `sources` order always wins.
@@ -162,12 +153,29 @@ Columns:
 
 Put location conflicts in Notes. Employment type and JD language are filters, not columns; put relevant evidence in Notes. For a German JD with English as the working language, state that evidence; never infer it.
 
+### 4.3 `已提交` (submitted jobs)
+
+A single top-level section, always immediately before the excluded table (section order 7). Only write it when at least one matched application was submitted.
+
+```markdown
+## 已提交
+
+| # | Company | Notes | Apply form | Link | Size | Business | Title | City | Mode | Posted | Matched keywords | Easy Apply | Cover letter | Source |
+```
+
+- Heading: `已提交` in a Chinese report, `Submitted` otherwise.
+- Only matched rows whose application was submitted (`applyStatus: "submitted"` / `appliedOn` set, `Apply form` = `已提交`); excluded, review and feed rows never appear here.
+- Same columns as Matched jobs. Number `#` from 1 across the whole section.
+- Order by `sources` order first (LinkedIn, then Indeed), then `common.sortBy`/`common.sortDirection`; ties keep the order they had in the matched table.
+- When an application is submitted, move the row out of its source section into this section; renumber the source section's `#` and part totals, drop the row's apply-form block and renumber the remaining blocks.
+- These rows still count as matched in the run summary and in cross-day dedupe.
+
 ## 5. 代招岗位 (third-party postings)
 
 Only with at least one confirmed third-party posting that passed every active check. Never write an empty section.
 
 - Heading: `代招岗位` in a Chinese report; `Agency / third-party postings` in other report languages.
-- Same columns, evidence rules, keyword matching, part split (Easy Apply, then No Easy Apply, then `已提交` when any row was submitted) and ordering as Matched jobs. Number `#` from 1 inside this section; both heading denominators use this section's total.
+- Same columns, evidence rules, keyword matching, part split (Easy Apply, then No Easy Apply) and ordering as Matched jobs. A submitted row leaves this section for the global `已提交` section. Number `#` from 1 inside this section; both heading denominators use this section's non-submitted total.
 - Rows from different sources keep `sources` order; the part split still comes first.
 - `common.thirdPartyPostings` decides placement: `separate` = this section, `include` = normal matched rows, `exclude` = excluded table.
 - Confirm the poster is a staffing firm, headhunter, agency or platform posting for a client. "Clearly" means the JD states the relation; unclear goes to review.
