@@ -37,7 +37,7 @@ Translate `Daily Job Findings`; keep ` — YYYY-MM-DD`.
 
 A normal run has sections 1, 2 and 6. Never write an empty section or "None".
 
-When `common.report.splitBySource` is `false`, section 2 is a single matched section with the same two parts; everything else is unchanged.
+When `common.report.splitBySource` is `false`, section 2 is a single matched section with the same parts; everything else is unchanged.
 
 Apply the evidence rules (section 11) and cross-day rules (section 12) to the report.
 
@@ -91,36 +91,46 @@ When `common.report.splitBySource` is `true` (default):
 
 ### 4.2 Workflow split inside a source
 
-Split the section's matched jobs into exactly two parts, in this order. The split is a workflow split, not a filter: it never creates, removes or reclassifies a match.
+Split the section's matched jobs into up to three parts, in this order. The split is a workflow split, not a filter: it never creates, removes or reclassifies a match.
 
 ```markdown
 ### Easy Apply (5/30)
 ```
 
-- All matched jobs with `Easy Apply = Yes`, including prompted rows.
+- All matched jobs with `Easy Apply = Yes` that are not submitted, including prompted rows.
 - Keep the heading text `Easy Apply` in every language, or its localized equivalent of the column header.
 - The user applies to these manually. The agent never opens, fills or submits them.
 - Number = rows in this part / total rows in this section.
 
 ```markdown
-### No Easy Apply (25/30)
+### No Easy Apply (20/30)
 ```
 
-- Every other matched job: `Easy Apply = No`, plus `Unknown`.
+- Every other matched job that is not submitted: `Easy Apply = No`, plus `Unknown`.
 - These are the external applications. The apply form is inspected and its fields are recorded; the user decides whether to file.
 - An `Unknown` row is allowed here only with `external redirect not verified` in Notes.
 - Keep the heading text `No Easy Apply` in every language.
 - Number = rows in this part / total rows in this section.
 
+```markdown
+### 已提交 (5/30)
+```
+
+- Every matched row whose application was submitted (`applyStatus: "submitted"` / `appliedOn` set, `Apply form` = `已提交`), whatever its Easy Apply value.
+- This part is always the last part of the section, so rows that still need action stay on top and nothing is interleaved with submitted rows.
+- Heading text: `已提交` in a Chinese report, `Submitted` otherwise.
+- A row moves here when its application is submitted; it leaves its Easy Apply / No Easy Apply part. Renumber `#` and the apply-form block headings afterwards.
+- Number = rows in this part / total rows in this section.
+
 Ordering:
 
-- Easy Apply part first, then No Easy Apply part, inside every source section.
-- Within the Easy Apply part, put prompted rows first.
-- Within the No Easy Apply part, put prompted rows first and prefix their Notes with `Top applicant`.
-- Within each part, follow `common.sortBy` (currently `companySize`) and `common.sortDirection` (`asc` default).
+- Easy Apply part first, then No Easy Apply part, then the submitted part, inside every source section.
+- Within the Easy Apply and No Easy Apply parts, put prompted rows first.
+- Within the No Easy Apply part, prefix prompted rows' Notes with `Top applicant`.
+- Within each part, follow `common.sortBy` (currently `companySize`) and `common.sortDirection` (`asc` default). The submitted part has no prompted ordering.
 - Compare the lower bound: `11-50` → 11, `10001+` → 10001, `9,000` → 9000.
 - Ties keep discovery order. Unknown `common.sortBy` keeps discovery order.
-- Renumber `#` across both parts inside the source section; update internal references.
+- Renumber `#` across all parts inside the source section; update internal references.
 - Each part is a separate table with the same header row; `#` stays continuous across parts of the same source.
 - Omit a part only when it has zero rows.
 - Do not sort across sources: `sources` order always wins.
@@ -128,15 +138,17 @@ Ordering:
 Columns:
 
 ```markdown
-| # | Source | Company | Size | Business | Title | City | Mode | Posted | Matched keywords | Easy Apply | Cover letter | Notes | Apply form | Link |
+| # | Company | Notes | Apply form | Link | Size | Business | Title | City | Mode | Posted | Matched keywords | Easy Apply | Cover letter | Source |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 ```
 
 | Column | Rule |
 |---|---|
 | # | Sequential in final display order |
-| Source | Platform name from `sources`; add the domain when ambiguous |
 | Company | Company on the page; if poster ≠ employer, put the poster here and the employer in Notes |
+| Notes | Verifiable facts only: stack, level, contract, poster/employer mismatch, conflicts; ≤ about 60 characters; no fit language |
+| Apply form | `Inspected (N fields)` linking to the job's block in section 6; `Blocked — <reason>` when the form is login-walled; empty for Easy Apply |
+| Link | `[Open](canonical URL)` actually visited in this run |
 | Size | Range shown on the page, e.g. `51-200`, `9,000`, `10001+`; `Not specified` when absent |
 | Business (`公司业务` in a Chinese report) | One short phrase, only when the JD explicitly states the company's product, market or industry, e.g. `B2B logistics SaaS`; `Not stated` when absent; never infer from the company name, domain or another page; ≤ about 40 characters |
 | Title | As published, including `(m/f/d)` and `(all genders)`; replace `|` with `·` |
@@ -146,9 +158,7 @@ Columns:
 | Matched keywords | Only configured terms actually in the JD, comma-separated |
 | Easy Apply | `Yes` for a one-click platform apply, `No` for an external form, `Unknown` otherwise; ordering only, never a filter |
 | Cover letter | `Yes` / `No` / `Unknown` from the page or form; draft when the form shows the field and `common.isNeededCover` is `true` |
-| Notes | Verifiable facts only: stack, level, contract, poster/employer mismatch, conflicts; ≤ about 60 characters; no fit language |
-| Apply form | `Inspected (N fields)` linking to the job's block in section 6; `Blocked — <reason>` when the form is login-walled; empty for Easy Apply |
-| Link | `[Open](canonical URL)` actually visited in this run |
+| Source | Platform name from `sources`; add the domain when ambiguous. Always the last column: the section heading already names the platform |
 
 Put location conflicts in Notes. Employment type and JD language are filters, not columns; put relevant evidence in Notes. For a German JD with English as the working language, state that evidence; never infer it.
 
@@ -157,8 +167,8 @@ Put location conflicts in Notes. Employment type and JD language are filters, no
 Only with at least one confirmed third-party posting that passed every active check. Never write an empty section.
 
 - Heading: `代招岗位` in a Chinese report; `Agency / third-party postings` in other report languages.
-- Same columns, evidence rules, keyword matching, two-part split (Easy Apply, then No Easy Apply) and ordering as Matched jobs. Number `#` from 1 inside this section; both heading denominators use this section's total.
-- Rows from different sources keep `sources` order; the two-part split still comes first.
+- Same columns, evidence rules, keyword matching, part split (Easy Apply, then No Easy Apply, then `已提交` when any row was submitted) and ordering as Matched jobs. Number `#` from 1 inside this section; both heading denominators use this section's total.
+- Rows from different sources keep `sources` order; the part split still comes first.
 - `common.thirdPartyPostings` decides placement: `separate` = this section, `include` = normal matched rows, `exclude` = excluded table.
 - Confirm the poster is a staffing firm, headhunter, agency or platform posting for a client. "Clearly" means the JD states the relation; unclear goes to review.
 - `Company`: the posting company (the agency or platform). Notes start with `代招：<client>` or `代招（客户未注明）` (`Third party: <client>` / `Third party: client not stated`), then one verifiable fact.
@@ -206,9 +216,9 @@ Only with at least one matching feed hiring post. Never write an empty section. 
 - Never infer company, role or location.
 
 ```markdown
-| # | Source | Company | Title | Location | Mode | Posted | Matched keywords | Notes | Link |
+| # | Company | Notes | Link | Title | Location | Mode | Posted | Matched keywords | Source |
 |---|---|---|---|---|---|---|---|---|---|
-| 1 | LinkedIn Feed | Example GmbH | Senior Frontend Engineer | Berlin | Hybrid | 2h ago | React, TypeScript | 来自 feed; hiring manager post | [Open](URL) |
+| 1 | Example GmbH | 来自 feed; hiring manager post | [Open](URL) | Senior Frontend Engineer | Berlin | Hybrid | 2h ago | React, TypeScript | LinkedIn Feed |
 ```
 
 - `Source`: `LinkedIn Feed`.
@@ -227,7 +237,7 @@ Only with entries. Use the matched table. In Notes, name the unknown check (titl
 Always the last job table.
 
 ```markdown
-| # | Source | Company | Title | City | Mode | Posted | Easy Apply | Cover letter | Exclusion reason | Link |
+| # | Company | Exclusion reason | Link | Title | City | Mode | Posted | Easy Apply | Cover letter | Source |
 |---|---|---|---|---|---|---|---|---|---|---|
 ```
 

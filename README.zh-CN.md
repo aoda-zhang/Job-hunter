@@ -97,7 +97,7 @@ cp job-hunter.config.example.json job-hunter.config.json
 | `common.report.splitBySource` | 否 | 默认 `true`。日报按平台分节，顺序同 `sources`，每节再分 Easy Apply / No Easy Apply。 |
 | `common.isNeededCover` | 否 | 为 `true` 时，留在报告里的命中/复核岗位若 JD 要求求职信，就生成一封。可用 `cover-letter` skill 渲染 PDF。默认 `false`。 |
 | `common.reportRepo` | 否 | 可选 Git 地址。配置后每次运行会把当天日报提交并推送到该仓库。 |
-| `common.sortBy` / `common.sortDirection` | 否 | 各部分（Easy Apply、No Easy Apply）内、Premium 提示行之后的排序方式。`companySize` 配合 `asc` / `desc`；不填则按发现顺序。 |
+| `common.sortBy` / `common.sortDirection` | 否 | 各部分（Easy Apply、No Easy Apply、已提交）内、Premium 提示行之后的排序方式。`companySize` 配合 `asc` / `desc`；不填则按发现顺序。 |
 | `common.preferredReportLanguage` | 否 | 日报和摘要邮件正文的语言，例如 `English`、`German`、`Chinese`，默认 `English`。 |
 | `applicant` | 否 | 用于填第三方申请表的身份信息：`firstName`、`lastName`、`phone`、`email`、`currentCity`、`linkedinUrl`、`portfolioUrl`、`cvPath`、`availableInGermanyFrom`、`governmentEmployee`。身份必填项缺失会停止投递；筛选问题缺失只会阻塞对应岗位。 |
 | `applications` | 否 | 投递策略：`enabled`；`externalApply` = `true`（自动填写并提交）/ `false`（只检查字段）；旧值 `off` / `inspect` / `fill`（填好停在 Submit 前）/ `submit` 仍然兼容；`scope`（`matched` 默认 / `review` / `all`）；`excludeThirdParty`（默认 `true`）；`requireNoAccount`（默认 `true`）；`requireExternalRedirect`（默认 `true`）；`maxPerRun`（数字或 `null`）；`coverLetterMode`（`never` / `required-only` / `always`）；`screening` 存放申请表答案。平台一键投递（LinkedIn Easy Apply、Indeed Apply）没有配置项，永远手动。 |
@@ -155,7 +155,7 @@ LinkedIn feed 有独立的定时器。把 `schedules.linkedinFeedReview.times` �
 
 Agent 必须**严格串行**：一次只搜一个查询、一次只开一个职位、一次只用一个标签页。打开 → 读 JD → 判断 → 投递或检查 → 记录 → 关掉标签页，再处理下一个。禁止批量打开职位卡片或职位链接，禁止在一次工具调用里循环多个职位 ID，禁止并行执行浏览器动作。慢一点是正确行为。
 
-没有打分，不按「候选人匹配度」排名，也不按薪资、工作年限、签证或行业额外过滤。命中岗位表固定分成两部分：**Easy Apply**（你本人手动投递）和 **No Easy Apply**（第三方页面，由 agent 填写；`externalApply: true` 时也会自动提交）。开启 `platforms.LinkedIn.premium` 后，带 **`You'd be a top applicant`** 提示的命中岗位在所属部分内优先排序；检查不符仍然排除。这个拆分不改变岗位是否命中。
+没有打分，不按「候选人匹配度」排名，也不按薪资、工作年限、签证或行业额外过滤。命中岗位表分成 **Easy Apply**（你本人手动投递）、**No Easy Apply**（第三方页面，由 agent 填写；`externalApply: true` 时也会自动提交）和最后的 **已提交** 三部分，已提交的行单独成组，不会和「已检查」混在一起。开启 `platforms.LinkedIn.premium` 后，带 **`You'd be a top applicant`** 提示的命中岗位在所属部分内优先排序；检查不符仍然排除。这个拆分不改变岗位是否命中。每张岗位表在 `#` 之后先放公司名、备注、申请表单状态和链接，招聘平台列放在最后。
 
 ## 7. 报告
 
@@ -165,7 +165,7 @@ Agent 必须**严格串行**：一次只搜一个查询、一次只开一个职�
 | LinkedIn feed 回复机会 | `reports/linkedin-feed/YYYY-MM-DD.md` |
 | 面试准备 | `reports/interviews/<company-slug>/` |
 
-日报按 `sources` 顺序按平台分节（先 LinkedIn、后 Indeed）。每一节内的命中岗位再分为 **Easy Apply** 和 **No Easy Apply** 两部分（部分内 Premium 提示行优先，再按公司规模排序）；运行汇总表每个平台一列，最后加总计列。之后是确认代招岗位通过同样检查后单独列出的「代招岗位」表、需要时的待复核表，以及最后写明具体原因的排除岗位。No Easy Apply 部分由 agent 打开第三方页面并填写表单，`externalApply: true` 时直接提交，`fill` 时保留标签页由你点 Submit。每张表都有 `Source` 列，跨平台时也能看清。日报格式由 `.opencode/skills/job-discovery/references/daily-report-format.md` 统一规定，语言由 `common.preferredReportLanguage` 指定（默认 `English`）。格式文档只固定结构，翻译的只是可读文字。
+日报按 `sources` 顺序按平台分节（先 LinkedIn、后 Indeed）。每一节内的命中岗位再分为 **Easy Apply** 和 **No Easy Apply** 两部分（部分内 Premium 提示行优先，再按公司规模排序），已提交的行单独移到该节最后的 **已提交** 部分；运行汇总表每个平台一列，最后加总计列。之后是确认代招岗位通过同样检查后单独列出的「代招岗位」表、需要时的待复核表，以及最后写明具体原因的排除岗位。No Easy Apply 部分由 agent 打开第三方页面并填写表单，`externalApply: true` 时直接提交，`fill` 时保留标签页由你点 Submit。每张表都有 `Source` 列，跨平台时也能看清。日报格式由 `.opencode/skills/job-discovery/references/daily-report-format.md` 统一规定，语言由 `common.preferredReportLanguage` 指定（默认 `English`）。格式文档只固定结构，翻译的只是可读文字。
 
 同一职位在 LinkedIn 投递过，就不会在 Indeed 再次出现或再次投递；未投递的重复职位只加注记，不合并。
 
