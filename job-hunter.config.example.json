@@ -118,6 +118,9 @@
         "you@example.com"
       ],
       "from": "you@example.com",
+      "resend": {
+        "keychainService": "jobhunter-resend-api-key"
+      },
       "smtp": {
         "host": "smtp.gmail.com",
         "port": 465,
