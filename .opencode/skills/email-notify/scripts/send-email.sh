@@ -32,10 +32,12 @@ MAIL_TO_JOINED="$(print -r -- "$MAIL_TO_JSON" | jq -r 'join(", ")')"
 MAIL_TO_LINES="$(print -r -- "$MAIL_TO_JSON" | jq -r '.[]')"
 MAIL_FROM="$(field '.notifications.email.from // empty')"
 
+ARG="${1:-}"
+
 case "$BACKEND" in
   mailapp)
     command -v osascript >/dev/null 2>&1 || { print -u2 -- "osascript is required"; exit 2; }
-    if [ "$1" = "--check" ]; then
+    if [ "$ARG" = "--check" ]; then
       print -r -- "email config OK: Mail.app -> $MAIL_TO_JOINED"
       exit 0
     fi
@@ -84,7 +86,7 @@ case "$BACKEND" in
     ;;
 esac
 
-subject="$1"
+subject="$ARG"
 [ -n "$subject" ] || subject="Job Hunter notification"
 body_file="$(mktemp "${TMPDIR:-/tmp}/jobhunter-mail.XXXXXX")"
 message_file="$(mktemp "${TMPDIR:-/tmp}/jobhunter-msg.XXXXXX")"
