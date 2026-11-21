@@ -38,7 +38,7 @@ Open this repository locally in OpenCode, select the **Job Hunter** primary agen
 
 You interact with the Primary Agent only. It routes the request and loads `job-discovery` automatically. The skill reads the single config, checks which browser tools are actually available, walks `sources` in order (LinkedIn first, then Indeed), sends each platform the query it is configured for (`common.jobSearchPrompt` or `platforms.<name>.search`), applies that platform's configured UI filters, opens vacancy pages, inspects the JD, applies the configured matching filters and saves the daily report to:
 
-`reports/daily/YYYY-MM-DD-HHMM.md`
+`reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM.md`
 
 You do not need to run an npm command, initialize a database or configure CI. If browser automation is unavailable in the current OpenCode environment, the skill must say so rather than pretend it searched.
 

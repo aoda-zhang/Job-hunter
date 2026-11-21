@@ -4,7 +4,7 @@ Format baseline for `reports/daily/`. Read before writing or updating a report. 
 
 ## 1. File and language
 
-- **One file per run**: `reports/daily/YYYY-MM-DD-HHMM.md`, where `HHMM` is the run's local start time (24h, `Asia/Shanghai` unless configured otherwise). Example: a run starting 21:01 writes `reports/daily/2026-11-20-2101.md`.
+- **One file per run**: `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM.md`, where `HHMM` is the run's local start time (24h, `Asia/Shanghai` unless configured otherwise). Example: a run starting 21:01 writes `reports/daily/2026-11-20/2026-11-20-2101.md`.
 - Two runs that start in the same minute: append `-2`, `-3`, … (`2026-11-20-2101-2.md`). Never merge them into one file.
 - A second run on the same day gets its own new file. **Never merge across runs, never append today's results to an earlier run's file, and never rewrite an earlier run's report.**
 - The same run keeps one file: later steps of that run (`job-apply`, `linkedin-feed-jobs`) edit the file the run created, not "today's report".
@@ -53,7 +53,7 @@ Write it as a plain list directly under the title, before the summary:
 - 本轮来源：LinkedIn（Indeed 未在本轮执行）
 - 搜索范围：德国全境（未限定城市）
 - 投递查重：运行前已核对 `reports/job-index.json` 与 `reports/applications/`，本轮命中已投递岗位 N 条，未重复投递
-- 本轮报告：`reports/daily/2026-11-20-2101.md`
+- 本轮报告：`reports/daily/2026-11-20/2026-11-20-2101.md`
 ```
 
 - `开始时间` = the moment the run started searching; `结束时间` = the moment report, index and audit were finished. Both in local time with minutes; keep the timezone label on the start line only.
@@ -168,7 +168,7 @@ Columns:
 | Posted | Relative time; mark reposts `(reposted)` |
 | Matched keywords | Only configured terms actually in the JD, comma-separated |
 | Easy Apply | `Yes` for a one-click platform apply, `No` for an external form, `Unknown` otherwise; ordering only, never a filter |
-| Cover letter | `Yes` / `No` / `Unknown` from the page or form; draft when the form shows the field and `common.isNeededCover` is `true` |
+| Cover letter | `Yes` / `No` / `Unknown` from the page or form; the letter itself is drafted for every matched row when `common.isNeededCover` is `true`, Easy Apply included |
 | Source | Platform name from `sources`; add the domain when ambiguous. Always the last column: the section heading already names the platform |
 
 Put location conflicts in Notes. Employment type and JD language are filters, not columns; put relevant evidence in Notes. For a German JD with English as the working language, state that evidence; never infer it.
@@ -304,8 +304,8 @@ Only on a failed, interrupted or largely unusable run; always at the end. Cover 
 
 A report is a single run's snapshot. At run start, the skip source is **every earlier run's report**, plus the latest previous-day runs:
 
-1. all `reports/daily/YYYY-MM-DD-*.md` of today whose `HHMM` is earlier than this run's start, and
-2. every run report of the most recent previous date (`reports/daily/<prev-date>*.md`).
+1. all `reports/daily/YYYY-MM-DD/YYYY-MM-DD-*.md` of today whose `HHMM` is earlier than this run's start, and
+2. every run report of the most recent previous date (`reports/daily/<prev-date>/*.md`).
 
 Extract every job ID / canonical URL from all their tables into the **previous-report set**; a card in this set is not opened, not judged and not listed.
 
@@ -314,7 +314,7 @@ Extract every job ID / canonical URL from all their tables into the **previous-r
 - `reports/job-index.json`: every entry with `appliedOn` set or `applyStatus` in `submitted` / `filled`;
 - `reports/applications/*.md`: every `Submitted` / `Filled (awaiting submit)` row of the last 30 days.
 
-Any vacancy in that set is skipped on every platform, never opened, never listed and **never submitted again**, even when the run is a re-check or the posting reappeared with a new ID (match on normalized identity, not only URL).
+Any vacancy in that set is skipped on every platform, never opened, never listed and **never submitted again**, even when the run is a re-check or the posting reappeared with a new ID (match on normalized identity, not only URL). This is what keeps a 20:40 run from repeating the 15:40 run: the second run of the day lists only genuinely new postings and says `0 new` when nothing is left.
 
 | Situation | Handling |
 |---|---|
@@ -342,7 +342,7 @@ Application staging markers (written by `job-apply` only):
 - `[apply blocked MM-DD]` — a blocker stopped the attempt; name it briefly. The same blocker must appear in Notes as `无法自动提交：<reason>`.
 - Easy Apply rows never get these markers from the agent; the user applies and confirms them.
 
-Cover letter: draft only when `common.isNeededCover` is `true` and `coverLetter` is `Yes`, for a matched or review job. Copy `cover-letter-template.md` exactly; fill only its placeholders from the page; leave unfillable placeholders unchanged and tell the user. Save to `reports/cover-letters/<company-slug>/<jobId>.md`. Never fabricate. Do not submit. If the template is missing, stop and tell the user to copy `cover-letter-template-example.md`.
+Cover letter: draft for every matched job when `common.isNeededCover` is `true` — Easy Apply and No Easy Apply alike, `代招岗位` rows included — whatever the page's `coverLetter` value says. Copy `cover-letter-template.md` exactly; fill only its placeholders from the page; leave unfillable placeholders unchanged and tell the user. Save the JSON plus `<First>_<Last>_<Role>_Cover_Letter.pdf` under `reports/cover-letters/<company-slug>/`. Never fabricate. Do not submit. If the template is missing, stop and tell the user to copy `cover-letter-template-example.md`.
 
 ## 13. Update an existing report
 

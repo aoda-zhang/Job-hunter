@@ -13,7 +13,7 @@ Ein Lauf erledigt vier Dinge:
 1. **Suchen** – die Plattformen aus `sources` werden in dieser Reihenfolge durchsucht, jede mit ihrer eigenen Suchanfrage (LinkedIn-Prompt, Indeed-Keywords).
 2. **Eingrenzen** – in der jeweiligen Filterleiste werden Veröffentlichungsdatum, Anstellungsart, Arbeitsmodell, Seniorität und Ort aus deiner Konfiguration gesetzt.
 3. **Prüfen** – jede verbleibende Anzeige wird als echte Stellenseite geöffnet (nicht nur als Ergebniskarte); geschlossene Anzeigen und solche ohne Bewerbungsmöglichkeit werden übersprungen.
-4. **Bewerten und berichten** – jede Stelle wird als Treffer, Prüffall oder Nicht-Treffer eingeordnet und in `reports/daily/YYYY-MM-DD-HHMM.md` gespeichert (ein eigenes File pro Lauf, minutengenau, keine Zusammenführung).
+4. **Bewerten und berichten** – jede Stelle wird als Treffer, Prüffall oder Nicht-Treffer eingeordnet und in `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM.md` gespeichert (ein eigenes File pro Lauf, minutengenau, keine Zusammenführung).
 
 Es bewirbt sich nie für dich, schreibt keine Recruiter an und ändert keine Kontoeinstellungen. Es nutzt die Browser-Sitzung, in der du bereits angemeldet bist.
 
@@ -30,7 +30,7 @@ flowchart TD
     F -->|geschlossen| X[übersprungen und gezählt]
     F -->|aktiv| G[Titel, Anbieter, JD-Sprache,<br/>Keywords, Modell, Art, Level prüfen]
     G --> H[Treffer / Prüffall / kein Treffer]
-    H --> I[reports/daily/YYYY-MM-DD-HHMM.md]
+    H --> I[reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM.md]
 ```
 
 Die Prüfungen laufen in fester Reihenfolge und enden beim ersten bestätigten Widerspruch. Reicht die Seite nicht aus, um Übereinstimmung oder Widerspruch zu belegen, landet die Stelle im **Prüffall** statt im Ausschluss.
@@ -63,7 +63,7 @@ Dann:
 1. Öffne diesen Ordner in OpenCode.
 2. Wähle den **Job Hunter**-Primary-Agent (`Tab` wechselt den Agenten).
 3. Frage einfach, z. B. *„Finde die Stellen von heute“* oder *„Bericht aktualisieren, nur remote“*.
-4. Der Agent steuert den Browser und schreibt `reports/daily/YYYY-MM-DD-HHMM.md`. Öffne die Datei und lies die Tabellen.
+4. Der Agent steuert den Browser und schreibt `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM.md`. Öffne die Datei und lies die Tabellen.
 
 Du sprichst immer nur mit dem Job-Hunter-Agenten. Er lädt `job-discovery` selbst; du wählst nie manuell einen Skill.
 
@@ -133,7 +133,7 @@ Es gibt keine Punkte, kein Ranking nach Kandidaten-Fit und keine Filterung nach 
 
 | Ergebnis | Pfad |
 |---|---|
-| Tägliche Stellensuche | `reports/daily/YYYY-MM-DD-HHMM.md` |
+| Tägliche Stellensuche | `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM.md` |
 | Interviewvorbereitung | `reports/interviews/<company-slug>/` |
 
 Der Tagesbericht ist nach Plattformen in `sources`-Reihenfolge gegliedert (zuerst LinkedIn, dann Indeed). Innerhalb jeder Plattform sind die Treffer in **Easy Apply** und **No Easy Apply** geteilt (innerhalb jedes Teils Premium-Hinweise zuerst, danach nach Unternehmensgröße sortiert); bereits abgesendete Zeilen verlassen ihren Teil und stehen im eigenen **已提交**-Abschnitt direkt vor der Ausschlusstabelle. Es folgen eine eigene `代招岗位`-Tabelle für bestätigte Drittkunden-Stellen, die dieselben Prüfungen bestehen, bei Bedarf eine Prüftabelle und zuletzt die ausgeschlossenen Stellen mit der genauen Begründung. Im Teil No Easy Apply füllt der Agent das Formular aus und sendet es bei `externalApply: true` ab; bei `fill` lässt er den Tab für deinen Submit offen. Die Zusammenfassung hat eine Spalte je Plattform plus Gesamt. Jede Tabelle hat eine Spalte `Source`. Die Struktur legt `.opencode/skills/job-discovery/references/daily-report-format.md` fest; die Sprache steuert `common.preferredReportLanguage` (Standard `English`). Übersetzt wird nur der lesbare Text.

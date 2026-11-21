@@ -82,7 +82,7 @@ Create the index when missing. If unparseable, back it up to `reports/job-index.
 
 The index is an application/history record; it is **not** a source for "already listed" decisions.
 
-1. Read every earlier run report of today (`reports/daily/YYYY-MM-DD-*.md` with an earlier `HHMM`) and every run report of the most recent previous date, for the previous-report set.
+1. Read every earlier run report of today (`reports/daily/YYYY-MM-DD/YYYY-MM-DD-*.md` with an earlier `HHMM`) and every run report of the most recent previous date, for the previous-report set.
 2. Read `reports/job-index.json` to preserve existing entries, to collect `appliedOn`, and to build the cross-source applied set (§4).
 3. Read the last 30 days of `reports/applications/*.md` for `Submitted` / `Filled (awaiting submit)` rows and merge them into the applied set.
 4. If the index is missing, create it empty; do not rebuild it from old reports for dedupe.
@@ -134,7 +134,7 @@ Path: `reports/runs/YYYY-MM-DD.jsonl`. Append one line per run; never overwrite.
   "runAt": "2026-11-20T21:01:00+08:00",
   "finishedAt": "2026-11-20T21:51:23+08:00",
   "durationSeconds": 3023,
-  "reportPath": "reports/daily/2026-11-20-2101.md",
+  "reportPath": "reports/daily/2026-11-20/2026-11-20-2101.md",
   "scope": { "countries": ["Germany"], "locations": [] },
   "sources": ["LinkedIn", "Indeed"],
   "queriesBySource": {
@@ -176,7 +176,7 @@ Rules:
 - `runAt` = search start; `finishedAt` = report, index and audit finished; `durationSeconds` = integer difference.
 - Use local time with UTC offset. Write `null` when unknown; never estimate.
 - **Never write `finishedAt` or `durationSeconds` before the run has actually finished.** Write the audit line only at the end, from the real clock; a future timestamp is a defect, not a placeholder.
-- `reportPath` = this run's report file (`reports/daily/YYYY-MM-DD-HHMM.md`), exactly as written and published.
+- `reportPath` = this run's report file (`reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM.md`), exactly as written and published.
 - `sources` = platforms attempted, in order. `searchedBySource` = `completed` / `failed` / `skipped` with reason.
 - `queriesBySource` = the queries actually submitted, per source. Keep the prompt verbatim for `queryMode: "prompt"`.
 - `uiFilters` = only filters the platform offered; otherwise `{}`.

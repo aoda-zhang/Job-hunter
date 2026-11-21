@@ -9,7 +9,7 @@ This is a separate, manually triggered workflow. Use it only after the user rece
 
 ## Input
 
-The user can identify a vacancy by its entry in `reports/daily/YYYY-MM-DD.md`, its company and title, or its direct job URL. Read the selected vacancy and its JD from the report. If the full JD is not present, open the original job URL in the browser and inspect it. Ask one concise question only if the selected company or role cannot be identified.
+The user can identify a vacancy by its entry in `reports/daily/YYYY-MM-DD/YYYY-MM-DD.md`, its company and title, or its direct job URL. Read the selected vacancy and its JD from the report. If the full JD is not present, open the original job URL in the browser and inspect it. Ask one concise question only if the selected company or role cannot be identified.
 
 Use the browser-control tools available in this OpenCode environment to research public sources. Inspect available browser tools rather than assuming a tool name. If browser automation is unavailable, state the limitation and ask whether the user wants a source list or manual research instead.
 

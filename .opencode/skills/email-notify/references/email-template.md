@@ -25,7 +25,7 @@ Scope: Germany (nationwide)
 This run: inspected 61 · matched 18 · review 0 · excluded 43
 Skipped as applied: 0
 Stop reason: no more result pages (127 cards read)
-Report: reports/daily/2026-11-10-2130.md
+Report: reports/daily/2026-11-10/2026-11-10-2130.md
 
 Status: completed normally
 ```
@@ -41,7 +41,7 @@ Field sources:
 | This run (audit) | audit | `postingsInspected` / `matched` / `excluded` |
 | Skipped as applied | audit `appliedSkipped` | `0` when absent |
 | Stop reason | audit `stopReason` | One short phrase; `not recorded` when absent |
-| Report | this run's file | `reports/daily/YYYY-MM-DD-HHMM.md` |
+| Report | this run's file | `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM.md` |
 
 One email per run. Never sum several runs of the same day into one email.
 
@@ -66,7 +66,7 @@ Job Hunter run failed
 Date: 2026-11-10
 Failed stage: search / read JD / write report
 Reason: <one line>
-Kept: reports/daily/2026-11-10-2130.md (if written)
+Kept: reports/daily/2026-11-10/2026-11-10-2130.md (if written)
 
 Status: failed
 ```

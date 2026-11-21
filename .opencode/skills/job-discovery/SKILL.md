@@ -39,11 +39,11 @@ Do not add a second config file. A platform named in `sources` without a `platfo
 
 ## 2. Resolve index and scope
 
-**One run = one report file.** At run start record the local start time and derive the report path `reports/daily/YYYY-MM-DD-HHMM.md` (`HHMM` = start time; add `-2`, `-3` on a same-minute collision). Never append to or rewrite another run's report.
+**One run = one report file.** At run start record the local start time and derive the report path `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM.md` (`HHMM` = start time; add `-2`, `-3` on a same-minute collision). Never append to or rewrite another run's report.
 
 Read the **previous-report set** from:
 
-- every run report of today whose `HHMM` is earlier than this run's start (`reports/daily/YYYY-MM-DD-*.md`), and
+- every run report of today whose `HHMM` is earlier than this run's start (`reports/daily/YYYY-MM-DD/YYYY-MM-DD-*.md`) — a 20:40 run must treat the 15:40 run as a hard skip — and
 - every run report of the most recent previous date.
 
 Extract every job ID / canonical URL from all their tables (matched, `代招岗位`, review, submitted, excluded) into the set.
@@ -97,7 +97,7 @@ Match case-insensitively and ignore a country domain. Never improvise a flow for
 
 If no browser tool exists, stop and say so. If `sources` is empty, ask which platforms to use.
 
-Skip a source whose `platforms.<name>.enabled` is not `true`; count it as `skipped (disabled)` and continue. A caller may also scope a pass to a subset of `sources` (for example "LinkedIn only"): process just those in `sources` order, count the rest as `skipped (not in this pass)`, do not mark them failed, and never open a platform outside the pass. At the start record the local start time in ISO 8601 with offset as `runAt` and derive this run's report path (`reports/daily/YYYY-MM-DD-HHMM.md`); both go into the report header and the audit line.
+Skip a source whose `platforms.<name>.enabled` is not `true`; count it as `skipped (disabled)` and continue. A caller may also scope a pass to a subset of `sources` (for example "LinkedIn only"): process just those in `sources` order, count the rest as `skipped (not in this pass)`, do not mark them failed, and never open a platform outside the pass. At the start record the local start time in ISO 8601 with offset as `runAt` and derive this run's report path (`reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM.md`); both go into the report header and the audit line.
 
 For each source in `sources` order:
 
@@ -161,13 +161,13 @@ Record the platform priority prompt when the reference defines one and the confi
 
 Keep `matched` and `review`; exclude `not_matched` from the main report. Never score fit. Do not filter on years, salary, visa, industry, architecture or company size. The only language-level filter is the explicit `common.jdLanguages.maxRequiredLevel` rule above; never infer a language level from the JD language, the company or the candidate's nationality. Record only page facts.
 
-Draft a cover letter for every `matched` or `review` vacancy whose apply form shows a cover-letter field, whether it is required or optional, when `common.isNeededCover` is `true`. A `Message to the Hiring Team` / `Message to the team` textarea counts as a cover-letter field: write a shortened 3–5 sentence text version, save it as `reports/cover-letters/<company-slug>/<jobId>-message.md`, and put the text in the report; do not create a PDF for it. For a real cover-letter upload, use the `cover-letter` skill and `cover-letter-template.md` exactly: keep structure, sections, wording and order; fill only its placeholders from the page and config; leave unfillable placeholders unchanged and tell the user. Never fabricate. Save the letter JSON plus `<First>_<Last>_<Role>_Cover_Letter.pdf` (and the matching `.md` when a text-only letter is needed); `<company-slug>`: lowercase, spaces/punctuation → `-`. Record the path in the report and index. Do not upload or submit it. If the template is missing, stop that step and tell the user to copy `cover-letter-template-example.md`.
+Draft a cover letter for **every matched vacancy** — `Easy Apply` and `No Easy Apply` alike, and every `代招岗位` row — whether or not the form exposes a cover-letter field, whenever `common.isNeededCover` is `true`. Generation is unconditional; only the upload follows `applications.coverLetterMode`. For a `代招岗位` row, use only facts the post states; never invent the client. A `Message to the Hiring Team` / `Message to the team` textarea counts as a cover-letter field: write a shortened 3–5 sentence text version, save it as `reports/cover-letters/<company-slug>/<jobId>-message.md`, and put the text in the report; do not create a PDF for it. For a real cover-letter upload, use the `cover-letter` skill and `cover-letter-template.md` exactly: keep structure, sections, wording and order; fill only its placeholders from the page and config; leave unfillable placeholders unchanged and tell the user. Never fabricate. Save the letter JSON plus `<First>_<Last>_<Role>_Cover_Letter.pdf` (and the matching `.md` when a text-only letter is needed); `<company-slug>`: lowercase, spaces/punctuation → `-`. Record the path in the report and index. Do not upload or submit it. If the template is missing, stop that step and tell the user to copy `cover-letter-template-example.md`.
 
 ## 5. Write the report
 
 Follow `.opencode/skills/job-discovery/references/daily-report-format.md` for structure, sections, columns, metadata and summaries. Write human-readable strings in `common.preferredReportLanguage`; keep structure, order, dates and URLs unchanged.
 
-Write **this run's own file**, `reports/daily/YYYY-MM-DD-HHMM.md` (`HHMM` = this run's start time, `-2` / `-3` on collision). Create it fresh with the run header (run id, start time, end time, sources of this run, scope, apply-dedupe result). Never append to an earlier run's file and never write a day-total report. Deduplicate inside the file by canonical URL; without one, use company + title + location and flag possible duplicates.
+Write **this run's own file**, `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM.md` (`HHMM` = this run's start time, `-2` / `-3` on collision). Create it fresh with the run header (run id, start time, end time, sources of this run, scope, apply-dedupe result). Never append to an earlier run's file and never write a day-total report. Deduplicate inside the file by canonical URL; without one, use company + title + location and flag possible duplicates.
 
 When `common.thirdPartyPostings` is `separate`, put only confirmed `third_party` postings that pass every active filter in the dedicated `代招岗位` section, with the same columns, keyword evidence, ordering and checks as matched jobs. They count as matched in the summary. A `third_party` posting that fails title, JD language, language requirement level, technical keywords, work mode, employment type or seniority goes to the excluded table with that reason, never to `代招岗位`. A third-party posting with `unknown` on an active dimension goes to review, never to `代招岗位`.
 
@@ -179,7 +179,7 @@ Cross-source rows follow §2a: a vacancy already applied to on another platform 
 
 Before writing, add cross-day repeat annotations only for jobs exempted from the previous-report skip. Do not count excluded or expired jobs as repeats.
 
-Publish when `common.reportRepo` is set: clone/pull it, copy this run's report to the same `reports/daily/YYYY-MM-DD-HHMM.md` path, commit `docs: add job run YYYY-MM-DD HH:MM`, push and verify. Never merge two runs into one remote file and never overwrite another run's file. On failure, report it and keep the local file. Never force-push. Publish only the run report.
+Publish when `common.reportRepo` is set: clone/pull it, create the day folder `reports/<YYYY-MM-DD>/` in that repo, copy this run's report there as `YYYY-MM-DD-HHMM.md`, commit `docs: add job run YYYY-MM-DD HH:MM`, push and verify. Never merge two runs into one remote file and never overwrite another run's file. On failure, report it and keep the local file. Never force-push. Publish only the run report.
 
 After the report, update `reports/job-index.json`: upsert every inspected vacancy by source-qualified key; set `source`, `lastSeen`, `status`, `firstSeen`, `firstReportedOn`, `easyApply`, `applyType`, `coverLetter`, `posterType`, `business`, `applyChannel`, `applyUrl`, `applyForm` and `coverLetterDraft`; never clear `appliedOn` or any `apply*` field; do not write `common.isNeededCover` per vacancy. At the very end of the run append one JSON line to `reports/runs/YYYY-MM-DD.jsonl` with the real `runAt`, `finishedAt`, `durationSeconds`, this run's `reportPath` and the fields in `.opencode/skills/job-discovery/references/job-index-and-audit.md`. Never write `finishedAt` in advance. Preserve unknown fields; never delete entries.
 

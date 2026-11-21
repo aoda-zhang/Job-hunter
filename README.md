@@ -13,7 +13,7 @@ A run does four things:
 1. **Searches** every platform listed in `sources`, in that order, with the query each platform is configured to use (LinkedIn: one natural-language prompt; Indeed: short keyword phrases).
 2. **Narrows** the results with each platform's own filters taken from your config: date posted, employment type, work mode, seniority and location.
 3. **Inspects** each remaining vacancy page — the real posting, not just the search card — and skips postings that are closed or no longer accepting applications.
-4. **Classifies and reports** every vacancy as matched, needs review, or not matched, then saves the result to `reports/daily/YYYY-MM-DD-HHMM.md` — one file per run, named to the minute, never merged across runs.
+4. **Classifies and reports** every vacancy as matched, needs review, or not matched, then saves the result to `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM.md` — one file per run, named to the minute, never merged across runs.
 
 It never applies for you, never messages recruiters, and never changes your account settings. It uses the browser session you are already logged in with.
 
@@ -30,7 +30,7 @@ flowchart TD
     F -->|closed| X[skipped and counted]
     F -->|open| G[Check title, employer, JD language,<br/>keywords, mode, type, seniority]
     G --> H[matched / review / not_matched]
-    H --> I[reports/daily/YYYY-MM-DD-HHMM.md]
+    H --> I[reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM.md]
 ```
 
 The agent checks the dimensions in a fixed order and stops at the first confirmed mismatch. When the page does not clearly prove a match or a mismatch, the vacancy goes to **review** instead of being rejected.
@@ -64,7 +64,7 @@ Then:
 1. Open this folder in OpenCode.
 2. Select the **Job Hunter** primary agent (`Tab` to switch agents).
 3. Ask in plain language, e.g. *"Find today's jobs"* or *"Refresh the report, only remote roles"*.
-4. The agent drives the browser, then writes `reports/daily/YYYY-MM-DD-HHMM.md` (`HHMM` = that run's start time). Open it and scan the tables.
+4. The agent drives the browser, then writes `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM.md` (`HHMM` = that run's start time). Open it and scan the tables.
 
 You only ever talk to the Job Hunter agent. It loads `job-discovery` by itself; you never pick a skill manually.
 
@@ -130,7 +130,7 @@ The daily job runs as **two separate OpenCode sessions in a fixed order** — Li
 
 **Schedule.** Editing `schedules.jobSearch` in the config does not change launchd by itself. After changing `times`, `weekdays` or `timezone`, run `.opencode/scripts/apply-schedule.sh` (or ask the agent to change the schedule). launchd uses the Mac's local time, so `timezone` must match the system timezone. An empty `times` array unloads and removes the job search schedule; adding times recreates it.
 
-The LinkedIn feed has its own launchd timer. Set `schedules.linkedinFeedReview.times` to an array of `HH:MM` values, optionally restrict it with `.weekdays` (`[1,2,3,4,5]` = Monday–Friday), and run the same script; an empty array disables that job. Each run reads the Recent feed once without checking the following list: it replies only to posts whose author role matches `common.jobTitles.include` and whose author location is confirmed inside `common.countries`/`common.locations`, with no daily minimum (zero is valid), adds hiring posts whose title and stated location match the config to `reports/daily/YYYY-MM-DD-HHMM.md`, emails the replies and job rows when notifications are enabled, and publishes `reports/linkedin-feed/YYYY-MM-DD.md` plus the updated daily report to `common.reportRepo`.
+The LinkedIn feed has its own launchd timer. Set `schedules.linkedinFeedReview.times` to an array of `HH:MM` values, optionally restrict it with `.weekdays` (`[1,2,3,4,5]` = Monday–Friday), and run the same script; an empty array disables that job. Each run reads the Recent feed once without checking the following list: it replies only to posts whose author role matches `common.jobTitles.include` and whose author location is confirmed inside `common.countries`/`common.locations`, with no daily minimum (zero is valid), adds hiring posts whose title and stated location match the config to `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM.md`, emails the replies and job rows when notifications are enabled, and publishes `reports/linkedin-feed/YYYY-MM-DD.md` plus the updated daily report to `common.reportRepo`.
 
 ## 6. How jobs are filtered
 
@@ -164,7 +164,7 @@ A vacancy applied to on LinkedIn is skipped on Indeed, and the other way round: 
 
 | Output | Path |
 |---|---|
-| Each discovery run | `reports/daily/YYYY-MM-DD-HHMM.md` |
+| Each discovery run | `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM.md` |
 | LinkedIn feed review | `reports/linkedin-feed/YYYY-MM-DD.md` |
 | Cover letter drafts | `reports/cover-letters/<company-slug>/<jobId>.md` and `<...>.pdf` |
 | Interview preparation | `reports/interviews/<company-slug>/` |

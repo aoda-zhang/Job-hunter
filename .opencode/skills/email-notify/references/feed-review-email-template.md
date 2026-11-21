@@ -42,7 +42,7 @@ Backup: ...
 
 Reports:
 - reports/linkedin-feed/2026-11-14.md
-- reports/daily/2026-11-14.md
+- reports/daily/2026-11-14/2026-11-14.md
 
 Status: completed normally
 ```
