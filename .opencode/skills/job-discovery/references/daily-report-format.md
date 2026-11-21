@@ -4,13 +4,41 @@ Format baseline for `reports/daily/`. Read before writing or updating a report. 
 
 ## 1. File and language
 
-- **One file per run**: `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM.md`, where `HHMM` is the run's local start time (24h, `Asia/Shanghai` unless configured otherwise). Example: a run starting 21:01 writes `reports/daily/2026-11-20/2026-11-20-2101.md`.
-- Two runs that start in the same minute: append `-2`, `-3`, … (`2026-11-20-2101-2.md`). Never merge them into one file.
-- A second run on the same day gets its own new file. **Never merge across runs, never append today's results to an earlier run's file, and never rewrite an earlier run's report.**
-- The same run keeps one file: later steps of that run (`job-apply`, `linkedin-feed-jobs`) edit the file the run created, not "today's report".
-- The plain `YYYY-MM-DD.md` file is only a day index that links that day's run files. Never put job tables in it.
-- Create the directory when missing.
-- Deduplicate inside a run's file by canonical URL; without one, use `source + company + title + location` and flag a possible duplicate.
+- **One folder per run**: `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM/`, containing `report.md` plus one folder per appliable vacancy (`<jobId>/`). `HHMM` is the run's local start time (24h, `Asia/Shanghai` unless configured otherwise). A run starting 21:01 writes `reports/daily/2026-11-20/2026-11-20-2101/report.md`.
+- Every appliable matched vacancy gets `<run>/<jobId>/` with:
+
+```text
+<run>/<jobId>/fields.json                       # every form field, required and optional
+<run>/<jobId>/cover-letter.json                 # template fields for this vacancy
+<run>/<jobId>/Qi_Zhang_<Role>_Cover_Letter.pdf  # the rendered letter
+```
+
+```json
+{
+  "jobId": "linkedin-4484812650",
+  "company": "Wolt",
+  "title": "Senior Software Engineer (Fullstack) - Merchant EMEA",
+  "source": "LinkedIn",
+  "status": "inspected | blocked | submitted | not_started",
+  "ats": "Greenhouse",
+  "applyUrl": "https://job-boards.greenhouse.io/wolt/jobs/8141574",
+  "blocker": "",
+  "coverLetter": "optional | required | not_shown | unknown",
+  "fields": [
+    { "label": "First Name", "type": "text", "required": true, "value": "Qi" },
+    { "label": "Salary expectation", "type": "text", "required": false, "value": "" }
+  ]
+}
+```
+
+- `fields` lists every visible field, required and optional. When the value is unknown, unconfigured or unread, write `""` — never `null`, never an invented value.
+- The folder exists only for jobs that can be applied to: matched, not excluded, and not a one-click-only row. Third-party rows are included only when `common.thirdPartyPostings` is not `exclude`.
+- `report.md` never contains field tables; its `Apply form` cell carries only the short status.
+- Two runs that start in the same minute: append `-2`, `-3`, … (`2026-11-20-2101-2/`). Never merge them.
+- A second run on the same day gets its own new folder. **Never merge across runs, never append today's results to an earlier run's folder, and never rewrite an earlier run's report.**
+- The same run keeps one folder: later steps of that run (`job-apply`, `linkedin-feed-jobs`) edit the files the run created, not "today's report".
+- Create the directories when missing.
+- Deduplicate inside a run's report by canonical URL; without one, use `source + company + title + location` and flag a possible duplicate.
 - Keep `job-index.json` and `runs/` out of the report and out of `common.reportRepo`.
 
 Write human-readable text in `common.preferredReportLanguage`; fall back to English when absent or unsupported.
@@ -41,7 +69,7 @@ Translate `Daily Job Findings`; keep ` — YYYY-MM-DD HH:MM` (the run's start ti
 
 A normal run has sections 0, 1, 2 and 5. Never write an empty section or "None".
 
-Apply-form field tables never go in the report. They are written per vacancy to `reports/jobs/<jobId>/fields.md`; the report's `Apply form` cell carries only the short status.
+Apply-form field tables never go in the report. They are written per vacancy to `<run>/<jobId>/fields.json`; the report's `Apply form` cell carries only the short status.
 
 ### 2.1 Run header
 
@@ -159,7 +187,7 @@ Columns:
 | # | Sequential in final display order |
 | Company | Company on the page; if poster ≠ employer, put the poster here and the employer in Notes |
 | Notes | Verifiable facts only: stack, level, contract, poster/employer mismatch, conflicts; ≤ about 90 characters; no fit language. Every external row (`Easy Apply` = `No` / `Unknown`) that was not submitted ends with `无法自动提交：<reason>` (`Not auto-submitted: <reason>` in other report languages), naming the concrete cause: login or account creation, a required field the config cannot answer, rejected value, CAPTCHA, expired posting, browser/relay failure, or a policy skip |
-| Apply form | `Inspected` (details in `reports/jobs/<jobId>/fields.md`), `Blocked` or `Submitted`; empty for Easy Apply |
+| Apply form | `Inspected` (details in the vacancy folder's `fields.json`), `Blocked` or `Submitted`; empty for Easy Apply |
 | Link | `[Open](canonical URL)` actually visited in this run |
 | Size | Range shown on the page, e.g. `51-200`, `9,000`, `10001+`; `Not specified` when absent |
 | Business (`公司业务` in a Chinese report) | One short phrase, only when the JD explicitly states the company's product, market or industry, e.g. `B2B logistics SaaS`; `Not stated` when absent; never infer from the company name, domain or another page; ≤ about 40 characters |

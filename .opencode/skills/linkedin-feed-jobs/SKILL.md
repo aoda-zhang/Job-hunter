@@ -65,7 +65,7 @@ Skip when:
 
 ## 6. Add to this run's report
 
-Edit the report file this run created: `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM.md` (`HHMM` = this run's start time). Never write into another run's file and never create a day-total file.
+Edit the report file this run created: `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM/report.md` (`HHMM` = this run's start time). Never write into another run's file and never create a day-total file.
 
 - Place a translated `## Feed-sourced jobs` section after matched jobs and the `代招岗位` section, and before review and excluded.
 - If the report is missing, create it with the run header (run id, start and end time, sources, scope, apply-dedupe result) and this section; note that job-discovery has not written its sections.
@@ -96,7 +96,7 @@ Renumber `#` after merging.
 
 ## 7. Publish
 
-Only when this skill is the only writer of the run report: if `common.reportRepo` is set, clone/pull it, copy this run's report to the report repo's day folder `reports/<YYYY-MM-DD>/YYYY-MM-DD-HHMM.md`, commit `docs: add feed-sourced jobs for YYYY-MM-DD HH:MM`, push and verify. Never merge into another run's remote file. On failure, report it and keep the local file. Never force-push.
+Only when this skill is the only writer of the run report: if `common.reportRepo` is set, clone/pull it, copy this run's report to the report repo's day folder `reports/<YYYY-MM-DD>/YYYY-MM-DD-HHMM/report.md`, commit `docs: add feed-sourced jobs for YYYY-MM-DD HH:MM`, push and verify. Never merge into another run's remote file. On failure, report it and keep the local file. Never force-push.
 
 When `job-discovery` runs in the same pass, the orchestrator publishes after this step: do not push. Never send email; the orchestrator sends one run summary.
 

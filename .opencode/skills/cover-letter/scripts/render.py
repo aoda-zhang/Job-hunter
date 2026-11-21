@@ -170,7 +170,8 @@ class Letter:
         )
         base_name = f"{fields['first_name']}_{fields['last_name']}_{role}_Cover_Letter"
         name = data.get("filename") or re.sub(r"[^A-Za-z0-9]+", "_", base_name).strip("_")
-        default = REPO_ROOT / "reports" / "cover-letters" / slug(fields["company"]) / f"{name}.pdf"
+        out_dir = Path(data.get("__input_dir") or (REPO_ROOT / "reports" / "cover-letters" / slug(fields["company"])))
+        default = out_dir / f"{name}.pdf"
         self.output = Path(data.get("output") or default).expanduser()
         if not self.output.is_absolute():
             self.output = REPO_ROOT / self.output
@@ -310,6 +311,7 @@ def main() -> int:
         path = Path(args.json_path)
         payload = json.loads(path.read_text(encoding="utf-8"))
         stem = path.stem
+        payload.setdefault("__input_dir", str(path.parent))
     payload.setdefault("__input_stem", stem)
     output = Letter(payload, load_config()).render()
     print(output)

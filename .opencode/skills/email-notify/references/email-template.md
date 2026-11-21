@@ -41,7 +41,7 @@ Field sources:
 | This run (audit) | audit | `postingsInspected` / `matched` / `excluded` |
 | Skipped as applied | audit `appliedSkipped` | `0` when absent |
 | Stop reason | audit `stopReason` | One short phrase; `not recorded` when absent |
-| Report | this run's file | `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM.md` |
+| Report | this run's file | `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM/report.md` |
 
 One email per run. Never sum several runs of the same day into one email.
 

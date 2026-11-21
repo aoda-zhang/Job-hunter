@@ -39,7 +39,7 @@ Do not add a second config file. A platform named in `sources` without a `platfo
 
 ## 2. Resolve index and scope
 
-**One run = one report file.** At run start record the local start time and derive the report path `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM.md` (`HHMM` = start time; add `-2`, `-3` on a same-minute collision). Never append to or rewrite another run's report.
+**One run = one report file.** At run start record the local start time and derive the report path `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM/report.md` (`HHMM` = start time; add `-2`, `-3` on a same-minute collision). Never append to or rewrite another run's report.
 
 Read the **previous-report set** from:
 
@@ -97,7 +97,7 @@ Match case-insensitively and ignore a country domain. Never improvise a flow for
 
 If no browser tool exists, stop and say so. If `sources` is empty, ask which platforms to use.
 
-Skip a source whose `platforms.<name>.enabled` is not `true`; count it as `skipped (disabled)` and continue. A caller may also scope a pass to a subset of `sources` (for example "LinkedIn only"): process just those in `sources` order, count the rest as `skipped (not in this pass)`, do not mark them failed, and never open a platform outside the pass. At the start record the local start time in ISO 8601 with offset as `runAt` and derive this run's report path (`reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM.md`); both go into the report header and the audit line.
+Skip a source whose `platforms.<name>.enabled` is not `true`; count it as `skipped (disabled)` and continue. A caller may also scope a pass to a subset of `sources` (for example "LinkedIn only"): process just those in `sources` order, count the rest as `skipped (not in this pass)`, do not mark them failed, and never open a platform outside the pass. At the start record the local start time in ISO 8601 with offset as `runAt` and derive this run's report path (`reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM/report.md`); both go into the report header and the audit line.
 
 For each source in `sources` order:
 
@@ -157,7 +157,7 @@ Disabled checks are skipped. Confirmed mismatch → `not_matched`, stop. Any `un
 
 Record `easyApply` (`yes`/`no`/`unknown`), `applyType` (`easy_apply` when the button applies inside the platform, `external` when it clearly redirects to an employer/ATS page, `unknown` otherwise) and `coverLetter` (`yes`/`no`/`unknown`) for every inspected vacancy. These are informational and never affect classification.
 
-**Apply-form inspection.** For a `matched` vacancy whose Apply control leaves the platform (`applyType: external`), open the employer form once and record: ATS name and host, final `applyUrl`, login/account/CAPTCHA/file blockers, and every visible field with its label, type, required flag, options and the value that would be filled from `applicant`/`applications.screening`. Record the cover-letter field as required, optional or absent. Never type into the form, never upload a file, never click Submit; close the inspection tab when done. If the form cannot be reached or is login-walled, record the blocker and continue. Write the field table to `reports/jobs/<jobId>/fields.md` (create the folder; `jobId` = LinkedIn job id, Indeed `jk`, or a company slug when neither exists) together with the ATS, apply URL and blocker. The daily report carries only the short `Apply form` status, never the field table. A platform one-click apply form is never opened.
+**Apply-form inspection.** For a `matched` vacancy whose Apply control leaves the platform (`applyType: external`), open the employer form once and record: ATS name and host, final `applyUrl`, login/account/CAPTCHA/file blockers, and every visible field with its label, type, required flag, options and the value that would be filled from `applicant`/`applications.screening`. Record the cover-letter field as required, optional or absent. Never type into the form, never upload a file, never click Submit; close the inspection tab when done. If the form cannot be reached or is login-walled, record the blocker and continue. Write the field table to `<run>/<jobId>/fields.json` (create the folder; `jobId` = LinkedIn job id, Indeed `jk`, or a company slug when neither exists) together with the ATS, apply URL and blocker. The daily report carries only the short `Apply form` status, never the field table. A platform one-click apply form is never opened.
 
 Keep the search tab and reuse one detail tab. Close every JD and apply-form tab immediately after that vacancy's row (including its field table and cover letter) is written to the report; never batch-close at the end. Close the apply-form tab even when the form is blocked.
 
@@ -173,7 +173,7 @@ Draft a cover letter for **every matched vacancy** — `Easy Apply` and `No Easy
 
 Follow `.opencode/skills/job-discovery/references/daily-report-format.md` for structure, sections, columns, metadata and summaries. Write human-readable strings in `common.preferredReportLanguage`; keep structure, order, dates and URLs unchanged.
 
-Write **this run's own file**, `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM.md` (`HHMM` = this run's start time, `-2` / `-3` on collision). Create it fresh with the run header (run id, start time, end time, sources of this run, scope, apply-dedupe result). Never append to an earlier run's file and never write a day-total report. Deduplicate inside the file by canonical URL; without one, use company + title + location and flag possible duplicates.
+Write **this run's own file**, `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM/report.md` (`HHMM` = this run's start time, `-2` / `-3` on collision). Create it fresh with the run header (run id, start time, end time, sources of this run, scope, apply-dedupe result). Never append to an earlier run's file and never write a day-total report. Deduplicate inside the file by canonical URL; without one, use company + title + location and flag possible duplicates.
 
 When `common.thirdPartyPostings` is `separate`, put only confirmed `third_party` postings that pass every active filter in the dedicated `代招岗位` section, with the same columns, keyword evidence, ordering and checks as matched jobs. They count as matched in the summary. A `third_party` posting that fails title, JD language, language requirement level, technical keywords, work mode, employment type or seniority goes to the excluded table with that reason, never to `代招岗位`. A third-party posting with `unknown` on an active dimension goes to review, never to `代招岗位`.
 

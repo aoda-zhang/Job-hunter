@@ -176,7 +176,7 @@ Rules:
 - `runAt` = search start; `finishedAt` = report, index and audit finished; `durationSeconds` = integer difference.
 - Use local time with UTC offset. Write `null` when unknown; never estimate.
 - **Never write `finishedAt` or `durationSeconds` before the run has actually finished.** Write the audit line only at the end, from the real clock; a future timestamp is a defect, not a placeholder.
-- `reportPath` = this run's report file (`reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM.md`), exactly as written and published.
+- `reportPath` = this run's report file (`reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM/report.md`), exactly as written and published.
 - `sources` = platforms attempted, in order. `searchedBySource` = `completed` / `failed` / `skipped` with reason.
 - `queriesBySource` = the queries actually submitted, per source. Keep the prompt verbatim for `queryMode: "prompt"`.
 - `uiFilters` = only filters the platform offered; otherwise `{}`.
