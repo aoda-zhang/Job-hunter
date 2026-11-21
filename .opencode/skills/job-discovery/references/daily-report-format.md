@@ -4,10 +4,13 @@ Format baseline for `reports/daily/`. Read before writing or updating a report. 
 
 ## 1. File and language
 
-- One file per local date: `reports/daily/YYYY-MM-DD.md`.
+- **One file per run**: `reports/daily/YYYY-MM-DD-HHMM.md`, where `HHMM` is the run's local start time (24h, `Asia/Shanghai` unless configured otherwise). Example: a run starting 21:01 writes `reports/daily/2026-11-20-2101.md`.
+- Two runs that start in the same minute: append `-2`, `-3`, … (`2026-11-20-2101-2.md`). Never merge them into one file.
+- A second run on the same day gets its own new file. **Never merge across runs, never append today's results to an earlier run's file, and never rewrite an earlier run's report.**
+- The same run keeps one file: later steps of that run (`job-apply`, `linkedin-feed-jobs`) edit the file the run created, not "today's report".
+- The plain `YYYY-MM-DD.md` file is only a day index that links that day's run files. Never put job tables in it.
 - Create the directory when missing.
-- Merge into an existing file; never overwrite, delete or downgrade a confirmed entry.
-- Deduplicate by canonical URL; without one, use `source + company + title + location` and flag a possible duplicate.
+- Deduplicate inside a run's file by canonical URL; without one, use `source + company + title + location` and flag a possible duplicate.
 - Keep `job-index.json` and `runs/` out of the report and out of `common.reportRepo`.
 
 Write human-readable text in `common.preferredReportLanguage`; fall back to English when absent or unsupported.
@@ -21,11 +24,12 @@ Use tables. Do not paste full JDs. Do not add scores, rankings, recommendations 
 ## 2. Section order
 
 ```markdown
-# Daily Job Findings — YYYY-MM-DD
+# Daily Job Findings — YYYY-MM-DD HH:MM
 ```
 
-Translate `Daily Job Findings`; keep ` — YYYY-MM-DD`.
+Translate `Daily Job Findings`; keep ` — YYYY-MM-DD HH:MM` (the run's start time, minute precision).
 
+0. Run header (mandatory): run id, start time, end time, sources processed in this run, scope, apply-dedupe result
 1. Run summary
 2. Matched jobs — one section per source, in `sources` order (LinkedIn first, then Indeed)
 3. `代招岗位` (third-party postings) — only with confirmed third-party postings that passed every other check
@@ -36,13 +40,33 @@ Translate `Daily Job Findings`; keep ` — YYYY-MM-DD`.
 8. Excluded jobs — always last job table
 9. Exception note — only on failure
 
-A normal run has sections 1, 2 and 6. Never write an empty section or "None".
+A normal run has sections 0, 1, 2 and 6. Never write an empty section or "None".
+
+### 2.1 Run header
+
+Write it as a plain list directly under the title, before the summary:
+
+```markdown
+- 运行编号：`2026-11-20-2101`
+- 开始时间：2026-11-20 21:01（Asia/Shanghai）
+- 结束时间：2026-11-20 21:51
+- 本轮来源：LinkedIn（Indeed 未在本轮执行）
+- 搜索范围：德国全境（未限定城市）
+- 投递查重：运行前已核对 `reports/job-index.json` 与 `reports/applications/`，本轮命中已投递岗位 N 条，未重复投递
+- 本轮报告：`reports/daily/2026-11-20-2101.md`
+```
+
+- `开始时间` = the moment the run started searching; `结束时间` = the moment report, index and audit were finished. Both in local time with minutes; keep the timezone label on the start line only.
+- Take both values from the same clock source; never write a planned or estimated end time.
+- `投递查重` must state the real result of the pre-run check. When it skipped jobs, name the count and keep the skipped rows out of every table.
 
 When `common.report.splitBySource` is `false`, section 2 is a single matched section with the same parts; everything else is unchanged.
 
 Apply the evidence rules (section 11) and cross-day rules (section 12) to the report.
 
 ## 3. Run summary
+
+Per run, never a day total. Counts come only from this run's rows.
 
 Keep it short: one row group per metric, one column per source plus a total. Everything else goes to the audit JSONL.
 
@@ -276,23 +300,36 @@ Only on a failed, interrupted or largely unusable run; always at the end. Cover 
 - The priority prompt and Easy Apply are ordering metadata only; neither ever creates or removes a job.
 - Never output candidate-fit, salary or visa judgments.
 
-## 12. Previous report dedupe
+## 12. Previous-report dedupe
 
-A report is a daily snapshot. At run start, the previous daily report is the skip source: every job ID / canonical URL in its tables is skipped before opening and appears nowhere in today's report. This prevents overlap from the daily `common.lookbackHours` window. `job-index.json` is not the source for this skip; it only supplies the applied set for the cross-source rule.
+A report is a single run's snapshot. At run start, the skip source is **every earlier run's report**, plus the latest previous-day runs:
+
+1. all `reports/daily/YYYY-MM-DD-*.md` of today whose `HHMM` is earlier than this run's start, and
+2. every run report of the most recent previous date (`reports/daily/<prev-date>*.md`).
+
+Extract every job ID / canonical URL from all their tables into the **previous-report set**; a card in this set is not opened, not judged and not listed.
+
+**Apply preflight (mandatory, before the first platform).** Build the applied set from two local sources and record the result in the report header:
+
+- `reports/job-index.json`: every entry with `appliedOn` set or `applyStatus` in `submitted` / `filled`;
+- `reports/applications/*.md`: every `Submitted` / `Filled (awaiting submit)` row of the last 30 days.
+
+Any vacancy in that set is skipped on every platform, never opened, never listed and **never submitted again**, even when the run is a re-check or the posting reappeared with a new ID (match on normalized identity, not only URL).
 
 | Situation | Handling |
 |---|---|
-| Key in the previous daily report | Do not open, judge or list; count as previously reported (skipped) |
+| Key in an earlier run's report of the same day | Do not open, judge or list; count as previously reported (skipped) |
+| Key in the previous day's runs | Do not open, judge or list; count as previously reported (skipped) |
 | `appliedOn` set | Do not open or judge; count as applied-skipped; never list |
 | Applied on another platform (normalized company + title + city) and `common.dedupe.skipApplied` is `true` | Do not open or judge; count as applied on another platform (skipped); never list, never apply again |
 | Same vacancy on two platforms, not applied (and `common.dedupe.crossSource` is `true`) | Keep the first source's row; annotate the second `⚠️ 同职位已在 <source> 出现` when it still appears |
-| Explicit re-check override | Exempt the named keys for that run; list normally and append `[reported MM-DD]` |
-| No previous report | Check every card |
+| Explicit re-check override | Exempt the named keys for that run; list normally and append `[reported MM-DD HH:MM]` |
+| No earlier report | Check every card |
 
 - Markers never reduce today's opened count.
-- The same URL appears once.
+- The same URL appears once per run file; the same vacancy may appear again in a later run only as `[reported MM-DD HH:MM]` after an explicit override, never as a duplicate row.
 - `Of which cross-day repeats` = matched rows with `[reported …]`, including `代招岗位` rows. With the default previous-report skip it is normally 0.
-- Use `MM-DD` to avoid cross-year ambiguity.
+- Use `MM-DD HH:MM` in markers so a repeat points at the exact run that reported it first; `MM-DD` alone is not enough on a multi-run day.
 
 Soft duplicates: same normalized company + title + city with a different ID → `⚠️ possible duplicate`, or `⚠️ possibly applied MM-DD` when applied. Annotate only; never merge or change counts. Normalization rules are in `job-index-and-audit.md`.
 
@@ -309,6 +346,8 @@ Cover letter: draft only when `common.isNeededCover` is `true` and `coverLetter`
 
 ## 13. Update an existing report
 
-Keep existing entries and evidence. Preserve `代招岗位` and `Feed-sourced jobs` sections and their rows. Add or correct only with new evidence. Never silently rewrite an old conclusion; state the reason when new config changes a decision.
+Only the current run's own file may be updated, and only by this run's later steps (`job-apply`, `linkedin-feed-jobs`). Never reopen or edit another run's report, and never merge two runs into one file.
+
+Keep existing entries and evidence inside that file. Preserve `代招岗位` and `Feed-sourced jobs` sections and their rows. Add or correct only with new evidence. Never silently rewrite an old conclusion; state the reason when new config changes a decision. When the header's `结束时间` or apply-dedupe line becomes outdated, update those two lines.
 
 When a config change reclassifies a job (for example a previously excluded third-party posting now passes and belongs in `代招岗位`), move the row to the correct table, keep its evidence and counts consistent, and state the reason in Notes. Never leave the same job in two tables.

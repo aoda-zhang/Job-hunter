@@ -13,7 +13,7 @@ Job Hunter 由三部分组成：一份 OpenCode Agent 说明、六个 Skill 说�
 1. **搜索**：按 `sources` 的顺序逐个平台检索，每个平台用它自己的查询配置（LinkedIn 一句话 prompt，Indeed 短关键词）。
 2. **收窄范围**：在各平台自己的筛选栏中应用你配置的条件——发布时间、雇佣类型、工作模式、职级、地点。
 3. **逐个打开**：进入每一个剩余职位的真实页面（而不只是搜索结果卡片），跳过已关闭或不再接受申请的职位。
-4. **分类并写报告**：把每个职位判定为「命中 / 待复核 / 不符」，保存到 `reports/daily/YYYY-MM-DD.md`。
+4. **分类并写报告**：把每个职位判定为「命中 / 待复核 / 不符」，保存到 `reports/daily/YYYY-MM-DD-HHMM.md`（每次运行一个独立文件，文件名精确到分钟，不跨轮合并）。
 
 它不会替你投递、不会私信招聘方、不会修改你的账号设置，只使用你已经登录的浏览器会话。
 
@@ -30,7 +30,7 @@ flowchart TD
     F -->|已关闭| X[跳过并计数]
     F -->|有效| G[核对标题、发布方、JD 语言、<br/>关键词、模式、类型、职级]
     G --> H[命中 / 待复核 / 不符]
-    H --> I[reports/daily/YYYY-MM-DD.md]
+    H --> I[reports/daily/YYYY-MM-DD-HHMM.md]
 ```
 
 判断按固定顺序进行，遇到第一个「确认不符」就停止。页面信息不足以证明符合或不符合时，职位会进入**待复核**，而不是被直接排除。
@@ -64,7 +64,7 @@ cp job-hunter.config.example.json job-hunter.config.json
 1. 在 OpenCode 中打开本仓库目录。
 2. 选择 **Job Hunter** Primary Agent（按 `Tab` 切换 Agent）。
 3. 直接用自然语言说，例如「帮我找今天的职位」「刷新报告，只要远程」。
-4. Agent 操作浏览器搜索并筛选，最后写出 `reports/daily/YYYY-MM-DD.md`，打开看表格即可。
+4. Agent 操作浏览器搜索并筛选，最后写出 `reports/daily/YYYY-MM-DD-HHMM.md`（HHMM 为该轮开始时间），打开看表格即可。
 
 你始终只需要和 Job Hunter Agent 交互。它会自行加载 `job-discovery`，不需要你手动选 Skill。
 
@@ -129,7 +129,7 @@ cp job-hunter.config.example.json job-hunter.config.json
 
 **定时任务。** 只改配置里的 `schedules.jobSearch` 不会自动改变 launchd。改完 `times`、`weekdays` 或 `timezone` 后，运行 `.opencode/scripts/apply-schedule.sh`（或直接让 Agent 改时间）。launchd 使用 Mac 的本地时间，所以 `timezone` 必须和系统时区一致。`times` 为空数组会卸载并删除 job search 定时任务；填入时间会重新创建。
 
-LinkedIn feed 有独立的定时器。把 `schedules.linkedinFeedReview.times` 设成 `HH:MM` 数组，可用 `.weekdays` 限定星期（`[1,2,3,4,5]` 表示周一到周五），再运行同一个脚本；空数组表示不启动这个任务。每次运行只看 Recent feed，不检查关注列表：只回复作者岗位匹配 `common.jobTitles.include`、且作者地点确认在 `common.countries`/`common.locations` 内的帖子，没有每日最低数量（0 条也是正常结果），把匹配的招聘帖追加到 `reports/daily/YYYY-MM-DD.md`，在启用邮件通知时把回复草稿和招聘帖一起发送，并在配置了 `common.reportRepo` 时推送 `reports/linkedin-feed/YYYY-MM-DD.md` 和更新后的日报。
+LinkedIn feed 有独立的定时器。把 `schedules.linkedinFeedReview.times` 设成 `HH:MM` 数组，可用 `.weekdays` 限定星期（`[1,2,3,4,5]` 表示周一到周五），再运行同一个脚本；空数组表示不启动这个任务。每次运行只看 Recent feed，不检查关注列表：只回复作者岗位匹配 `common.jobTitles.include`、且作者地点确认在 `common.countries`/`common.locations` 内的帖子，没有每日最低数量（0 条也是正常结果），把匹配的招聘帖追加到本轮自己的 `reports/daily/YYYY-MM-DD-HHMM.md`，在启用邮件通知时把回复草稿和招聘帖一起发送，并在配置了 `common.reportRepo` 时推送 `reports/linkedin-feed/YYYY-MM-DD.md` 和更新后的日报。
 
 ## 6. 职位如何被筛选
 
@@ -161,7 +161,7 @@ Agent 必须**严格串行**：一次只搜一个查询、一次只开一个职�
 
 | 产出 | 路径 |
 |---|---|
-| 每日职位发现 | `reports/daily/YYYY-MM-DD.md` |
+| 每轮职位发现 | `reports/daily/YYYY-MM-DD-HHMM.md` |
 | LinkedIn feed 回复机会 | `reports/linkedin-feed/YYYY-MM-DD.md` |
 | 面试准备 | `reports/interviews/<company-slug>/` |
 

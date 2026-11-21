@@ -8,8 +8,9 @@ Local memory layer. Follow this on every `job-discovery` run. Never push these f
 |---|---|
 | `reports/job-index.json` | Cross-day index and application record |
 | `reports/runs/YYYY-MM-DD.jsonl` | Run audit, one line per run |
+| `reports/applications/YYYY-MM-DD.md` | Application log, read by the pre-run apply check |
 
-Both are Git-ignored and local only.
+All three are Git-ignored and local only.
 
 ## 2. Index schema
 
@@ -81,19 +82,22 @@ Create the index when missing. If unparseable, back it up to `reports/job-index.
 
 The index is an application/history record; it is **not** a source for "already listed" decisions.
 
-1. Read `reports/daily/<previous date>.md` for the previous-report set.
+1. Read every earlier run report of today (`reports/daily/YYYY-MM-DD-*.md` with an earlier `HHMM`) and every run report of the most recent previous date, for the previous-report set.
 2. Read `reports/job-index.json` to preserve existing entries, to collect `appliedOn`, and to build the cross-source applied set (§4).
-3. If the index is missing, create it empty; do not rebuild it from old reports for dedupe.
+3. Read the last 30 days of `reports/applications/*.md` for `Submitted` / `Filled (awaiting submit)` rows and merge them into the applied set.
+4. If the index is missing, create it empty; do not rebuild it from old reports for dedupe.
+
+Record the pre-run result in the report header: applied entries checked, this run's hits, skipped count. The check runs before the first platform is opened and again before `job-apply` fills anything.
 
 ## 4. Dedup
 
 Hard dedup: same job ID or canonical URL on one platform; same canonical URL or normalized identity across platforms.
 
-- **Previous-report set**: at run start, read the latest `reports/daily/YYYY-MM-DD.md` before today and extract every job ID / canonical URL from all its tables. A card in this set is not opened, not judged and not listed; count it as "Previously reported (skipped)".
+- **Previous-report set**: at run start, read every earlier run report of today plus every run report of the most recent previous date, and extract every job ID / canonical URL from all their tables. A card in this set is not opened, not judged and not listed; count it as "Previously reported (skipped)".
 - `appliedOn` jobs count as "Already applied (skipped)".
-- `common.skipPreviousReport` (default `true`) enables this. The previous daily report, not the index, drives this skip.
+- `common.skipPreviousReport` (default `true`) enables this. The reports, not the index, drive this skip.
 - Override only on explicit user request (named jobs, a company, a status); exempt those keys for that run and record the exemption in `limitations`.
-- The first run with no previous report checks everything; later runs only process genuinely new postings. This is what prevents overlap from the daily `common.lookbackHours` window.
+- The first run of a day with no earlier report checks everything; later runs only process genuinely new postings. This is what prevents overlap from the daily `common.lookbackHours` window.
 
 Soft dedup: compare `normalized company + normalized title + city`, without the platform name.
 
@@ -104,7 +108,7 @@ Soft dedup: compare `normalized company + normalized title + city`, without the 
 
 Cross-source dedup (`common.dedupe.crossSource` / `.skipApplied`, default `true`):
 
-- Build the applied set at run start: every index entry with `appliedOn` set or `applyStatus: "submitted"`, mapped to the normalized key above. Do not clear or rewrite those entries.
+- Build the applied set at run start: every index entry with `appliedOn` set or `applyStatus` in `submitted` / `filled`, plus every `Submitted` / `Filled (awaiting submit)` row in the last 30 days of `reports/applications/*.md`, mapped to the normalized key above. Do not clear or rewrite those entries.
 - Before opening a card on a platform, look up its normalized key. When the applied entry belongs to another platform, skip the card and count it as **applied on another platform (skipped)**. It never becomes a match, review or excluded row, and `job-apply` must never file it again.
 - A cross-source hit that is not applied stays eligible; write `⚠️ same job on <other source>` in Notes and keep both rows only when they are genuinely different postings. Same normalized key + same employer = one vacancy: keep the row of the source that appears first in `sources`.
 - With `skipApplied: false`, cross-source duplicates are still annotated but not skipped.
@@ -114,9 +118,9 @@ Cross-source dedup (`common.dedupe.crossSource` / `.skipApplied`, default `true`
 
 Triggers: the user says they applied, names the jobs, or `job-apply` confirms a submit.
 
-1. Find the job in today's report, historical reports, then the index by URL or company + title.
+1. Find the job in the current run's report, then earlier run reports, then the index by URL or company + title.
 2. Set `appliedOn` to today; keep `status`.
-3. If it is in today's report, append `[applied MM-DD]` to Notes; otherwise update the index only.
+3. If it is in the current run's report, append `[applied MM-DD HH:MM]` to Notes; otherwise update the index only.
 4. If ambiguous, ask one question. Never guess or mark a batch.
 5. Do not change report counts or decisions.
 6. `job-apply` also writes `applyType`, `applyStatus`, `applyChannel`, `applyUrl`, `applyAttemptedAt`, `applicationRef` and `applyNote`. Only a confirmed submit sets `appliedOn`; a filled-but-unsubmitted form stays `applyStatus: "filled"` with `appliedOn: null`.
@@ -127,9 +131,10 @@ Path: `reports/runs/YYYY-MM-DD.jsonl`. Append one line per run; never overwrite.
 
 ```json
 {
-  "runAt": "2026-11-10T09:30:00+01:00",
-  "finishedAt": "2026-11-10T10:02:00+01:00",
-  "durationSeconds": 1920,
+  "runAt": "2026-11-20T21:01:00+08:00",
+  "finishedAt": "2026-11-20T21:51:23+08:00",
+  "durationSeconds": 3023,
+  "reportPath": "reports/daily/2026-11-20-2101.md",
   "scope": { "countries": ["Germany"], "locations": [] },
   "sources": ["LinkedIn", "Indeed"],
   "queriesBySource": {
@@ -170,6 +175,8 @@ Rules:
 
 - `runAt` = search start; `finishedAt` = report, index and audit finished; `durationSeconds` = integer difference.
 - Use local time with UTC offset. Write `null` when unknown; never estimate.
+- **Never write `finishedAt` or `durationSeconds` before the run has actually finished.** Write the audit line only at the end, from the real clock; a future timestamp is a defect, not a placeholder.
+- `reportPath` = this run's report file (`reports/daily/YYYY-MM-DD-HHMM.md`), exactly as written and published.
 - `sources` = platforms attempted, in order. `searchedBySource` = `completed` / `failed` / `skipped` with reason.
 - `queriesBySource` = the queries actually submitted, per source. Keep the prompt verbatim for `queryMode: "prompt"`.
 - `uiFilters` = only filters the platform offered; otherwise `{}`.

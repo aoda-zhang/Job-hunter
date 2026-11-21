@@ -39,22 +39,28 @@ Do not add a second config file. A platform named in `sources` without a `platfo
 
 ## 2. Resolve index and scope
 
-Read the **previous daily report** (the most recent `reports/daily/YYYY-MM-DD.md` before today). Extract every job ID / canonical URL from all its tables (matched, `代招岗位`, review, excluded) into the **previous-report set**.
+**One run = one report file.** At run start record the local start time and derive the report path `reports/daily/YYYY-MM-DD-HHMM.md` (`HHMM` = start time; add `-2`, `-3` on a same-minute collision). Never append to or rewrite another run's report.
+
+Read the **previous-report set** from:
+
+- every run report of today whose `HHMM` is earlier than this run's start (`reports/daily/YYYY-MM-DD-*.md`), and
+- every run report of the most recent previous date.
+
+Extract every job ID / canonical URL from all their tables (matched, `代招岗位`, review, submitted, excluded) into the set.
 
 - Before opening a card, skip it if its job ID or canonical URL is in the previous-report set. Do not open, judge or list it; count it as `上次报告已记录（跳过）` / `previously reported (skipped)`.
-- Applied jobs still count as applied-skipped.
 - `common.skipPreviousReport` (default `true`) controls this. When `false`, no report-based skip.
 - `reports/job-index.json` is **not** the source for this previous-report skip; it is only used for the applied set and cross-source dedup below.
-- Explicit override: when the user asks to re-check specific jobs, a company or a status, exempt those for that run and record the exemption in `limitations`.
-- If there is no previous daily report, the set is empty and every card is checked.
+- Explicit override: when the user asks to re-check specific jobs, a company or a status, exempt those for that run, append `[reported MM-DD HH:MM]` pointing at the earlier run and record the exemption in `limitations`.
+- If no earlier run report exists, the set is empty and every card is checked.
 - Flag likely duplicates (same company, normalized title, city, different ID) as `⚠️ possible duplicate`; add `possibly applied MM-DD` when the other job was applied to.
 
 Read the index once for the whole run and build two in-memory sets before any platform is opened:
 
-- **applied set** — every index job with `appliedOn` set or `applyStatus: "submitted"`, keyed by normalized `company + title + city` (normalization: `job-index-and-audit.md` §4).
+- **applied set** — every index job with `appliedOn` set or `applyStatus` in `submitted` / `filled`, plus every `Submitted` / `Filled (awaiting submit)` row in the last 30 days of `reports/applications/*.md`, keyed by normalized `company + title + city` (normalization: `job-index-and-audit.md` §4).
 - **known set** — every index job that is `matched` or `review`, same key, used for soft-duplicate annotations.
 
-These sets are shared across platforms and are the basis for the cross-source rule in §2a.
+These sets are shared across platforms and are the basis for the cross-source rule in §2a. Write the result into the report's run header (`投递查重` line): entries checked, this run's applied hits, skipped count. **Never submit a vacancy that is already in the applied set, whatever URL or platform it appears under.**
 
 Resolve scope:
 
@@ -91,7 +97,7 @@ Match case-insensitively and ignore a country domain. Never improvise a flow for
 
 If no browser tool exists, stop and say so. If `sources` is empty, ask which platforms to use.
 
-Skip a source whose `platforms.<name>.enabled` is not `true`; count it as `skipped (disabled)` and continue. A caller may also scope a pass to a subset of `sources` (for example "LinkedIn only"): process just those in `sources` order, count the rest as `skipped (not in this pass)`, do not mark them failed, and never open a platform outside the pass. Record the start time in ISO 8601 with the local offset as `runAt`.
+Skip a source whose `platforms.<name>.enabled` is not `true`; count it as `skipped (disabled)` and continue. A caller may also scope a pass to a subset of `sources` (for example "LinkedIn only"): process just those in `sources` order, count the rest as `skipped (not in this pass)`, do not mark them failed, and never open a platform outside the pass. At the start record the local start time in ISO 8601 with offset as `runAt` and derive this run's report path (`reports/daily/YYYY-MM-DD-HHMM.md`); both go into the report header and the audit line.
 
 For each source in `sources` order:
 
@@ -161,7 +167,7 @@ Draft a cover letter for every `matched` or `review` vacancy whose apply form sh
 
 Follow `.opencode/skills/job-discovery/references/daily-report-format.md` for structure, sections, columns, metadata and summaries. Write human-readable strings in `common.preferredReportLanguage`; keep structure, order, dates and URLs unchanged.
 
-Write `reports/daily/YYYY-MM-DD.md`. Merge with an existing report. Preserve any `代招岗位` and `Feed-sourced jobs` sections and their counts. Deduplicate by canonical URL; without one, use company + title + location and flag possible duplicates.
+Write **this run's own file**, `reports/daily/YYYY-MM-DD-HHMM.md` (`HHMM` = this run's start time, `-2` / `-3` on collision). Create it fresh with the run header (run id, start time, end time, sources of this run, scope, apply-dedupe result). Never append to an earlier run's file and never write a day-total report. Deduplicate inside the file by canonical URL; without one, use company + title + location and flag possible duplicates.
 
 When `common.thirdPartyPostings` is `separate`, put only confirmed `third_party` postings that pass every active filter in the dedicated `代招岗位` section, with the same columns, keyword evidence, ordering and checks as matched jobs. They count as matched in the summary. A `third_party` posting that fails title, JD language, language requirement level, technical keywords, work mode, employment type or seniority goes to the excluded table with that reason, never to `代招岗位`. A third-party posting with `unknown` on an active dimension goes to review, never to `代招岗位`.
 
@@ -173,9 +179,9 @@ Cross-source rows follow §2a: a vacancy already applied to on another platform 
 
 Before writing, add cross-day repeat annotations only for jobs exempted from the previous-report skip. Do not count excluded or expired jobs as repeats.
 
-Publish when `common.reportRepo` is set: clone/pull it, copy the daily report to `reports/daily/YYYY-MM-DD.md`, commit `docs: add daily job results for YYYY-MM-DD`, push and verify. On failure, report it and keep the local file. Never force-push. Publish only the daily report.
+Publish when `common.reportRepo` is set: clone/pull it, copy this run's report to the same `reports/daily/YYYY-MM-DD-HHMM.md` path, commit `docs: add job run YYYY-MM-DD HH:MM`, push and verify. Never merge two runs into one remote file and never overwrite another run's file. On failure, report it and keep the local file. Never force-push. Publish only the run report.
 
-After the report, update `reports/job-index.json`: upsert every inspected vacancy by source-qualified key; set `source`, `lastSeen`, `status`, `firstSeen`, `firstReportedOn`, `easyApply`, `applyType`, `coverLetter`, `posterType`, `business`, `applyChannel`, `applyUrl`, `applyForm` and `coverLetterDraft`; never clear `appliedOn` or any `apply*` field; do not write `common.isNeededCover` per vacancy. Append one JSON line to `reports/runs/YYYY-MM-DD.jsonl` using `runAt`, `finishedAt`, `durationSeconds` and the fields in `.opencode/skills/job-discovery/references/job-index-and-audit.md`. Preserve unknown fields; never delete entries.
+After the report, update `reports/job-index.json`: upsert every inspected vacancy by source-qualified key; set `source`, `lastSeen`, `status`, `firstSeen`, `firstReportedOn`, `easyApply`, `applyType`, `coverLetter`, `posterType`, `business`, `applyChannel`, `applyUrl`, `applyForm` and `coverLetterDraft`; never clear `appliedOn` or any `apply*` field; do not write `common.isNeededCover` per vacancy. At the very end of the run append one JSON line to `reports/runs/YYYY-MM-DD.jsonl` with the real `runAt`, `finishedAt`, `durationSeconds`, this run's `reportPath` and the fields in `.opencode/skills/job-discovery/references/job-index-and-audit.md`. Never write `finishedAt` in advance. Preserve unknown fields; never delete entries.
 
 `applyForm` is `inspected` / `blocked` / `not_external`; `coverLetterDraft` is the saved file path or empty. Discovery records the form; it never files it.
 
@@ -185,6 +191,6 @@ If `notifications.email.enabled`, load `email-notify` and send one summary after
 
 ## 6. Report completion
 
-State the report path, resolved scope (say `All Germany` when `common.locations` was empty), the resolved queries per source, distinct vacancies inspected by source, applied-skipped, applied-on-another-platform skipped, previously-checked skipped, cards skipped before opening, expired/closed skipped, matched, Easy Apply-matched, No Easy Apply-matched, external applications filled/blocked, third-party postings (`代招岗位`), review, excluded, cross-day repeats, possible duplicates, per-source coverage and stop reason, email status and any access limitation. Give the counts per source and as a total.
+State the report path (the run file with its exact start time), resolved scope (say `All Germany` when `common.locations` was empty), the resolved queries per source, distinct vacancies inspected by source, applied-skipped, applied-on-another-platform skipped, previously-checked skipped, cards skipped before opening, expired/closed skipped, matched, Easy Apply-matched, No Easy Apply-matched, external applications filled/blocked, third-party postings (`代招岗位`), review, excluded, cross-day repeats, possible duplicates, per-source coverage and stop reason, email status and any access limitation. Give the counts per source and as a total for this run only.
 
 Count only pages actually opened. Distinguish results seen from JDs reviewed. Do not add a limitations section to a normal report; use the exception note only for a failed or interrupted run.

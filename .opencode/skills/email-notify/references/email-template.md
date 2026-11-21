@@ -22,11 +22,10 @@ Job Hunter daily search summary
 Date: 2026-11-10
 Run time: 14:05 – 14:14 (9 min)
 Scope: Germany (nationwide)
-Day total: inspected 135 · matched 28 · review 12 · excluded 95
-This run: inspected 5 · matched 0 · excluded 5
+This run: inspected 61 · matched 18 · review 0 · excluded 43
 Skipped as applied: 0
 Stop reason: no more result pages (127 cards read)
-Report: reports/daily/2026-11-10.md
+Report: reports/daily/2026-11-10-2130.md
 
 Status: completed normally
 ```
@@ -38,13 +37,13 @@ Field sources:
 | Date | audit `runAt` | `YYYY-MM-DD` |
 | Run time | audit `runAt` / `finishedAt` / `durationSeconds` | `HH:MM – HH:MM (N min)`; omit the end or duration when missing |
 | Scope | audit `scope.countries` / `locations` | No `locations` = `(nationwide)`; list up to five cities, then "etc." |
-| Day total | daily report run summary | inspected = `JDs read` / `检查 JD`, matched = `Matched`, review = `Needs manual review`, excluded = `Confirmed non-match (excluded)` |
-| This run | audit | `postingsInspected` / `matched` / `excluded` |
+| This run's totals | this run's report run summary | inspected = `检查 JD`, matched = `匹配`, review = `需要人工复核`, excluded = `已排除`; one run only, never a day total |
+| This run (audit) | audit | `postingsInspected` / `matched` / `excluded` |
 | Skipped as applied | audit `appliedSkipped` | `0` when absent |
 | Stop reason | audit `stopReason` | One short phrase; `not recorded` when absent |
-| Report | fixed path | `reports/daily/YYYY-MM-DD.md` |
+| Report | this run's file | `reports/daily/YYYY-MM-DD-HHMM.md` |
 
-Omit the day-total line when the summary is missing or unreadable.
+One email per run. Never sum several runs of the same day into one email.
 
 ## Status
 
@@ -67,7 +66,7 @@ Job Hunter run failed
 Date: 2026-11-10
 Failed stage: search / read JD / write report
 Reason: <one line>
-Kept: reports/daily/2026-11-10.md (if written)
+Kept: reports/daily/2026-11-10-2130.md (if written)
 
 Status: failed
 ```

@@ -1,11 +1,11 @@
 ---
 name: linkedin-feed-jobs
-description: Search LinkedIn posts by hiring keywords for the titles, locations and time window in job-hunter.config.json, add matches to today's daily report under Feed-sourced jobs, and ignore all non-matching posts. Read-only.
+description: Search LinkedIn posts by hiring keywords for the titles, locations and time window in job-hunter.config.json, add matches to this run's timestamped report under Feed-sourced jobs, and ignore all non-matching posts. Read-only.
 ---
 
 # LinkedIn Feed Jobs
 
-Read-only. Find hiring posts through keyword search plus a Recent-feed pass, match them against the config, add matches to today's daily report. Never apply, message, like, comment, react, repost, follow or connect. Never change `job-discovery` output.
+Read-only. Find hiring posts through keyword search plus a Recent-feed pass, match them against the config, add matches to this run's timestamped report. Never apply, message, like, comment, react, repost, follow or connect. Never change `job-discovery` output.
 
 ## 1. Read config
 
@@ -53,23 +53,23 @@ If the post states no location or no specific role, skip. Never infer a location
 
 ## 5. Deduplicate
 
-Read today's report, the previous 7 daily reports and `reports/job-index.json` before adding a row.
+Read every run report of today (`reports/daily/YYYY-MM-DD-*.md`), every run report of the previous 7 dates, and `reports/job-index.json` before adding a row.
 
 Skip when:
 
-- the canonical permalink, or the normalized company + title + location, already appears in today's report;
-- the job has `appliedOn` set in the index;
+- the canonical permalink, or the normalized company + title + location, already appears in an earlier run report of today;
+- the job has `appliedOn` set in the index, or appears as `Submitted` / `Filled (awaiting submit)` in the last 30 days of `reports/applications/*.md`;
 - the job is already `matched` or `review` in the index;
 - two posts describe the same job; keep the newer or the one that states more fields;
-- the job already appears in the matched or review table of today's report.
+- the job already appears in a matched or review table of an earlier run report today.
 
-## 6. Add to the daily report
+## 6. Add to this run's report
 
-Edit `reports/daily/YYYY-MM-DD.md`.
+Edit the report file this run created: `reports/daily/YYYY-MM-DD-HHMM.md` (`HHMM` = this run's start time). Never write into another run's file and never create a day-total file.
 
 - Place a translated `## Feed-sourced jobs` section after matched jobs and the `代招岗位` section, and before review and excluded.
-- If the report is missing, create it with the report title and this section; note that the regular job-discovery run has not written its sections.
-- Merge new rows; never duplicate a row, rewrite a matched/review row or overwrite a user-edited row.
+- If the report is missing, create it with the run header (run id, start and end time, sources, scope, apply-dedupe result) and this section; note that job-discovery has not written its sections.
+- Append new rows to this run's file; never duplicate a row, rewrite a matched/review row or overwrite a user-edited row.
 - If a run summary table exists, set its `Feed-sourced jobs` row to the row count. Do not create a run summary table.
 - List only matches. Never list non-matching hiring posts or non-hiring posts anywhere, including the excluded table.
 - If nothing matches, do not add the section.
@@ -96,10 +96,10 @@ Renumber `#` after merging.
 
 ## 7. Publish
 
-Only when this skill is the only writer of today's daily report: if `common.reportRepo` is set, clone/pull it, copy the daily report to `reports/daily/YYYY-MM-DD.md`, merge the `Feed-sourced jobs` section into an existing remote file, commit `docs: add feed-sourced jobs for YYYY-MM-DD`, push and verify. On failure, report it and keep the local file. Never force-push.
+Only when this skill is the only writer of the run report: if `common.reportRepo` is set, clone/pull it, copy this run's report to `reports/daily/YYYY-MM-DD-HHMM.md`, commit `docs: add feed-sourced jobs for YYYY-MM-DD HH:MM`, push and verify. Never merge into another run's remote file. On failure, report it and keep the local file. Never force-push.
 
 When `job-discovery` runs in the same pass, the orchestrator publishes after this step: do not push. Never send email; the orchestrator sends one run summary.
 
 ## 8. Finish
 
-Report queries run, pages read, cards seen, hiring posts seen, rows added, skipped for missing title or location, skipped as duplicate or applied, the daily report path, publish status and limitations. Count only posts actually rendered. A zero result is valid.
+Report queries run, pages read, cards seen, hiring posts seen, rows added, skipped for missing title or location, skipped as duplicate or applied, this run's report path, publish status and limitations. Count only posts actually rendered. A zero result is valid.
