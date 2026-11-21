@@ -160,10 +160,16 @@ class Letter:
         self.page_no = 0
         self.y = BODY_Y
 
-        # One file per vacancy. A JSON named after the job id produces <jobId>.pdf;
-        # only a role-slug JSON (legacy) falls back to the role name.
-        stem = slug(Path(data.get("__input_stem") or "").stem) if data.get("__input_stem") else ""
-        name = stem if re.fullmatch(r"[0-9a-f]{6,}", stem) else slug(fields["role"])
+        # File name follows the applicant convention used for the CV:
+        # <First>_<Last>_<JD role>_Cover_Letter.pdf, with the gender marker
+        # stripped the same way the CV does it. A JD that dictates a file name
+        # overrides it through "filename".
+        role = re.sub(
+            r"\s*[\(\[]?(m/f/d|m/w/d|f/m/d|w/m/d|f/m/d/x|all genders|gn)[\)\]]?",
+            "", fields["role"], flags=re.I,
+        )
+        base_name = f"{fields['first_name']}_{fields['last_name']}_{role}_Cover_Letter"
+        name = data.get("filename") or re.sub(r"[^A-Za-z0-9]+", "_", base_name).strip("_")
         default = REPO_ROOT / "reports" / "cover-letters" / slug(fields["company"]) / f"{name}.pdf"
         self.output = Path(data.get("output") or default).expanduser()
         if not self.output.is_absolute():

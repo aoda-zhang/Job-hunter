@@ -73,7 +73,7 @@ python3 .opencode/skills/cover-letter/scripts/render.py reports/cover-letters/<c
 
 The script prints the absolute PDF path. Verify the file exists.
 
-Output naming: the PDF is written next to the JSON as `<jobId>.pdf` when the JSON file is named after the job id (`4491902297.json`), otherwise as `<role-slug>.pdf` for legacy role-named JSONs. **One vacancy = one PDF**: never copy or render the same letter to a second filename.
+Output naming: `<First>_<Last>_<JD role>_Cover_Letter.pdf`, next to the JSON — the role as published in the JD with the `(m/f/d)` / `(all genders)` marker stripped, exactly like the CV name (`Qi_Zhang_<Role>_CV.pdf`). A JD that dictates a file name overrides it through `"filename"` in the JSON. **One vacancy = one PDF**: never copy or render the same letter to a second filename.
 
 To rebuild the yellow base template (personal facts filled, company/JD placeholders highlighted):
 

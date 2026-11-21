@@ -73,7 +73,7 @@ Any other missing field is not fatal for the whole run: fill what is known, leav
    - `never` — leave empty even when optional.
    - `required-only` — only when the form marks it required.
    - `always` — whenever the form offers it.
-   - For a text box, paste the filled template. For a file upload, create the file under `reports/cover-letters/<company-slug>/<jobId>.md` using `cover-letter-template.md` and upload it only when the accept list includes that extension; otherwise record `blocked — cover letter file must be exported to PDF` and stop.
+   - For a text box, paste the filled template. For a file upload, create the file under `reports/cover-letters/<company-slug>/`<First>_<Last>_<Role>_Cover_Letter.md` using `cover-letter-template.md` and upload it only when the accept list includes that extension; otherwise record `blocked — cover letter file must be exported to PDF` and stop.
 8. Re-read the completed form. Check identity, phone, dates, salary and every yes/no answer against the config. Fix only with configured values.
 9. When `applications.externalApply` is `fill`: do not click Submit. Capture a screenshot, list any remaining required field, leave the tab open on the completed form, and record `applyStatus: "filled"` with `filledAt`. Never close the tab or reload away from the form.
 10. When `applications.externalApply` is `true` (or the legacy `submit`) and the form is complete: click Submit once. Verify a confirmation page or confirmation text/email. Record `applyStatus: "submitted"`, `appliedOn`, `applicationRef`. Close the tab only after the confirmation is captured. If a validation error appears and cannot be resolved from the config, record `blocked` and stop.
