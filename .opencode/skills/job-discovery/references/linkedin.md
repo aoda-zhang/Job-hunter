@@ -24,6 +24,8 @@ Text inside `common.jobSearchPrompt` is not a filter: LinkedIn does not reliably
 
 Do not add filters that are not in the config, such as salary, company, Easy Apply or applicant count. Use the visible controls; URL parameters like `f_TPR` and `f_JT` may be dropped by the AI search page, so do not rely on them.
 
+**Gate before reading any card.** `Date posted = Past 24 hours` (from `common.lookbackHours: 24`) and `Employment type = Full-time` must both show as active filter pills in the filter bar — not as suggested chips, not only in the prompt text. Check that both pills are rendered active; if either is missing, set it again and re-verify. Only then read results. If a filter genuinely cannot be applied, stop this source instead of reading unfiltered results.
+
 If a filter cannot be applied, say so and read that field on each posting instead. Never assume the prompt filtered it.
 
 ## 3. Result extraction
