@@ -25,13 +25,13 @@ Format baseline for `reports/daily/`. Read before writing or updating a report. 
   "blocker": "",
   "coverLetter": "optional | required | not_shown | unknown",
   "fields": [
-    { "label": "First Name", "type": "text", "required": true, "value": "Qi" },
-    { "label": "Salary expectation", "type": "text", "required": false, "value": "" }
+    { "label": "First Name", "type": "text", "required": true },
+    { "label": "Salary expectation", "type": "text", "required": false }
   ]
 }
 ```
 
-- `fields` lists every visible field, required and optional. When the value is unknown, unconfigured or unread, write `""` — never `null`, never an invented value.
+- `fields` lists every visible field with what the application asks for: `label`, `type`, `required`. **No candidate values**: never write a name, email, phone, salary, answer or empty `value` key into `fields.json`. Values stay in `job-hunter.config.json` and are applied when filling.
 - The folder exists only for jobs that can be applied to: matched, not excluded, and not a one-click-only row. Third-party rows are included only when `common.thirdPartyPostings` is not `exclude`.
 - `report.md` never contains field tables; its `Apply form` cell carries only the short status.
 - Two runs that start in the same minute: append `-2`, `-3`, … (`2026-11-20-2101-2/`). Never merge them.
@@ -39,7 +39,7 @@ Format baseline for `reports/daily/`. Read before writing or updating a report. 
 - The same run keeps one folder: later steps of that run (`job-apply`, `linkedin-feed-jobs`) edit the files the run created, not "today's report".
 - Create the directories when missing.
 - Deduplicate inside a run's report by canonical URL; without one, use `source + company + title + location` and flag a possible duplicate.
-- Keep `job-index.json` and `runs/` out of the report and out of `common.reportRepo`.
+- Keep `job-index.json`, `runs/` and `reports/applications/` out of the report and out of `common.reportRepo`. Run folders (report plus per-job `fields.json`, `cover-letter.json` and the PDF) are published.
 
 Write human-readable text in `common.preferredReportLanguage`; fall back to English when absent or unsupported.
 

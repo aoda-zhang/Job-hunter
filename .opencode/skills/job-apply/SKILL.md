@@ -87,7 +87,7 @@ If the user is present, a login/CAPTCHA/2FA blocker may be handed to them with t
 2. Record the ATS name, host, final `applyUrl`, and any login / account-creation / CAPTCHA / file blocker.
 3. Record every visible form field: label, type, required flag, options, and the value that would be filled from section 5. Unknown or unconfigured values become `needs confirmation (<config key>)`; legal declarations always become `needs confirmation`; privacy/data/talent-pool/contact/interview-recording consents become `同意`.
 4. If the form shows a cover-letter field, required or optional, draft it from `cover-letter-template.md` and save `reports/cover-letters/<company-slug>/<jobId>.md`; also export `.../<jobId>.pdf` when the form expects an upload. Record the path.
-5. Never type, upload, check consent, or submit. Write the field table to `<run>/<jobId>/fields.json` (create the folder), then close the inspection tab immediately; do not leave it for a batch cleanup. The daily report carries only the `Apply form` status.
+5. Never type, upload, check consent, or submit. Write the field requirements to `<run>/<jobId>/fields.json` (create the folder; `label`, `type`, `required` only — never candidate values), then close the inspection tab immediately; do not leave it for a batch cleanup. The daily report carries only the `Apply form` status.
 6. Record `applyStatus: "not_started"`, `applyForm: "inspected"`, `applyChannel`, `applyUrl`, `coverLetterDraft` and `applyNote: "form inspected"`; use `applyForm: "blocked"` with the concrete blocker when the form cannot be reached.
 
 ## 5. Field mapping
