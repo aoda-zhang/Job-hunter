@@ -160,7 +160,11 @@ class Letter:
         self.page_no = 0
         self.y = BODY_Y
 
-        default = REPO_ROOT / "reports" / "cover-letters" / slug(fields["company"]) / f"{slug(fields['role'])}.pdf"
+        # One file per vacancy. A JSON named after the job id produces <jobId>.pdf;
+        # only a role-slug JSON (legacy) falls back to the role name.
+        stem = slug(Path(data.get("__input_stem") or "").stem) if data.get("__input_stem") else ""
+        name = stem if re.fullmatch(r"[0-9a-f]{6,}", stem) else slug(fields["role"])
+        default = REPO_ROOT / "reports" / "cover-letters" / slug(fields["company"]) / f"{name}.pdf"
         self.output = Path(data.get("output") or default).expanduser()
         if not self.output.is_absolute():
             self.output = REPO_ROOT / self.output
@@ -295,8 +299,12 @@ def main() -> int:
     args = parser.parse_args()
     if args.json_path == "-":
         payload = json.load(sys.stdin)
+        stem = ""
     else:
-        payload = json.loads(Path(args.json_path).read_text(encoding="utf-8"))
+        path = Path(args.json_path)
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        stem = path.stem
+    payload.setdefault("__input_stem", stem)
     output = Letter(payload, load_config()).render()
     print(output)
     return 0
