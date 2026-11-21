@@ -4,13 +4,13 @@ Format baseline for `reports/daily/`. Read before writing or updating a report. 
 
 ## 1. File and language
 
-- **One folder per run**: `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM/`, containing `report.md` plus one folder per appliable vacancy (`<jobId>/`). `HHMM` is the run's local start time (24h, `Asia/Shanghai` unless configured otherwise). A run starting 21:01 writes `reports/daily/2026-11-20/2026-11-20-2101/report.md`.
-- Every appliable matched vacancy gets `<run>/<jobId>/` with:
+- **One folder per run**: `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM/`, containing `report.md` plus one folder per appliable vacancy (`<Company>-<JobTitle>/`). `HHMM` is the run's local start time (24h, `Asia/Shanghai` unless configured otherwise). A run starting 21:01 writes `reports/daily/2026-11-20/2026-11-20-2101/report.md`.
+- Every appliable matched vacancy gets `<run>/<Company>-<JobTitle>/` with:
 
 ```text
-<run>/<jobId>/fields.json                       # every form field, required and optional
-<run>/<jobId>/cover-letter.json                 # template fields for this vacancy
-<run>/<jobId>/Qi_Zhang_<Role>_Cover_Letter.pdf  # the rendered letter
+<run>/<Company>-<JobTitle>/fields.json                       # every form field, required and optional
+<run>/<Company>-<JobTitle>/cover-letter.json                 # template fields for this vacancy
+<run>/<Company>-<JobTitle>/Qi_Zhang_<Role>_Cover_Letter.pdf  # the rendered letter
 ```
 
 ```json
@@ -29,6 +29,7 @@ Format baseline for `reports/daily/`. Read before writing or updating a report. 
 - `note` is the only non-field key: `apply DONE` when this run submitted the application automatically, otherwise `blocked: <concrete blocker>` or `not applied: <reason>`.
 - No job metadata inside the file (`jobId`, `company`, `ats`, `applyUrl`, …): the folder name identifies the vacancy, the report row carries the link and status.
 - Easy Apply: open the apply modal read-only once, record the fields it shows, close it — **never submit and never fill it**.
+- Folder name = company + published job title, spaces → hyphens and gender markers dropped: `AboutYou-Senior-TypeScript-Developer`, `Wolt-Senior-Software-Engineer`. Never use ids or dates in the name.
 - The folder exists only for jobs that can be applied to: matched, not excluded, and not a one-click-only row. Third-party rows are included only when `common.thirdPartyPostings` is not `exclude`.
 - `report.md` never contains field tables; its `Apply form` cell carries only the short status.
 - Two runs that start in the same minute: append `-2`, `-3`, … (`2026-11-20-2101-2/`). Never merge them.
@@ -66,7 +67,7 @@ Translate `Daily Job Findings`; keep ` — YYYY-MM-DD HH:MM` (the run's start ti
 
 A normal run has sections 0, 1, 2 and 5. Never write an empty section or "None".
 
-Apply-form field tables never go in the report. They are written per vacancy to `<run>/<jobId>/fields.json`; the report's `Apply form` cell carries only the short status.
+Apply-form field tables never go in the report. They are written per vacancy to `<run>/<Company>-<JobTitle>/fields.json`; the report's `Apply form` cell carries only the short status.
 
 ### 2.1 Run header
 
