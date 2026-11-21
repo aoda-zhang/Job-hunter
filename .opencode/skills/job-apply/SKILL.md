@@ -9,7 +9,7 @@ Run locally in this repository with the configured browser tools. This skill ins
 
 ## 1. Preconditions and scope
 
-Read `job-hunter.config.json` first.
+Read `job-hunter.config.json` first, then `.opencode/skills/job-apply/help.md`. `help.md` is the blocked-field queue: an `answered` row supplies the value for that field, an `open` row still blocks, and a `fixed` row is already in the config. Never start filling without reading it.
 
 Run only when `applications.enabled` is `true`. `applications.externalApply` is the single mode switch:
 
@@ -66,7 +66,7 @@ Any other missing field is not fatal for the whole run: fill what is known, leav
 **One application at a time.** Finish a job completely (open → inspect → fill → submit/stop → record → close the tab) before opening the next one. Never open several application forms in parallel, never loop over multiple jobs inside one script, and never leave more than one form tab open (except a `fill`-mode tab the user must submit).
 2. Read the apply control first. If it is labeled `Easy Apply`, `Quick application` or `Schnellbewerbung` (or a localized equivalent of a one-click platform apply), do not click it: record `skipped: easy apply`, leave the job to the user and move on. Otherwise click `Apply` once, follow a same-tab redirect or new tab, and record the final `applyUrl` and the ATS host. If the destination is still `linkedin.com` or `indeed.com` / `smartapply.indeed.com`, treat it as a one-click apply: close without filling anything and record `skipped: easy apply`. If the destination cannot be confirmed as a third-party page, stop and record `skipped: external redirect not confirmed`.
 3. Identify the ATS from the host and page, e.g. `greenhouse.io`, `lever.co`, `myworkdayjobs.com`, `personio.de`, `smartrecruiters.com`, `successfactors.com`, `recruitee.com`, `join.com`, `softgarden.io`, `homerun.co`, `bamboohr.com`, `ashbyhq.com`, `icims.com`, `taleo.net`, or the employer's own careers portal.
-4. Detect blockers before filling: login wall, "create an account", password field, email verification, SSO, CAPTCHA, unsupported location, file-upload restriction. Stop and record `blocked` with the concrete reason.
+4. Detect blockers before filling: login wall, "create an account", password field, email verification, SSO, CAPTCHA, unsupported location, file-upload restriction. Stop, record `blocked` with the concrete reason, and append the row to `help.md` (company, role, field, reason, `open`). A required field with no configured or answered value is a blocker too — never guess it.
 5. Fill every visible field from the mapping in section 5. Never guess. Every matched job has a cover letter (discovery renders one for all of them); when it is missing, render it from `cover-letter-template.md` before filling, never skip it. Leave unknown optional fields empty. For unknown required fields, stop and record the field name.
 6. Upload `applicant.cvPath` as the resume/CV. Keep the original filename.
 7. Cover letter: follow `applications.coverLetterMode`.
@@ -77,7 +77,7 @@ Any other missing field is not fatal for the whole run: fill what is known, leav
 8. Re-read the completed form. Check identity, phone, dates, salary and every yes/no answer against the config. Fix only with configured values.
 9. When `applications.externalApply` is `fill`: do not click Submit. Capture a screenshot, list any remaining required field, leave the tab open on the completed form, and record `applyStatus: "filled"` with `filledAt`. Never close the tab or reload away from the form.
 10. When `applications.externalApply` is `true` (or the legacy `submit`) and the form is complete: click Submit once. Verify a confirmation page or confirmation text/email. Record `applyStatus: "submitted"`, `appliedOn`, `applicationRef`. Close the tab only after the confirmation is captured. If a validation error appears and cannot be resolved from the config, record `blocked` and stop.
-11. On any unexpected error, record `failed` with the exact error text and continue with the next job.
+11. On any unexpected error, record `failed` with the exact error text, append it to `help.md`, and continue with the next job.
 
 If the user is present, a login/CAPTCHA/2FA blocker may be handed to them with the `handoff` tool. On an unattended/scheduled run, never wait for a person: record `blocked` and continue.
 
