@@ -108,6 +108,6 @@ Skip when the key already appears in today's report, the previous 7 daily report
 
 ## 9. Notes vocabulary
 
-Start `Notes` with `来自搜索` or `来自 feed` (`From search` / `From feed`), then one verifiable fact such as a stated poster role, an apply instruction, or `multi-city post`. Append soft-note phrases with `;`.
+Start `Notes` with `From search` or `From feed` (translated in the report language), then one verifiable fact such as a stated poster role, an apply instruction, or `multi-city post`. Append soft-note phrases with `;`.
 
 Allowed markers: `stack not stated`, `mode not specified`, `employment not specified`, `level not specified`, `third party: <client>`, `third party: client not stated`, `poster type unclear`, `JD language: <language>`, `24h boundary`. Do not invent other status text.

@@ -2,15 +2,15 @@
 
 Reference for `sources: ["<Platform>"]`. File name is the platform name lowercased (`Indeed` → `indeed.md`); a configured country domain such as `indeed.de` resolves to `indeed.md`.
 
-Replace every `<...>` placeholder and delete the guidance sentences before committing. A reference is complete only when it answers the seven points below; if the platform cannot answer one, say so and describe the fallback.
+Replace every `<...>` placeholder and delete the guidance sentences before committing. A reference is complete only when it answers every section below; if the platform cannot answer one, say so and describe the fallback.
 
-After adding the file, add the platform to `sources`, add a matching `platforms.<name>` block (`enabled`, `search.queryMode`, and `search.queries` when the site works best with short keywords), and add the row to the lookup table in `SKILL.md`.
+After adding the file, add the platform to `sources`, add a matching `platforms.<name>` block (`enabled`, `search.queryMode`, `search.maxPagesPerQuery`, and `search.queries` for `queryMode: "custom"`), and add the row to the lookup table in `SKILL.md`.
 
 ## 1. Search entry
 
 - URL or navigation path:
 - Country domains, if the platform is split by country:
-- Does the site accept `common.jobSearchPrompt` verbatim, or only keywords?
+- Does it accept one short title per query (`queryMode: "titles"`), or does it need its own `search.queries` list?
 - Does it require sign-in before showing results?
 
 ## 2. Filter mapping

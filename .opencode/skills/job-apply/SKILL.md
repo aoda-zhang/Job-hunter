@@ -19,13 +19,17 @@ Run only when `applications.enabled` is `true`. `applications.externalApply` is 
 
 Easy Apply has no config key and is always manual: a one-click form (LinkedIn Easy Apply, Indeed Apply / `Schnellbewerbung`) may be opened once read-only to record its fields into `fields.json`, then closed — never fill it, never submit it, whatever the config says.
 
+**Easy Apply recording (always).** For every matched one-click vacancy, open the apply modal once, read-only, and write each visible field (label, type, required flag, options, mapped value) to `<run>/<Company>-<JobTitle>/fields.json` with `note: "easy apply - user submits"`. Close the modal without typing, without accepting anything and without submitting. The row stays in the `Easy Apply` part for the user.
+
+**External blockers (always).** For a matched external vacancy, attempt it. When it cannot be completed — login or account creation, a required unconfigured field, a rejected value, CAPTCHA, upload restriction, expired posting — set `note: "blocked: <reason>"` in that job's `fields.json` and append one row to `.opencode/skills/job-apply/help.md` with `Status: open`. One row per company + role + field; never duplicate an open row.
+
 When `job-discovery` already inspected the form inline, reuse its recorded fields instead of reopening the page.
 
 Candidate vacancies:
 
 1. Read this run's report `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM/report.md` and `reports/job-index.json`. When this skill runs as part of a discovery run, `HHMM` is that run's start time; never read or edit another run's report.
 2. **Pre-apply check (mandatory).** Before opening any form, read the previous run's report plus this run's rows: a vacancy that appears in the previous run was already handled there. A candidate that matches is `skipped: already applied` — no form opened, no field filled, no second submission. With `common.dedupe.checkAppliedHistory: false` older history is not scanned. Record the count in this run's report.
-3. Take only rows in the matched tables of this run's report (or the `代招岗位` table only when `applications.excludeThirdParty` is `false`). When the pass is scoped to one platform, take only that platform's rows. Never take `review`, excluded, expired or feed-sourced rows unless `applications.scope` explicitly says `review` or `all`.
+3. Take only rows in the matched tables of this run's report (or the agency/third-party table only when `applications.excludeThirdParty` is `false`). When the pass is scoped to one platform, take only that platform's rows. Never take `review`, excluded, expired or feed-sourced rows unless `applications.scope` explicitly says `review` or `all`.
 4. Easy Apply belongs to the user. Apply only when the Apply button is confirmed to leave the platform for a third-party/employer application page. Require `easyApply: "no"`, then click Apply once and verify the destination host is neither `linkedin.com` nor `indeed.com`/`smartapply.indeed.com`. If the flow stays on the platform, opens a one-click form, shows `unknown`, or the destination cannot be confirmed, skip the job, record `skipped: easy apply / external redirect not confirmed`, and leave it to the user.
 5. Skip any job with `appliedOn` set or `applyStatus` in `filled`, `submitted`, `blocked` or `failed`, unless the user explicitly asks to retry that job.
 6. Skip any job whose normalized `company + title + city` matches an applied entry (index or applications log) from **another** platform when `common.dedupe.skipApplied` is `true`. Record `skipped: applied on <source>`. The user's rule: one vacancy is applied to once, on whichever platform saw it first.
@@ -44,6 +48,7 @@ Any other missing field is not fatal for the whole run: fill what is known, leav
 
 ## 3. Hard rules
 
+- **English only on the form.** Everything typed into an application — free-text answers, motivation, additional information, cover letter, uploaded documents — is in **English**, whatever `common.preferredReportLanguage` says. The report language is for the user's report; it never changes what an employer receives.
 - Never create an account, set a password, verify an email, complete SSO, or accept an account-creation step. A form that requires registration is abandoned (`help.md` row, `fixed`): the user's policy is to skip it.
 - When the phone country code is locked to a value other than the configured one, try the configured code first; if it cannot be set, abandon the application and record the blocker.
 - Never solve or bypass a CAPTCHA, bot check, phone verification or rate limit. Stop that job and record `blocked`.
@@ -53,7 +58,7 @@ Any other missing field is not fatal for the whole run: fill what is known, leav
 - Never submit one job twice. Deduplicate by canonical job URL and by `applyUrl`.
 - Never answer a question with a value that is not in the config or the CV. In particular never claim a degree, certification, language level, visa status, salary, start date, security clearance or government affiliation.
 - `applicant.governmentEmployee` is `null` until the user sets it. A government-official / public-sector / sanctions question with a `null` value is `blocked`; never default to `false`.
-- Never answer legal declarations (background check, drug test, export control, sanctions, non-compete, criminal record, disability, veteran status, ethnicity, gender) unless the config covers them. Privacy, data-processing, talent-pool, contact and interview-recording consents are not legal declarations: always agree to them when filling and record `同意`.
+- Never answer legal declarations (background check, drug test, export control, sanctions, non-compete, criminal record, disability, veteran status, ethnicity, gender) unless the config covers them. Privacy, data-processing, talent-pool, contact and interview-recording consents are not legal declarations: always agree to them when filling and record `agreed`.
 - Nationality and citizenship are facts from `applicant`; a nationality question is never answered from the company, the JD language or the candidate's location. A nationality answer never answers a work-authorization, visa, permit, sponsorship or right-to-work question — those come only from `applications.screening.workAuthorization` / `.workPermitStatus` / `.requiresSponsorship`.
 - Never apply to a confirmed third-party/agency posting while `excludeThirdParty` is `true`.
 - Never touch platform profile, saved jobs, messages or connection requests (LinkedIn, Indeed).
@@ -86,7 +91,7 @@ If the user is present, a login/CAPTCHA/2FA blocker may be handed to them with t
 
 1. Open the canonical job URL, click Apply once and confirm the destination leaves the platform (`linkedin.com`, `indeed.com`, `smartapply.indeed.com`); if it does not, record `skipped: easy apply` and stop.
 2. Record the ATS name, host, final `applyUrl`, and any login / account-creation / CAPTCHA / file blocker.
-3. Record every visible form field: label, type, required flag, options, and the value that would be filled from section 5. Unknown or unconfigured values become `needs confirmation (<config key>)`; legal declarations always become `needs confirmation`; privacy/data/talent-pool/contact/interview-recording consents become `同意`.
+3. Record every visible form field: label, type, required flag, options, and the value that would be filled from section 5. Unknown or unconfigured values become `needs confirmation (<config key>)`; legal declarations always become `needs confirmation`; privacy/data/talent-pool/contact/interview-recording consents become `agreed`.
 4. If the form shows a cover-letter field, required or optional, draft it from `cover-letter-template.md` and save `reports/cover-letters/<company-slug>/<jobId>.md`; also export `.../<jobId>.pdf` when the form expects an upload. Record the path.
 5. Never type, upload, check consent, or submit. Write the field map to `<run>/<Company>-<JobTitle>/fields.json` (folder = company + job title, e.g. `Wolt-Senior-Software-Engineer`; object of field → answer, `""` when unknown, plus `note`), then close the inspection tab immediately; do not leave it for a batch cleanup. The daily report carries only the `Apply form` status.
 6. Record `applyStatus: "not_started"`, `applyForm: "inspected"`, `applyChannel`, `applyUrl`, `coverLetterDraft` and `applyNote: "form inspected"`; use `applyForm: "blocked"` with the concrete blocker when the form cannot be reached.
@@ -113,7 +118,7 @@ If the user is present, a login/CAPTCHA/2FA blocker may be handed to them with t
 | Website / Portfolio | `applicant.portfolioUrl` | empty → leave blank |
 | Resume / CV upload | `applicant.cvPath` | required |
 | Cover letter | generated template | per `coverLetterMode`; a `Message to the Hiring Team` / `Message to the team` box uses the shortened text version |
-| Privacy / data-processing / talent-pool / contact / interview-recording consent | — | always agree when filling; record `同意` |
+| Privacy / data-processing / talent-pool / contact / interview-recording consent | — | always agree when filling; record `agreed` |
 | Legally authorized to work in Germany | `applications.screening.workAuthorization` | never guess |
 | Require visa sponsorship | `applications.screening.requiresSponsorship` | `null` + required → blocked |
 | Earliest start date | `applications.screening.earliestStartDate`, else `applicant.availableInGermanyFrom` | exact wording from config |
@@ -139,7 +144,7 @@ If the user is present, a login/CAPTCHA/2FA blocker may be handed to them with t
 | Years with a named technology | `applications.screening.techYears["<technology>"]` | exact; missing or empty + required → blocked with the technology name |
 | GitHub | `applicant.portfolioUrl` when it is a GitHub URL | exact |
 
-Salary, availability and "tell us about yourself" free-text boxes use only the template and configured values. Never add experience, achievements or numbers that are not in the CV or config.
+Salary, availability and "tell us about yourself" free-text boxes use only the template and configured values, and are written in English. Never add experience, achievements or numbers that are not in the CV or config.
 
 ## 6. Record results
 
@@ -168,11 +173,11 @@ Write `reports/applications/YYYY-MM-DD.md` (create the directory when missing), 
 
 Status values: `Inspected`, `Filled (awaiting submit)`, `Submitted`, `Blocked`, `Failed`, `Skipped`. Notes name the exact blocker or missing config key. When `applications.externalApply` is `false` the row is `Inspected` and the daily report carries the field table.
 
-Update this run's report too (the file this run created, `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM/report.md`): set `External applications submitted` in the run summary (per-source column plus total), add `[filled MM-DD HH:MM]`, `[applied MM-DD HH:MM]` or `[apply blocked MM-DD HH:MM]` to the job's Notes as defined in `daily-report-format.md`, and keep the inspected field table in `<run>/<Company>-<JobTitle>/fields.json` **only for jobs that were not successfully submitted** (never in the report itself): `blocked`, `filled` (waiting for the user's Submit), `failed` and inspected-only rows keep their block; a job submitted successfully gets no block (its `Apply form` cell reads `已提交` / `Submitted`) and is recorded only in `reports/applications/`. A newly submitted row leaves its source section and moves to the global `已提交` section just before the excluded table (see `daily-report-format.md` 4.3), so renumber the source section's `#` and part totals, drop the row's apply-form block and renumber the remaining blocks. Never touch one-click apply rows, and never touch a row that was skipped because another platform already had the application.
+Update this run's report too (the file this run created, `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM/report.md`): set `External applications submitted` in the run summary (per-source column plus total), add `[filled MM-DD HH:MM]`, `[applied MM-DD HH:MM]` or `[apply blocked MM-DD HH:MM]` to the job's Notes as defined in `daily-report-format.md`, and keep the inspected field table in `<run>/<Company>-<JobTitle>/fields.json` **only for jobs that were not successfully submitted** (never in the report itself): `blocked`, `filled` (waiting for the user's Submit), `failed` and inspected-only rows keep their block; a job submitted successfully gets no block (its `Apply form` cell reads `Submitted`) and is recorded only in `reports/applications/`. A newly submitted row leaves its source section and moves to the global `Submitted` section just before the excluded table (see `daily-report-format.md` 4.3), so renumber the source section's `#` and part totals, drop the row's apply-form block and renumber the remaining blocks. Never touch one-click apply rows, and never touch a row that was skipped because another platform already had the application.
 
 `reports/applications/` is local only. Never publish it to `common.reportRepo`; it contains personal data.
 
-Every result other than `submitted` — `blocked`, `filled`, `failed`, or `skipped` because the flow could not be confirmed or the browser failed — must end that job's Notes in today's daily report with `无法自动提交：<reason>`, using the same concrete wording as the applications row. A submitted row never carries the marker, and Easy Apply rows are manual by design and do not need it.
+Every result other than `submitted` — `blocked`, `filled`, `failed`, or `skipped` because the flow could not be confirmed or the browser failed — must end that job's Notes in today's daily report with `Not auto-submitted: <reason>`, using the same concrete wording as the applications row. A submitted row never carries the marker, and Easy Apply rows are manual by design and do not need it.
 
 ## 6a. Blocked-field queue (`help.md`)
 

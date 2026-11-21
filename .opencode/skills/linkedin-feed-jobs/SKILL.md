@@ -67,7 +67,7 @@ Skip when:
 
 Edit the report file this run created: `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM/report.md` (`HHMM` = this run's start time). Never write into another run's file and never create a day-total file.
 
-- Place a translated `## Feed-sourced jobs` section after matched jobs and the `代招岗位` section, and before review and excluded.
+- Place a translated `## Feed-sourced jobs` section after matched jobs and the agency/third-party section, and before review and excluded.
 - If the report is missing, create it with the run header (run id, start and end time, sources, scope, apply-dedupe result) and this section; note that job-discovery has not written its sections.
 - Append new rows to this run's file; never duplicate a row, rewrite a matched/review row or overwrite a user-edited row.
 - If a run summary table exists, set its `Feed-sourced jobs` row to the row count. Do not create a run summary table.
@@ -79,7 +79,7 @@ Use these columns:
 ```markdown
 | # | Source | Company | Title | Location | Mode | Posted | Matched keywords | Notes | Link |
 |---|---|---|---|---|---|---|---|---|---|
-| 1 | LinkedIn Search | Example GmbH | <configured title> | <configured location> | Hybrid | 2h ago | <configured keyword> | 来自搜索; hiring manager post | [Open](URL) |
+| 1 | LinkedIn Search | Example GmbH | <configured title> | <configured location> | Hybrid | 2h ago | <configured keyword> | From search; hiring manager post | [Open](URL) |
 ```
 
 - `Source`: `LinkedIn Search` for a keyword-search hit, `LinkedIn Feed` for a Recent-feed hit.
@@ -89,7 +89,7 @@ Use these columns:
 - `Mode`: the stated mode, or `Not specified`.
 - `Posted`: the relative time (`2h ago`, `1 day ago`); add `24h boundary` in Notes when applicable.
 - `Matched keywords`: configured terms named in the post; `None matched` when a stack is named but no term matches; `Not stated` when no stack is named.
-- `Notes`: start with `来自搜索` / `来自 feed` (`From search` / `From feed` for non-Chinese reports), then one verifiable fact. Append soft-note phrases with `;`.
+- `Notes`: start with `From search` or `From feed` (translated in the report language), then one verifiable fact. Append soft-note phrases with `;`.
 - `Link`: the permalink found in the post or copied from its menu; `Link unavailable` when none exists. Never assemble a URL.
 
 Renumber `#` after merging.

@@ -7,6 +7,8 @@ description: Fill the fixed cover-letter template from a small JSON file. Person
 
 Use this skill whenever the user asks for a cover letter or a cover letter PDF.
 
+**The letter is always written in English**, regardless of `common.preferredReportLanguage`, the JD language or the report language. The template and every generated PDF are English.
+
 Every matched job gets one letter — Easy Apply and No Easy Apply alike; the letter is written even when the form has no cover-letter field or the JD says one is not required. The letter is a fixed template. Personal facts (name, age, job title, years, React, Manulife, achievements, start date) are baked into `render.py` and must not be rewritten per application. Only the company/JD fields change.
 
 ## 1. Read the inputs

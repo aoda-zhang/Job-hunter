@@ -2,7 +2,7 @@
 
 **Sag OpenCode, welche Stelle du suchst. Es durchsucht die in `sources` konfigurierten Job-Plattformen – LinkedIn und jede andere Seite, die dein Browser erreicht – öffnet jede verbleibende Anzeige, filtert sie nach deiner Konfiguration und schreibt eine tägliche Markdown-Auswahl.**
 
-[English](README.md) · [简体中文](README.zh-CN.md) · **Deutsch**
+[English](README.md) · [Chinesisch](README.zh-CN.md) · **Deutsch**
 
 ## 1. Was es tut
 
@@ -52,7 +52,7 @@ cp job-hunter.config.example.json job-hunter.config.json
 
 Bearbeite dann `job-hunter.config.json` (per Git ignoriert, deine Einstellungen bleiben lokal):
 
-1. **`common.jobSearchPrompt`** – ein Satz in natürlicher Sprache für LinkedIn: wo, welche Rolle, welcher Stack, wie aktuell.
+1. **`common.searchTitles`** – die kurzen Jobtitel, die pro Lauf einzeln gesucht werden, ein Query pro Eintrag, z. B. `JavaScript Developer`, `Full-Stack Developer`.
 2. **`common.countries` / `common.locations`** – wo gesucht wird. Leere `locations` bedeutet das ganze Land.
 3. **`common.jobTitles.include`** – die akzeptierten Stellentitel, verwendet für Abgleich und Indeed-Standardsuche.
 4. **`common.jdLanguages.include`** und **`common.technicalKeywords`** – die Sprache und der Stack, mit denen du arbeiten kannst.
@@ -67,7 +67,7 @@ Dann:
 
 Du sprichst immer nur mit dem Job-Hunter-Agenten. Er lädt `job-discovery` selbst; du wählst nie manuell einen Skill.
 
-> **Anfragen sind plattformspezifisch.** LinkedIn erhält `common.jobSearchPrompt` unverändert, Indeed die kurzen Phrasen aus `platforms.Indeed.search.queries`. Beides kommt aus der Konfiguration. `jobTitles` und `technicalKeywords` dienen dem *Abgleich*, nicht der *Suche*.
+> **Jede Plattform sucht jeden Titel aus `common.searchTitles` einzeln.** Es gibt keinen natürlichsprachigen Prompt. `jobTitles` und `technicalKeywords` dienen dem *Abgleich*, nicht der *Suche*.
 >
 > **Filter kommen aus der Konfiguration, nicht aus dem Prompt.** „Letzte 24 Stunden“ im Prompt ist unzuverlässig; der Agent setzt den Filter „Veröffentlichungsdatum“ der Plattform aus dem konfigurierten Fenster und prüft vor dem Lesen der Ergebnisse, ob er aktiv ist.
 
@@ -79,12 +79,12 @@ Du sprichst immer nur mit dem Job-Hunter-Agenten. Er lädt `job-discovery` selbs
 | `common.countries` | ja | Landesweiter Suchumfang, z. B. `["Germany"]`. Dient der Prüfung des Umfangs, nicht dem Aufbau der Anfrage. |
 | `common.locations` | nein | Optionale Städte innerhalb dieser Länder. Leer oder fehlend = ganzes Land. |
 | `common.lookbackHours` | ja | Veröffentlichungsfenster in Stunden. Steuert den Datumsfilter der Plattform und wird je Anzeige erneut geprüft. |
-| `common.jobSearchPrompt` | ja | Natürlichsprachige Anfrage für Plattformen mit `queryMode: "prompt"` (LinkedIn), unverändert gesendet. |
-| `common.jobTitles.include` | ja | Akzeptierte Titelvarianten, für Abgleich, Karten-Vorfilter und `queryMode: "titles"`. |
+| `common.searchTitles` | ja | Geordnete Liste kurzer Jobtitel, ein Query pro Eintrag, unverändert gesendet. |
+| `common.jobTitles.include` | ja | Akzeptierte Titelvarianten, für Abgleich und den flachen Titelfilter (nicht als Suchbegriff). |
 | `common.jdLanguages.*` | ja/nein | `include` (akzeptierte Sprachen), `acceptGermanJdWithEnglishWorkingLanguage`, `maxRequiredLevel` (z. B. `{"German": "A2", "English": "C1"}`). Ein höheres Pflichtlevel wird als `language requirement` ausgeschlossen. |
 | `common.technicalKeywords.*` | ja | `include` = Technologien in der JD; `matchMode` = `any` (ein Begriff genügt) / `all`. |
 | `common.workModes` / `common.employmentTypes` / `common.seniority.include` | nein | Optionale Filter. Alle Werte auflisten oder leer lassen = kein Filter. |
-| `common.thirdPartyPostings` | nein | `separate` (Standard) = eigene `代招岗位`-Tabelle; `include` = mit normalen Treffern; `exclude` = ausgeschlossen. |
+| `common.thirdPartyPostings` | nein | `separate` (Standard) = eigene Tabelle `Agentur / Drittanbieter-Stellen`; `include` = mit normalen Treffern; `exclude` = ausgeschlossen. |
 | `common.skipPreviousReport` | nein | Standard `true`. Überspringt Stellen aus dem letzten Tagesbericht. |
 | `common.dedupe.crossSource` / `.skipApplied` | nein | Standard `true`. Dieselbe Stelle (Firma + Titel + Stadt) auf zwei Plattformen wird erkannt; nach einer Bewerbung wird sie anderswo nicht erneut geöffnet oder abgeschickt. |
 | `common.report.splitBySource` | nein | Standard `true`. Tagesbericht je Plattform in `sources`-Reihenfolge, je Abschnitt Easy Apply / No Easy Apply. |
@@ -92,7 +92,7 @@ Du sprichst immer nur mit dem Job-Hunter-Agenten. Er lädt `job-discovery` selbs
 | `applicant` | nein | Identität für externe Bewerbungsformulare. Fehlt eine Pflichtangabe, stoppt der Bewerbungslauf. |
 | `applications` | nein | Bewerbungsrichtlinie: `enabled`; `externalApply` = `true` (ausfüllen und absenden) / `false` (nur prüfen); `scope`; `excludeThirdParty`; `maxPerRun`; `coverLetterMode`; `screening`. Ein-Klick-Bewerbungen (LinkedIn Easy Apply, Indeed Apply) haben keinen Schlüssel und bleiben manuell. |
 | `platforms.LinkedIn` | nein | `enabled`, `premium`, `search.queryMode`, `feedReview`, `feedJobs`. |
-| `platforms.Indeed` | nein | `enabled`, `domain`, `search.queryMode` (`custom` Standard), `search.queries`, `maxQueries`, `maxPagesPerQuery`, `lookbackHours`, `filters` (`date` / `employmentType` / `language` / `remote` / `quickApply`). |
+| `platforms.Indeed` | nein | `enabled`, `domain`, `search.queryMode` (`titles` Standard oder `custom` mit `queries`), `maxPagesPerQuery`, `lookbackHours`, `filters` (`date` / `employmentType` / `language` / `remote` / `quickApply`). |
 | `notifications.email` | nein | Optionaler SMTP-Block für Zusammenfassungsmails. |
 | `schedules.jobSearch` / `schedules.linkedinFeedReview` | nein | launchd-Zeitpläne: `times` (`HH:MM`), `weekdays`, `timezone`. Leeres `times` deaktiviert den Job. |
 
@@ -121,13 +121,13 @@ Die Prüfungen laufen in dieser Reihenfolge und enden beim ersten bestätigten W
 
 | Ergebnis | Bedeutung | Erscheint |
 |---|---|---|
-| `matched` | alle aktiven Kriterien sind auf der Seite belegt | Haupttabelle; bestätigte Drittkunden-Stellen in `代招岗位` |
+| `matched` | alle aktiven Kriterien sind auf der Seite belegt | Haupttabelle; bestätigte Drittkunden-Stellen in `Agentur / Drittanbieter-Stellen` |
 | `review` | die Seite belegt weder Treffer noch Widerspruch (kurz, fehlend, abgeschnitten, gemischtsprachig) | Prüftabelle |
 | `not_matched` | mindestens ein aktives Kriterium ist klar nicht erfüllt | Ausschlusstabelle mit Begründung |
 
 Vor dem Öffnen einer Seite gibt es einen kurzen Kartenfilter: Titel, die eindeutig eine andere Funktion nennen (Vertrieb, Marketing, Finanzen, HR, Design, SAP-Administration …) oder klar außerhalb von Land/Stadt liegen, werden übersprungen und nur gezählt. Mehrdeutige, abgeschnittene oder rollenübergreifende Titel werden weiterhin geöffnet.
 
-Es gibt keine Punkte, kein Ranking nach Kandidaten-Fit und keine Filterung nach Gehalt, Berufsjahren, Visum oder Branche. Die Treffertabelle ist in Arbeitsablauf-Teile geteilt: **Easy Apply** (du bewirbst dich selbst) und **No Easy Apply** (externe Formulare, die der Agent ausfüllt; bei `externalApply: true` sendet er sie auch ab), abgesendete Bewerbungen stehen in einem eigenen **已提交**-Abschnitt direkt vor der Ausschlusstabelle, damit abgesendete Zeilen nie zwischen geprüften stehen. Mit `platforms.LinkedIn.premium` werden LinkedIn-Treffer mit **`You'd be a top applicant`** innerhalb ihres Teils zuerst sortiert; eine fehlgeschlagene Prüfung schließt die Stelle weiterhin aus. Die Teilung ändert nie, ob eine Stelle passt. Jede Stellentabelle beginnt mit Firma, Notizen, Formularstatus und Link; die Plattformspalte steht am Ende. Jede externe Stelle, die nicht automatisch abgesendet werden konnte, endet in den Notizen mit `Not auto-submitted: <Grund>`.
+Es gibt keine Punkte, kein Ranking nach Kandidaten-Fit und keine Filterung nach Gehalt, Berufsjahren, Visum oder Branche. Die Treffertabelle ist in Arbeitsablauf-Teile geteilt: **Easy Apply** (du bewirbst dich selbst) und **No Easy Apply** (externe Formulare, die der Agent ausfüllt; bei `externalApply: true` sendet er sie auch ab), abgesendete Bewerbungen stehen in einem eigenen **Submitted**-Abschnitt direkt vor der Ausschlusstabelle, damit abgesendete Zeilen nie zwischen geprüften stehen. Mit `platforms.LinkedIn.premium` werden LinkedIn-Treffer mit **`You'd be a top applicant`** innerhalb ihres Teils zuerst sortiert; eine fehlgeschlagene Prüfung schließt die Stelle weiterhin aus. Die Teilung ändert nie, ob eine Stelle passt. Jede Stellentabelle beginnt mit Firma, Notizen, Formularstatus und Link; die Plattformspalte steht am Ende. Jede externe Stelle, die nicht automatisch abgesendet werden konnte, endet in den Notizen mit `Not auto-submitted: <Grund>`.
 
 ## 7. Berichte
 
@@ -136,7 +136,7 @@ Es gibt keine Punkte, kein Ranking nach Kandidaten-Fit und keine Filterung nach 
 | Tägliche Stellensuche | `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM/report.md` |
 | Interviewvorbereitung | `reports/interviews/<company-slug>/` |
 
-Der Tagesbericht ist nach Plattformen in `sources`-Reihenfolge gegliedert (zuerst LinkedIn, dann Indeed). Innerhalb jeder Plattform sind die Treffer in **Easy Apply** und **No Easy Apply** geteilt (innerhalb jedes Teils Premium-Hinweise zuerst, danach nach Unternehmensgröße sortiert); bereits abgesendete Zeilen verlassen ihren Teil und stehen im eigenen **已提交**-Abschnitt direkt vor der Ausschlusstabelle. Es folgen eine eigene `代招岗位`-Tabelle für bestätigte Drittkunden-Stellen, die dieselben Prüfungen bestehen, bei Bedarf eine Prüftabelle und zuletzt die ausgeschlossenen Stellen mit der genauen Begründung. Im Teil No Easy Apply füllt der Agent das Formular aus und sendet es bei `externalApply: true` ab; bei `fill` lässt er den Tab für deinen Submit offen. Die Zusammenfassung hat eine Spalte je Plattform plus Gesamt. Jede Tabelle hat eine Spalte `Source`. Die Struktur legt `.opencode/skills/job-discovery/references/daily-report-format.md` fest; die Sprache steuert `common.preferredReportLanguage` (Standard `English`). Übersetzt wird nur der lesbare Text.
+Der Tagesbericht ist nach Plattformen in `sources`-Reihenfolge gegliedert (zuerst LinkedIn, dann Indeed). Innerhalb jeder Plattform sind die Treffer in **Easy Apply** und **No Easy Apply** geteilt (innerhalb jedes Teils Premium-Hinweise zuerst, danach nach Unternehmensgröße sortiert); bereits abgesendete Zeilen verlassen ihren Teil und stehen im eigenen **Submitted**-Abschnitt direkt vor der Ausschlusstabelle. Es folgen eine eigene Tabelle `Agentur / Drittanbieter-Stellen` für bestätigte Drittkunden-Stellen, die dieselben Prüfungen bestehen, bei Bedarf eine Prüftabelle und zuletzt die ausgeschlossenen Stellen mit der genauen Begründung. Im Teil No Easy Apply füllt der Agent das Formular aus und sendet es bei `externalApply: true` ab; bei `fill` lässt er den Tab für deinen Submit offen. Die Zusammenfassung hat eine Spalte je Plattform plus Gesamt. Jede Tabelle hat eine Spalte `Source`. Die Struktur legt `.opencode/skills/job-discovery/references/daily-report-format.md` fest; die Sprache steuert `common.preferredReportLanguage` (Standard `English`). Übersetzt wird nur der lesbare Text.
 
 `job-hunter.config.json` und `reports/daily/` sind per Git ignoriert. Ist `common.reportRepo` gesetzt, wird nach jedem Lauf nur der Tagesbericht committet und in dein gewähltes Repository gepusht.
 
@@ -194,7 +194,7 @@ reports/interviews/                               Ergebnisse aus Phase 2
 
 | Symptom | Ursache und Lösung |
 |---|---|
-| Kein Bericht entsteht | Konfiguration fehlt, `common.jobSearchPrompt` ist leer oder es gibt kein Browser-Tool. Der Agent soll sagen, welcher Fall vorliegt. |
+| Kein Bericht entsteht | Konfiguration fehlt, `common.searchTitles` ist leer oder es gibt kein Browser-Tool. Der Agent soll sagen, welcher Fall vorliegt. |
 | „Browser-Tool nicht verfügbar“ | Aktiviere eine Browser-Integration in OpenCode. Dieses Repository liefert und konfiguriert keine. |
 | Lauf stoppt bei Login oder CAPTCHA | Melde dich selbst in diesem Browser bei der Plattform an und starte erneut. Der Agent darf die Sperre nicht umgehen. |
 | Deutsche Stellen werden ausgeschlossen | `common.jdLanguages` akzeptiert nur Englisch. Setze `acceptGermanJdWithEnglishWorkingLanguage: true` oder ergänze `German`. |

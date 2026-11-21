@@ -65,11 +65,11 @@ Write one primary and one backup per selected post.
 Write `reports/linkedin-feed/YYYY-MM-DD.md` in `common.preferredReportLanguage`.
 
 ````markdown
-# LinkedIn Feed 回复机会 — YYYY-MM-DD
+# LinkedIn Feed reply opportunities — YYYY-MM-DD
 
-## 今日回复清单
+## Today's reply list
 
-- [ ] **1. Name** — Headline · Topic · Language [· 24h 边界] — [打开原帖](URL)
+- [ ] **1. Name** — Headline · Topic · Language [· 24h boundary] — [Open post](URL)
 
   > primary
 
@@ -78,21 +78,21 @@ Write `reports/linkedin-feed/YYYY-MM-DD.md` in `common.preferredReportLanguage`.
 
 Then add the run summary:
 
-| 指标 | 值 |
+| Metric | Value |
 |---|---|
-| 时间窗口 | 过去 24 小时 |
-| 浏览的帖子 | N |
-| 硬过滤（excludeTopics） | N |
-| 作者岗位匹配 | N |
-| 作者地点确认 | N |
-| 话题相关且值得回复 | N |
-| 最终入选 | N |
-| Feed 招聘帖新增 | N |
-| 回复语言 | auto |
+| Time window | past 24 hours |
+| Posts viewed | N |
+| Excluded by topics | N |
+| Author role matched | N |
+| Author location confirmed | N |
+| Relevant and worth replying | N |
+| Selected | N |
+| New feed hiring posts | N |
+| Reply language | auto |
 
 Translate the labels into `common.preferredReportLanguage`.
 
-Add `## Feed 招聘帖` with the matched rows. When none match, write one line `本轮没有匹配的招聘帖。`. Add one `## 覆盖说明` line. Do not add a post-detail section or paste full posts.
+Add `## Feed hiring posts` with the matched rows. When none match, write one line `No matching hiring posts this run.`. Add one `## Coverage notes` line. Do not add a post-detail section or paste full posts.
 
 ### Email and publish
 

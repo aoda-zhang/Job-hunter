@@ -133,45 +133,53 @@ Path: `reports/runs/YYYY-MM-DD.jsonl`. Append one line per run; never overwrite.
 {
   "runAt": "2026-11-20T21:01:00+08:00",
   "finishedAt": "2026-11-20T21:51:23+08:00",
-  "durationSeconds": 3023,
-  "reportPath": "reports/daily/2026-11-20/2026-11-20-2101.md",
+  "durationSeconds": "<N>",
+  "reportPath": "reports/daily/2026-11-20/2026-11-20-2101/report.md",
   "scope": { "countries": ["Germany"], "locations": [] },
   "sources": ["LinkedIn", "Indeed"],
   "queryVerbatim": true,
   "uiFiltersVerified": true,
   "queriesBySource": {
-    "LinkedIn": ["<jobSearchPrompt>"],
-    "Indeed": ["Frontend Developer", "React Developer", "Fullstack Developer"]
+    "LinkedIn": ["<search title>", "…"],
+    "Indeed": ["<search title>", "…"]
+  },
+  "jobAudit": {
+    "cardsCollected": "<N>",
+    "mergedUnique": "<N>",
+    "shallowFiltered": "<N>",
+    "sentToJdReview": "<N>"
   },
   "uiFilters": {
     "LinkedIn": { "datePosted": "Past 24 hours", "employmentTypes": ["Full-time"], "workModes": ["Remote", "Hybrid", "On-site"], "seniority": null },
     "Indeed": { "datePosted": "Last 7 days", "jt": "fulltime", "lang": null, "remote": false, "quickApply": false }
   },
-  "resultsBySource": { "LinkedIn": 300, "Indeed": 75 },
-  "resultCount": 375,
-  "resultPagesOpened": 8,
-  "resultPagesBySource": { "LinkedIn": 5, "Indeed": 3 },
+  "resultsBySource": { "LinkedIn": "<N>", "Indeed": "<N>" },
+  "resultCount": "<N>",
+  "resultPagesOpened": "<N>",
+  "resultPagesBySource": { "LinkedIn": "<N>", "Indeed": "<N>" },
   "searchedBySource": { "LinkedIn": "completed", "Indeed": "completed" },
-  "cardsSkipped": 0,
-  "postingsInspected": 120,
-  "applyFormsInspected": 40,
-  "applyBlocked": 3,
-  "expired": 0,
-  "appliedSkipped": 4,
-  "appliedElsewhereSkipped": 2,
-  "previouslyReportedSkipped": 180,
-  "matched": 23,
-  "matchedBySource": { "LinkedIn": 15, "Indeed": 8 },
-  "thirdPartyMatched": 5,
-  "review": 12,
-  "excluded": 85,
-  "crossSourceDuplicates": 3,
-  "crossDayRepeats": 10,
-  "possibleDuplicates": 2,
-  "stopReason": "results older than lookbackHours",
+  "cardsSkipped": "<N>",
+  "postingsInspected": "<N>",
+  "applyFormsInspected": "<N>",
+  "applyBlocked": "<N>",
+  "expired": "<N>",
+  "appliedSkipped": "<N>",
+  "appliedElsewhereSkipped": "<N>",
+  "previouslyReportedSkipped": "<N>",
+  "matched": "<N>",
+  "matchedBySource": { "LinkedIn": "<N>", "Indeed": "<N>" },
+  "thirdPartyMatched": "<N>",
+  "review": "<N>",
+  "excluded": "<N>",
+  "crossSourceDuplicates": "<N>",
+  "crossDayRepeats": "<N>",
+  "possibleDuplicates": "<N>",
+  "stopReason": "<short phrase>",
   "limitations": []
 }
 ```
+
+**This block is a schema, not a record.** Every `<N>` and `<search title>` is a placeholder for this run's real value; nothing here comes from the config and nothing may be copied into a run.
 
 Rules:
 
@@ -180,17 +188,18 @@ Rules:
 - **Never write `finishedAt` or `durationSeconds` before the run has actually finished.** Write the audit line only at the end, from the real clock; a future timestamp is a defect, not a placeholder.
 - `reportPath` = this run's report file (`reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM/report.md`), exactly as written and published.
 - `sources` = platforms attempted, in order. `searchedBySource` = `completed` / `failed` / `skipped` with reason.
-- `queriesBySource` = the queries actually submitted, per source. Keep the prompt verbatim for `queryMode: "prompt"`.
-- `queryVerbatim` = `true` only when the search input value was read back and matched the config string exactly. `uiFiltersVerified` = `true` only when every configured filter (date posted, employment type, work mode) was confirmed active before reading results. Either one `false` is a defect to report, not a detail to hide.
+- `queriesBySource` = the search titles actually submitted, per source, in order. They must equal `common.searchTitles` (or `search.queries` for `queryMode: "custom"`).
+- `queryVerbatim` = `true` only when each submitted title was read back and matched its configured string (LinkedIn's appended `full-time posted in the past 24 hours` suffix is UI-added and ignored). `uiFiltersVerified` = `true` only when every configured filter (date posted, employment type, work mode) was confirmed active before reading results. Either one `false` is a defect to report, not a detail to hide.
+- `jobAudit` = the step-1 funnel from the report's `job-audit` section: cards collected, unique after merge, removed by the shallow title filter, sent to JD review. Never estimate; use the numbers written in the report.
 - `uiFilters` = only filters the platform offered; otherwise `{}`.
-- `resultsBySource` / `resultCount` = page count; `null` when absent. Page counts go in `resultPagesBySource`; `resultPagesOpened` = total.
+- `resultsBySource` / `resultCount` = the result count the platform displayed; `null` when absent. Pages opened go in `resultPagesBySource`; `resultPagesOpened` = total.
 - Older `linkedinResultCount` equals `resultsBySource.LinkedIn`; read compatibly, never rewrite.
 - `stopReason`: short phrase, e.g. `results older than lookbackHours`, `no more pages`, `login required`.
 - `limitations`: only actual limitations; empty on a normal run.
-- `postingsInspected` / `matched` / `review` / `excluded` are this run's counts. The report summary is the day total; never conflate them.
+- `postingsInspected` / `matched` / `review` / `excluded` are this run's counts. Never write a day total anywhere.
 - `appliedSkipped` = jobs with `appliedOn` on the same platform; `appliedElsewhereSkipped` = cards skipped because another platform already had the application; `previouslyReportedSkipped` = other cards found in the previous daily report that were not opened.
 - `applyFormsInspected` = matched external forms actually opened and read; `applyBlocked` = forms stopped by a login, account, CAPTCHA or unconfigured required field.
-- `thirdPartyMatched` is a subset of `matched` (the `代招岗位` rows), not an additional count.
+- `thirdPartyMatched` is a subset of `matched` (the agency/third-party rows), not an additional count.
 - `crossSourceDuplicates` = cross-source normalized-key hits this run; `possibleDuplicates` = same-platform soft duplicates.
 
 ## 7. Retention

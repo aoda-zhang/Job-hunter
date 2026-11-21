@@ -8,7 +8,7 @@ The UI varies by country, language and A/B test, and changes often. Confirm a co
 
 - Domain: `platforms.Indeed.domain` when set, otherwise the domain matching `common.countries` (`Germany` → `de.indeed.com`). Never reuse job IDs or URLs across domains.
 - Location field: `common.locations` when non-empty, otherwise the country name or empty for country-wide.
-- Queries: resolve from `platforms.Indeed.search` (`SKILL.md` §3). Indeed takes short keyword phrases; a long natural-language paragraph returns poor results, which is why `queryMode: "custom"` with 4–6 short titles is the default.
+- Queries: resolve from `platforms.Indeed.search` (`SKILL.md` §3). `queryMode: "titles"` (default) submits one query per `common.searchTitles` entry, one at a time; `custom` uses `search.queries`. There is no prompt mode. Indeed takes short keyword phrases — never submit a natural-language paragraph.
 - One query per search. Re-submitting replaces the active filters, so verify them again after every new query.
 - `search.lookbackHours` overrides `common.lookbackHours` for Indeed only.
 
@@ -59,7 +59,9 @@ Do not add filters that are not in the config (salary, company rating, urgency, 
 
 The results page is a split view: a card list on the left, the selected job's description on the right. Selecting a card updates `vjk` in the URL without a page load.
 
-**One query, one posting, one tab.** Run one query at a time and finish its pages before the next query. Process cards strictly in order: select one card (or open one `/viewjob?jk=` tab), read the JD, classify it, take the apply/inspect action, write the row, close the tab, then move to the next. Never batch-open several `jk` values, never loop over multiple job pages inside one script, and never keep more than one job tab open. A batch pass is a defect even if the rows look right.
+**Step 1 reads cards only.** Extract the `jk`, canonical URL and card fields; do not select cards or read JDs. Step 3 does the per-posting work.
+
+**One query, one posting, one tab (step 3).** Run one query at a time and finish its pages before the next query. Process cards strictly in order: select one card (or open one `/viewjob?jk=` tab), read the JD, classify it, take the apply/inspect action, write the row, close the tab, then move to the next. Never batch-open several `jk` values, never loop over multiple job pages inside one script, and never keep more than one job tab open. A batch pass is a defect even if the rows look right.
 
 - Job key: `jk` on the card link or apply button, usually 16 hex characters. Read it from the anchor (`a.jcs-JobTitle`, attribute `data-jk`, or `id` = `job_<jk>` / `sj_<jk>`). A card without `jk` is not usable — skip it and count it as a card skip.
 - Canonical URL: `https://<domain>/viewjob?jk=<jk>`. Strip `pagead`, `rc/clk`, `vjs`, `tk`, `xkcb`, `from`, `vjk` tracking.
@@ -73,7 +75,7 @@ The results page is a split view: a card list on the left, the selected job's de
 - About 15 cards per page. Advance with `start=15`, `start=30`, … or with the pagination control when it is rendered.
 - The pagination element is often empty even when thousands of results exist, so never conclude "no more results" from a missing pager. Stop only when the `start` page returns no new `jk` values.
 - Respect `search.maxPagesPerQuery`. Stop earlier when results fall outside the window, the same `jk` set repeats, or an access boundary appears.
-- `search.maxQueries` × `search.maxPagesPerQuery` is the hard page budget for this source.
+- `common.searchTitles` × `search.maxPagesPerQuery` is the hard page budget for this source.
 
 ## 5. Freshness
 
@@ -101,9 +103,11 @@ Record while the job is open; these are informational and never affect match/rev
 
 **Apply type (`applyType`)** — `easy_apply` for the first case, `external` for the second, `unknown` otherwise.
 
-**Cover letter** — `Yes` only when the page or JD explicitly requires one; `No` when explicitly optional or absent; `Unknown` when unstated. Do not open the apply flow to find out.
+**Cover letter** — `Yes` only when the page or JD explicitly requires one; `No` when explicitly optional or absent; `Unknown` when unstated.
 
-Never click `Quick application`, never start the `applystart` redirect chain during discovery. `job-apply` owns external forms.
+**Quick application form** — open it once, read-only, record every visible field into `<run>/<Company>-<JobTitle>/fields.json`, close it. Never fill, upload or submit it; the row stays with the user.
+
+**External form** — click `Continue to the application` once, record the ATS, host, final `applyUrl` and every field read-only. `job-apply` files it after the report; a blocker becomes `blocked: <reason>` in `fields.json` plus a row in `.opencode/skills/job-apply/help.md`.
 
 ## 8. Access boundaries
 

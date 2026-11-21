@@ -8,14 +8,15 @@
 
 Job Hunter 由三部分组成：一份 OpenCode Agent 说明、六个 Skill 说明，以及一个属于你自己的配置文件。项目里没有应用代码——不需要后端、数据库、CLI、CI，也不需要任何 API Key。
 
-一次运行只做四件事：
+一次运行分三个步骤：
 
-1. **搜索**：按 `sources` 的顺序逐个平台检索，每个平台用它自己的查询配置（LinkedIn 一句话 prompt，Indeed 短关键词）。
-2. **收窄范围**：在各平台自己的筛选栏中应用你配置的条件——发布时间、雇佣类型、工作模式、职级、地点。
-3. **逐个打开**：进入每一个剩余职位的真实页面（而不只是搜索结果卡片），跳过已关闭或不再接受申请的职位。
-4. **分类并写报告**：把每个职位判定为「命中 / 待复核 / 不符」，保存到 `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM/report.md`（每次运行一个独立文件，文件名精确到分钟，不跨轮合并）。
+1. **采集**：按 `sources` 的顺序逐个平台检索，每个平台逐一提交 `common.searchTitles` 里的标题并应用配置的筛选。这一阶段只记录每张卡片的公司、职位、可打开的链接和 job id，写进报告的 `job-audit` 章节。
+2. **合并**：跨标题、跨平台去重，只剔除标题上「明显不对」的岗位；`Software Engineer`、`Developer` 以及任何不确定的标题都会保留到下一步由 JD 决定。
+3. **审阅**：逐个打开剩余职位并判定为「命中 / 待复核 / 不符」。Easy Apply 只读打开一次，把字段记录到 `fields.json`；外部表单在 `applications.enabled` 为 true 时交给 `job-apply` 填写投递。
 
-它不会替你投递、不会私信招聘方、不会修改你的账号设置，只使用你已经登录的浏览器会话。
+结果保存到 `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM/report.md`（每次运行一个独立文件，文件名精确到分钟，不跨轮合并）。
+
+平台的一键投递（LinkedIn Easy Apply、Indeed Apply）永远由你手动完成；它不会私信招聘方，也不会修改你的账号设置，只使用你已经登录的浏览器会话。
 
 ## 2. 工作流程
 
@@ -23,7 +24,7 @@ Job Hunter 由三部分组成：一份 OpenCode Agent 说明、六个 Skill 说�
 flowchart TD
     A[job-hunter.config.json] --> B[Job Hunter Agent]
     B --> C[配置的平台<br/>sources：LinkedIn、Indeed 等]
-    C --> D[各平台搜索<br/>LinkedIn prompt、Indeed 短词]
+    C --> D[各平台搜索<br/>每个配置标题一条查询]
     D --> E[各平台自己的筛选<br/>日期、类型、模式、职级]
     D --> E[逐个打开职位页面]
     E --> F{职位仍有效}
@@ -52,7 +53,7 @@ cp job-hunter.config.example.json job-hunter.config.json
 
 然后编辑 `job-hunter.config.json`（它已被 Git 忽略，偏好只留在本地）：
 
-1. **`common.jobSearchPrompt`**：一句自然语言，写清地点、职位、技术栈和时间范围（LinkedIn 使用）。
+1. **`common.searchTitles`**：每次运行逐一搜索的短职位名，一个标题一条查询，例如 `JavaScript Developer`、`Full-Stack Developer`。
 2. **`common.countries` / `common.locations`**：搜索范围。`locations` 为空表示搜索整个国家。
 3. **`common.jobTitles.include`**：你接受的职位名称，用于匹配，也是 Indeed 默认查询的来源。
 4. **`common.jdLanguages.include`** 和 **`common.technicalKeywords`**：你能接受的语言和技术栈。
@@ -68,9 +69,9 @@ cp job-hunter.config.example.json job-hunter.config.json
 
 你始终只需要和 Job Hunter Agent 交互。它会自行加载 `job-discovery`，不需要你手动选 Skill。
 
-> **查询是按平台配置的。** LinkedIn 原样收到 `common.jobSearchPrompt`；Indeed 收到 `platforms.Indeed.search.queries` 里的短词（或每个职位名一条）。两者都来自配置，运行时不会临时编造。`jobTitles` 和 `technicalKeywords` 用于**匹配结果**，不用于搜索。
+> **每个平台都按 `common.searchTitles` 逐个标题搜索。** 没有自然语言 prompt；`jobTitles` 和 `technicalKeywords` 只用于**匹配结果**，不用于搜索。
 >
-> **筛选来自配置，不来自 prompt。** 在 prompt 里写「最近 24 小时」并不可靠；Agent 会按配置的时间窗口设置平台的「发布日期」筛选，并在读取结果前确认筛选已生效。在 Indeed 上还会把 JD 语言、雇佣类型和远程偏好映射成对应筛选。
+> **筛选来自配置。** Agent 会按配置的时间窗口设置平台的「发布日期」筛选，并按配置勾选雇佣类型，在读取结果前确认两个筛选都已生效。
 
 ## 5. 配置说明
 
@@ -82,8 +83,8 @@ cp job-hunter.config.example.json job-hunter.config.json
 | `common.countries` | 是 | 国家级范围，例如 `["Germany"]`。用于校验和说明搜索范围，不用于拼接查询。 |
 | `common.locations` | 否 | 国家内的可选城市。为空或缺失表示整个国家。 |
 | `common.lookbackHours` | 是 | 发布时间窗口（小时）。决定各平台的日期筛选，并在打开每个职位时再次核对。 |
-| `common.jobSearchPrompt` | 是 | `queryMode: "prompt"` 的平台（LinkedIn）使用的自然语言检索语句，原样提交。 |
-| `common.jobTitles.include` | 是 | 接受的职位名称变体，用于匹配、卡片预筛和 `queryMode: "titles"`。 |
+| `common.searchTitles` | 是 | 按顺序逐一提交的短职位名清单，每个平台一条查询，原文提交。 |
+| `common.jobTitles.include` | 是 | 接受的职位名称变体，用于匹配和浅过滤（不作为搜索词）。 |
 | `common.jdLanguages.include` | 是 | 接受的 JD 语言，例如 `["English"]`。Indeed 会映射到它的 `Language` 筛选。 |
 | `common.jdLanguages.acceptGermanJdWithEnglishWorkingLanguage` | 否 | 为 `true` 时，德语 JD 只要明确写明英语是工作/团队/公司语言，也算命中。 |
 | `common.jdLanguages.maxRequiredLevel` | 否 | 可选的语言等级上限，例如 `{"German": "A2", "English": "C1"}`。JD 明确要求高于该等级时，按 `language requirement` 排除。只写“German required”按 B1 计算；“nice to have/plus/optional”不算要求。 |
@@ -102,14 +103,14 @@ cp job-hunter.config.example.json job-hunter.config.json
 | `applicant` | 否 | 用于填第三方申请表的身份信息：`firstName`、`lastName`、`phone`、`email`、`currentCity`、`linkedinUrl`、`portfolioUrl`、`cvPath`、`availableInGermanyFrom`、`governmentEmployee`。身份必填项缺失会停止投递；筛选问题缺失只会阻塞对应岗位。 |
 | `applications` | 否 | 投递策略：`enabled`；`externalApply` = `true`（自动填写并提交）/ `false`（只检查字段）；旧值 `off` / `inspect` / `fill`（填好停在 Submit 前）/ `submit` 仍然兼容；`scope`（`matched` 默认 / `review` / `all`）；`excludeThirdParty`（默认 `true`）；`requireNoAccount`（默认 `true`）；`requireExternalRedirect`（默认 `true`）；`maxPerRun`（数字或 `null`）；`coverLetterMode`（`never` / `required-only` / `always`）；`screening` 存放申请表答案。平台一键投递（LinkedIn Easy Apply、Indeed Apply）没有配置项，永远手动。 |
 | `platforms.LinkedIn.enabled` / `.premium` | 否 | `premium: true` 时，带 `You'd be a top applicant` 提示的命中岗位在所属部分内优先排序；`enabled: false` 跳过该平台。 |
-| `platforms.LinkedIn.search.queryMode` | 否 | `prompt`（默认，原样使用 `common.jobSearchPrompt`）、`titles` 或 `custom`。 |
+| `platforms.LinkedIn.search.queryMode` | 否 | `titles`（默认，每个 `common.searchTitles` 一条）或 `custom`（自带 `search.queries`）。 |
 | `platforms.LinkedIn.feedReview` | 否 | Feed 任务设置：`lookbackHours`、`maxPosts`、`excludeTopics`、`replyLanguage`。 |
 | `platforms.LinkedIn.feedJobs` | 否 | 招聘帖搜索：`enabled`、`lookbackHours`（feed 帖时间窗，缺省继承 `common.lookbackHours`）、`searchKeywords`、`maxQueries`、`maxPagesPerQuery`、`maxScreens`、`locationTerms`、`includeRecentFeed`。 |
 | `platforms.Indeed.enabled` | 否 | `false` 时跳过 Indeed，但仍保留在 `sources` 里。 |
 | `platforms.Indeed.domain` | 否 | 例如 `de.indeed.com`，要和 `common.countries` 一致。 |
-| `platforms.Indeed.search.queryMode` | 否 | `custom`（Indeed 默认，使用 `search.queries`）、`titles`（每个 `common.jobTitles.include` 一条）或 `prompt`。 |
-| `platforms.Indeed.search.queries` | 否 | 短关键词，例如 `["Frontend Developer","React Developer"]`。Indeed 对短词的效果远好于长段落。 |
-| `platforms.Indeed.search.maxQueries` / `.maxPagesPerQuery` | 否 | 该平台的查询条数和翻页上限。 |
+| `platforms.Indeed.search.queryMode` | 否 | `titles`（默认，每个 `common.searchTitles` 一条）或 `custom`（自带 `search.queries`）。 |
+| `platforms.Indeed.search.queries` | 否 | 仅 `queryMode: "custom"` 时使用：短关键词，例如 `["Frontend Developer","React Developer"]`。 |
+| `platforms.Indeed.search.maxPagesPerQuery` | 否 | 该平台每条查询的翻页上限。 |
 | `platforms.Indeed.search.lookbackHours` | 否 | 只覆盖 Indeed 的时间窗口——当前是 `168`（7 天），LinkedIn 保持 24 小时。 |
 | `platforms.Indeed.search.filters` | 否 | 绑定哪些 Indeed 筛选器：`date`（始终开）、`employmentType`（开——按 `common.employmentTypes` 选 `Full-time`）、`language`（关——读 JD 判断）、`remote`（关）、`quickApply`（关——会隐藏外部 ATS 岗位）。开关为 `false` 的维度一律从职位页判断。 |
 | `notifications.email` | 否 | 可选 SMTP 配置，用于发送运行摘要邮件；默认关闭。`enabled` 为 `true` 时每次运行后发送一封摘要。 |
@@ -229,7 +230,7 @@ reports/interviews/                               第二阶段产出
 
 | 现象 | 原因与处理 |
 |---|---|
-| 没有生成报告 | 配置缺失、`common.jobSearchPrompt` 为空，或没有可用的浏览器工具。Agent 被要求明确说明是哪一种。 |
+| 没有生成报告 | 配置缺失、`common.searchTitles` 为空，或没有可用的浏览器工具。Agent 被要求明确说明是哪一种。 |
 | 提示「浏览器工具不可用」 | 在 OpenCode 中启用浏览器集成。本仓库不提供也不配置浏览器工具。 |
 | 搜索停在登录或验证码 | 你在该浏览器中自行登录该平台后重试。Agent 不得绕过这些限制。 |
 | 德语职位都被排除 | `jdLanguages` 只接受英语。把 `acceptGermanJdWithEnglishWorkingLanguage` 设为 `true`，或把 `German` 加入列表。 |

@@ -22,7 +22,11 @@
     },
     "thirdPartyPostings": "separate",
     "skipPreviousReport": true,
-    "jobSearchPrompt": "Find English-speaking software engineering jobs across all of Germany, posted in the last 48 hours.",
+    "searchTitles": [
+      "Frontend Engineer",
+      "TypeScript Developer",
+      "Full-Stack Developer"
+    ],
     "jobTitles": {
       "include": [
         "Frontend Engineer",
@@ -128,7 +132,8 @@
       "enabled": true,
       "premium": false,
       "search": {
-        "queryMode": "prompt"
+        "queryMode": "titles",
+        "maxPagesPerQuery": 10
       },
       "feedReview": {
         "lookbackHours": 24,
@@ -176,13 +181,7 @@
       "enabled": true,
       "domain": "de.indeed.com",
       "search": {
-        "queryMode": "custom",
-        "queries": [
-          "Frontend Developer",
-          "React Developer",
-          "Fullstack Developer"
-        ],
-        "maxQueries": 3,
+        "queryMode": "titles",
         "maxPagesPerQuery": 2,
         "lookbackHours": 48,
         "filters": {
