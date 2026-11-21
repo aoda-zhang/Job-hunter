@@ -93,6 +93,9 @@ Path: `reports/runs/YYYY-MM-DD.jsonl`. Append one line per run; never overwrite.
   "postingsInspected": "<N>",
   "applyFormsInspected": "<N>",
   "applyBlocked": "<N>",
+  "saved": "<N>",
+  "savedAlready": "<N>",
+  "saveFailed": "<N>",
   "expired": "<N>",
   "appliedSkipped": "<N>",
   "appliedElsewhereSkipped": "<N>",
@@ -126,6 +129,7 @@ Rules:
 - `resultsBySource` / `resultCount` = the count the platform displayed; `null` when absent.
 - `matched` / `review` / `excluded` are this run's counts. Never write a day total.
 - `appliedSkipped` = jobs in today's log for the same platform; `appliedElsewhereSkipped` = cards skipped because another platform already had the application; `previouslyReportedSkipped` = cards found in the previous daily report.
+- `saved` = matched rows whose Save click was verified this run; `savedAlready` = matched rows already in the saved list and left untouched; `saveFailed` = matched rows recorded as `not saved: <reason>`. All three are `0` when `common.saveMatchedJobs` is not `true`.
 - `thirdPartyMatched` is a subset of `matched`.
 - `limitations`: only actual limitations; empty on a normal run.
 

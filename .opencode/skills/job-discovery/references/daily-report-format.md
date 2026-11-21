@@ -84,8 +84,11 @@ Write it as a plain list directly under the title, before the summary:
 - Search titles (in order): <common.searchTitles, separated by ·>
 - Platform filters (verified): Past 24 hours · Full-time
 - Apply dedupe: previous run report and today's `reports/applications/` checked before the run; N already-applied hits; none re-applied
+- Saved: N matched jobs saved on the platform (LinkedIn N · Indeed N); M not saved
 - Report: `reports/daily/2026-11-20/2026-11-20-2101/report.md`
 ```
+
+- `Saved` is written only when `common.saveMatchedJobs` is `true`; name each not-saved reason in the audit, not in the header.
 
 - `Start` = the moment the run started searching; `End` = the moment report, index and audit were finished. Both in local time with minutes; keep the timezone label on the start line only.
 - Take both values from the same clock source; never write a planned or estimated end time.
@@ -155,6 +158,7 @@ Keep it short: one row group per metric, one column per source plus a total. Eve
 | Applied on another platform (skipped) | N | N | N |
 | Matched | N | N | N |
 | Of which Easy Apply / No Easy Apply | N / N | N / N | N / N |
+| Saved on the platform (matched rows) | N | N | N |
 | Needs manual review | N | N | N |
 | Feed-sourced jobs | N | — | N |
 ```
@@ -165,6 +169,7 @@ Keep it short: one row group per metric, one column per source plus a total. Eve
 - The audit JSONL keeps the full counts (excluded, third-party postings, inspected forms); the summary table shows only the rows above.
 - `Matched` includes confirmed third-party postings listed in `Agency / third-party postings`.
 - `Of which Easy Apply / No Easy Apply` adds up to `Matched`; it is a workflow split, not extra matches.
+- `Saved on the platform` counts matched rows saved or already saved this run; write `—` when `common.saveMatchedJobs` is not `true`.
 - `Previously reported (skipped)`, `Applied on another platform (skipped)` and `Feed-sourced jobs` are outside the JD sum.
 - When `job-apply` filled or submitted forms, add an `External applications filled / submitted / blocked` row. It is outside the JD sum.
 
@@ -226,8 +231,8 @@ Ordering:
 Columns:
 
 ```markdown
-| # | Company | Notes | Apply form | Link | Size | Business | Title | City | Mode | Posted | Matched keywords | Easy Apply | Cover letter | Source |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| # | Company | Notes | Apply form | Saved | Link | Size | Business | Title | City | Mode | Posted | Matched keywords | Easy Apply | Cover letter | Source |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 ```
 
 | Column | Rule |
@@ -236,6 +241,7 @@ Columns:
 | Company | Company on the page; if poster ≠ employer, put the poster here and the employer in Notes |
 | Notes | Verifiable facts only: stack, level, contract, poster/employer mismatch, conflicts; ≤ about 90 characters; no fit language. Every external row (`Easy Apply` = `No` / `Unknown`) that was not submitted ends with `Not auto-submitted: <reason>` (translated in the report language), naming the concrete cause: login or account creation, a required field the config cannot answer, rejected value, CAPTCHA, expired posting, browser/relay failure, or a policy skip |
 | Apply form | `Inspected` (fields in the vacancy folder's `fields.json`), `Blocked`, `Submitted`, or `Not external` for a one-click apply recorded read-only |
+| Saved | `Saved` (verified this run), `Already saved` (untouched), `Not saved: <reason>` (no save control, sign-in wall, control did not respond), or `—` when `common.saveMatchedJobs` is not `true` or the row is not a match |
 | Link | `[Open](canonical URL)` actually visited in this run |
 | Size | Range shown on the page, e.g. `51-200`, `9,000`, `10001+`; `Not specified` when absent |
 | Business (localized heading in other report languages) | One short phrase, only when the JD explicitly states the company's product, market or industry, e.g. `B2B logistics SaaS`; `Not stated` when absent; never infer from the company name, domain or another page; ≤ about 40 characters |
@@ -257,7 +263,7 @@ A single top-level section, always immediately before the excluded table (sectio
 ```markdown
 ## Submitted
 
-| # | Company | Notes | Apply form | Link | Size | Business | Title | City | Mode | Posted | Matched keywords | Easy Apply | Cover letter | Source |
+| # | Company | Notes | Apply form | Saved | Link | Size | Business | Title | City | Mode | Posted | Matched keywords | Easy Apply | Cover letter | Source |
 ```
 
 - Heading: `Submitted` (translated in the report language).
@@ -306,7 +312,7 @@ Only with at least one matching feed hiring post. Never write an empty section. 
 
 ## 7. Needs manual review
 
-Only with entries. Use the matched table. In Notes, name the unknown check (title / language / keywords / work mode / employment type) and the concrete reason (JD did not load, too short, truncated, mixed language, field not exposed). Group rows by source in `sources` order, then order them as in Matched jobs (Easy Apply first, then No Easy Apply) without adding the part headings; start top-applicant rows' Notes with `Top applicant`. An unknown check never becomes a match or an exclusion.
+Only with entries. Use the matched table. In Notes, name the unknown check (title / language / keywords / work mode / employment type) and the concrete reason (JD did not load, too short, truncated, mixed language, field not exposed). Group rows by source in `sources` order, then order them as in Matched jobs (Easy Apply first, then No Easy Apply) without adding the part headings; start top-applicant rows' Notes with `Top applicant`. An unknown check never becomes a match or an exclusion. Review rows are never saved: the `Saved` cell is `—`.
 
 ## 8. Excluded jobs
 
@@ -345,6 +351,7 @@ Only on a failed, interrupted or largely unusable run; always at the end. Cover 
 - A non-matching feed hiring post appears nowhere, including the excluded table.
 - A feed job appears only in the feed section; do not duplicate a matched or review row.
 - The top-applicant marker and Easy Apply are ordering metadata only; neither ever creates or removes a job.
+- A `Saved` state is reported only after it was verified in the browser; never assume a save succeeded.
 - Never output candidate-fit, salary or visa judgments.
 
 ## 11. Previous-run dedupe

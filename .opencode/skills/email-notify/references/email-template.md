@@ -22,7 +22,7 @@ Job Hunter daily search summary
 Date: 2026-11-10
 Run time: 14:05 – 14:14 (9 min)
 Scope: Germany (nationwide)
-This run: inspected 61 · matched 18 · review 0 · excluded 43
+This run: inspected 61 · matched 18 · saved 18 · review 0 · excluded 43
 Skipped as applied: 0
 Stop reason: no more result pages (127 cards read)
 Report: reports/daily/2026-11-10/2026-11-10-2130.md
@@ -37,7 +37,7 @@ Field sources:
 | Date | audit `runAt` | `YYYY-MM-DD` |
 | Run time | audit `runAt` / `finishedAt` / `durationSeconds` | `HH:MM – HH:MM (N min)`; omit the end or duration when missing |
 | Scope | audit `scope.countries` / `locations` | No `locations` = `(nationwide)`; list up to five cities, then "etc." |
-| This run's totals | this run's report run summary | inspected = `JD reviewed`, matched = `matched`, review = `needs review`, excluded = `excluded`; one run only, never a day total |
+| This run's totals | this run's report run summary | inspected = `JD reviewed`, matched = `matched`, saved = `Saved on the platform`, review = `needs review`, excluded = `excluded`; one run only, never a day total; omit `saved` when saving is disabled |
 | This run (audit) | audit | `postingsInspected` / `matched` / `excluded` |
 | Skipped as applied | audit `appliedSkipped` | `0` when absent |
 | Stop reason | audit `stopReason` | One short phrase; `not recorded` when absent |

@@ -115,7 +115,7 @@ Indeed may return an empty page, a "No jobs were found" page containing only rec
 
 **A trust or automation-suspicion dialog ends the whole run, not just this source.** That includes `verify you are human`, CAPTCHA, `unusual traffic` / `unusual activity`, `automated access`, `are you a robot`, an AI-agent warning, and a forced re-login or 2FA prompt. Stop immediately: no further navigation, no retry, no reload, no form filling, no Submit. Record the platform and the exact dialog text, keep what is already recorded, and tell the user to take over.
 
-Only a plain "no results" page or a single failed page load is treated as a normal source boundary: then stop this source, record it in `limitations` and `searchedBySource`, and continue with the next source. Never solve a CAPTCHA, never create an account, never rotate sessions or proxies.
+Only a plain "no results" page or a single failed page load is treated as a normal source boundary: then stop this source, record it in `limitations` and `searchedBySource`, and continue with the next source. Never solve a CAPTCHA, never create an account, never rotate sessions or proxies. Never save on Indeed unless `common.saveMatchedJobs` is `true` and the row is `matched` (§10).
 
 Keep the query count low and do not reload pages in a loop; a burst of navigations is what triggers the degraded responses.
 
@@ -126,3 +126,13 @@ Keep the query count low and do not reload pages in a loop; a burst of navigatio
 - Interface language follows the `lang` parameter and/or the account; a translation browser extension rewrites visible text, so read attributes (`data-jk`, `href`) and JD containers instead of trusting translated `innerText`.
 - The result header may omit the total count. Use the browser tab title when it says "Find N open positions", otherwise record `null`; never estimate.
 - Salary ranges, ratings and benefit tags are display data only and never filters.
+
+## 10. Saving matched postings
+
+Only when `common.saveMatchedJobs` is `true`, and only for a vacancy just classified `matched` (normal or confirmed agency/third-party). One save per vacancy, on the job detail pane, right after classification and **before** `Continue to the application` — that control leaves Indeed.
+
+- The control is `Save job` / `Job speichern` in the detail pane (often `Gespeichert` / `Saved` when already saved). A saved state is never clicked; record `already saved`.
+- Indeed usually requires a signed-in account to save. If `Save job` opens a sign-in prompt, closes without changing state, or is absent, record `not saved: login required` / `not saved: no save control`, close the prompt and continue. Never sign in or create an account to save.
+- Click once only, verify the label changed to the saved state, and record `saved`. An unverified click becomes `not saved: control did not respond`.
+- Never toggle a save off, never save a `review`, `excluded`, expired or skipped job, and never use a card-level save icon.
+- Saving is unconditional: it does not depend on `applications.enabled`, a fillable form, a successful submission or the user applying later.

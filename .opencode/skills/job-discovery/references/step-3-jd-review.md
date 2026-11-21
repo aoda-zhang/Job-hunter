@@ -31,7 +31,18 @@ Disabled checks are skipped. Confirmed mismatch → `not_matched`, stop. Any `un
 
 **Third-party gate.** Only a `third_party` posting matched on every active dimension enters the agency/third-party section. A confirmed mismatch goes to Excluded with that reason; an `unknown` goes to review. Never assume full-time, English JD, work mode or seniority from the poster type.
 
-## 3. Apply control
+## 3. Save matched postings
+
+Active only when `common.saveMatchedJobs` is `true`. Skipped entirely when it is `false` or absent.
+
+1. Immediately after a vacancy is classified `matched` — normal or confirmed agency/third-party — and **before** touching any Apply control, click that page's Save/bookmark control once.
+2. Save is unconditional: it does not depend on `applications.enabled`, on the apply form being fillable, on the form being submitted, or on the user ever applying. `review`, `excluded`, expired and skipped rows are never saved. A save controlled from the search-result card is never used.
+3. One click per vacancy. If the page already shows the saved state (`Saved` / `Gespeichert`, a filled bookmark icon), do not click — record `already saved`; never toggle an existing save off.
+4. Verify after the click: the control must read `Saved` (localized `Gespeichert`, `收藏` etc.). Only then record `saved`. If the click left the page unchanged, record `not saved: control did not respond`.
+5. Save only in the logged-in session you are already using. A login wall, account prompt or missing Save control is recorded as `not saved: login required` / `not saved: no save control` and the run continues — it is not a stop-all signal. Never create an account to save.
+6. Where the Save control sits is platform-specific: see `linkedin.md` §9 and `indeed.md` §10.
+
+## 4. Apply control
 
 Record `easyApply` (`yes` / `no` / `unknown`), `applyType` (`easy_apply` / `external` / `unknown`) and `coverLetter` (`yes` / `no` / `unknown`) for every inspected vacancy. They never affect classification.
 
@@ -41,7 +52,7 @@ Record `easyApply` (`yes` / `no` / `unknown`), `applyType` (`easy_apply` / `exte
 
 The daily report carries only the short `Apply form` status, never a field table.
 
-## 4. Cover letters
+## 5. Cover letters
 
 Draft a cover letter for **every matched vacancy** — Easy Apply, external and every agency/third-party row — whenever `common.isNeededCover` is `true`, whether or not the form exposes a field.
 
@@ -52,10 +63,11 @@ Draft a cover letter for **every matched vacancy** — Easy Apply, external and 
 - Save the JSON plus `<First>_<Last>_<Role>_Cover_Letter.pdf` and record the path. Never upload or submit it.
 - If the template is missing, stop that step and tell the user to copy `cover-letter-template-example.md`.
 
-## 5. Output
+## 6. Output
 
 - `matched` and `review` rows go to the report tables; `not_matched` goes to the excluded table. Every row that was inspected is recorded in this run's report and audit only.
 - Record `posterType` for every inspected vacancy; record `business` only from an explicit JD statement. For `third_party`, the client goes in Notes.
+- Record the `saved` state (`saved` / `already saved` / `not saved: <reason>`) for every matched row in the report's `Saved` column; review and excluded rows are never saved.
 - Read the top-applicant marker only when the platform reference defines it and the config enables it (LinkedIn: `platforms.LinkedIn.premium`). It orders rows and is never a check.
 - Never score fit, never filter on years, salary, visa, industry, architecture or company size. Record only page facts.
 

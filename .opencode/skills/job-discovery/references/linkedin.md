@@ -60,7 +60,7 @@ Record the displayed result count when shown, plus pages opened and the stop rea
 
 ## 6. Access boundaries
 
-If LinkedIn requires login, shows a CAPTCHA or blocks the run, stop this source and record it in `limitations`. Never ask for credentials and never bypass access controls. Never message, save, follow or use a one-click apply. Opening an employer form read-only is allowed; never fill, upload or submit it.
+If LinkedIn requires login, shows a CAPTCHA or blocks the run, stop this source and record it in `limitations`. Never ask for credentials and never bypass access controls. Never message, follow or change account settings. Never save a job on LinkedIn unless `common.saveMatchedJobs` is `true` and the row is `matched` (§9); never save from a login wall. Opening an employer form read-only is allowed; never fill, upload or submit it.
 
 **A trust or automation-suspicion signal stops everything.** `verify you are human`, CAPTCHA, `unusual activity` / `unusual traffic`, `automated access`, `are you a robot`, an AI-agent warning, or a forced re-login/2FA mid-run: stop the whole run immediately — no navigation, retry, refresh, filling or Submit. Record the exact dialog text and tell the user to take over.
 
@@ -85,3 +85,14 @@ Record these while the job page is open; they never affect classification.
 - The search box is rewritten on submit (LinkedIn appends `full-time posted in the past 24 hours`); compare only the title part.
 - The same role can appear under several job IDs (multi-city, bilingual); handle it with the soft-dedup rules in `job-index-and-audit.md`.
 - `Easy Apply` is not a filter and must never be used as one.
+
+## 9. Saving matched postings
+
+Only when `common.saveMatchedJobs` is `true`, and only for a vacancy the run has just classified `matched` (normal or confirmed agency/third-party). One save per vacancy, on the job detail page, right after classification and **before** clicking Apply — an external Apply leaves the page.
+
+- The control sits in the top card of the job detail page: a `Save` button (`aria-label` like `Save the job`, `Save <job title>`) or `Save` inside the `…` overflow menu. Localized labels: `Speichern`, `Gespeichert`, `收藏`, `已收藏`.
+- The card state is authoritative: `Save` = not saved, `Saved` / filled bookmark = already saved. A job already in `Saved` state is never clicked and is recorded as `already saved`.
+- Click once, then verify the label changed to `Saved` / `Gespeichert` (or the bookmark is filled). Record `saved` only after that verification; otherwise record `not saved: control did not respond`.
+- Never use the Save icon on a result card or in a list, never save a `review`, `excluded`, expired or skipped job, and never click Save twice or toggle a save off.
+- No Save control visible, or a sign-in prompt in its place → record `not saved: no save control` / `not saved: login required`, continue the row. Never sign in or create an account to save.
+- Saving is unconditional: it does not depend on `applications.enabled`, a fillable form, a successful submission or the user applying later.

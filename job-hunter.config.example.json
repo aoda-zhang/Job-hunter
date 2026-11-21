@@ -65,6 +65,7 @@
     "preferredReportLanguage": "English",
     "reportRepo": "",
     "isNeededCover": false,
+    "saveMatchedJobs": false,
     "dedupe": {
       "crossSource": true,
       "skipApplied": true

@@ -21,6 +21,7 @@ Read `job-hunter.config.json` (Git-ignored). Never use the example as personal s
 - `common.jobTitles.shallowExclude` — optional string array; a title containing any of these strings (case-insensitive) is removed in step 2 before any JD is opened, unless the normalized/translated title also contains a `jobTitles.include` phrase (that guard always wins).
 - `common.jobTitles.earlyStrictMatch` — when `true`, step 2 also applies the strict title gate: a normalized/translated title without an include phrase (or with an exclude word) is removed before any JD is opened.
 - `common.thirdPartyPostings`, `dedupe.*`, `report.*`, `sortBy`, `preferredReportLanguage`, `reportRepo`, `isNeededCover`.
+- `common.saveMatchedJobs` — boolean (default `false`). When `true`, every vacancy that ends as `matched` is saved on its source platform, whether or not it is applied to. See §4.
 - `platforms.<name>.search.queryMode` — `titles` (default) or `custom`. **There is no prompt mode.**
 
 `applicant`, `applications` and `notifications` are runtime blocks.
@@ -76,6 +77,7 @@ Platform mechanics live in `references/linkedin.md` and `references/indeed.md`; 
 - **Stop-all**: `verify you are human`, CAPTCHA, `unusual activity` / `unusual traffic`, `automated access`, `are you a robot`, an AI-agent warning, or a forced re-login/2FA stops the entire run immediately — no navigation, search, apply or retry. Keep what is written and tell the user to take over.
 - **Language split**: the report and the summary email follow `common.preferredReportLanguage`; every value sent to an employer — form fields, free-text answers, cover letters, uploaded documents — is **English only**, whatever that setting says.
 - Never fabricate a listing, JD fact, field value or result. Never guess a private API or bypass access controls.
+- **Save matched postings.** With `common.saveMatchedJobs: true`, every vacancy that ends as `matched` — normal matched rows and confirmed agency/third-party rows, including rows later submitted — gets exactly one Save/bookmark click on its own platform page. Saving is independent of `applications.enabled`, of the apply outcome and of whether the user ever applies: save it anyway. Save right after the classification decision, before any Apply control is used and before the tab closes. Never save `review`, `excluded`, expired or skipped rows, never save from a search-result card, never toggle an already-saved job off, never create an account or log in to save. A missing control or login wall is recorded as `not saved: <reason>` and does not stop the run. Ordering: classify → save → apply control.
 - Discovery never fills or submits a platform one-click apply; it may open it once read-only to record fields.
 
 ## 5. Outputs
@@ -87,4 +89,4 @@ Platform mechanics live in `references/linkedin.md` and `references/indeed.md`; 
 5. **Apply** — when `applications.enabled` is `true`, load `job-apply` after the report and index are written.
 6. **Email** — when `notifications.email.enabled` is `true`, send one summary via `email-notify`.
 
-Report completion: report path and start time, scope, titles submitted, the step-1 funnel, skips, matched / Easy Apply / No Easy Apply, applications filled / submitted / blocked, third-party postings, review, excluded, coverage and stop reason per source, email status, limitations.
+Report completion: report path and start time, scope, titles submitted, the step-1 funnel, skips, matched / Easy Apply / No Easy Apply, saved / not saved, applications filled / submitted / blocked, third-party postings, review, excluded, coverage and stop reason per source, email status, limitations.

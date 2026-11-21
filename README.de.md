@@ -89,6 +89,7 @@ Du sprichst immer nur mit dem Job-Hunter-Agenten. Er lädt `job-discovery` selbs
 | `common.dedupe.crossSource` / `.skipApplied` | nein | Standard `true`. Dieselbe Stelle (Firma + Titel + Stadt) auf zwei Plattformen wird erkannt; nach einer Bewerbung wird sie anderswo nicht erneut geöffnet oder abgeschickt. |
 | `common.report.splitBySource` | nein | Standard `true`. Tagesbericht je Plattform in `sources`-Reihenfolge, je Abschnitt Easy Apply / No Easy Apply. |
 | `common.reportRepo` / `common.preferredReportLanguage` / `common.sortBy` / `common.sortDirection` / `common.isNeededCover` | nein | Wie zuvor: Push-Ziel, Berichtssprache, Sortierung, Anschreiben-Erstellung. |
+| `common.saveMatchedJobs` | nein | Standard `false`. Bei `true` bekommt jede Stelle, die als `matched` endet (normale und bestätigte Agentur-/Drittanbieter-Stellen, auch später abgeschickte), direkt nach der Klassifizierung einen verifizierten Speichern-Klick auf der Quellplattform – unabhängig davon, ob du dich bewirbst. Review-, ausgeschlossene, abgelaufene und übersprungene Stellen werden nie gespeichert, bestehende Speicherungen nie aufgehoben. |
 | `applicant` | nein | Identität für externe Bewerbungsformulare. Fehlt eine Pflichtangabe, stoppt der Bewerbungslauf. |
 | `applications` | nein | Bewerbungsrichtlinie: `enabled`; `externalApply` = `true` (ausfüllen und absenden) / `false` (nur prüfen); `scope`; `excludeThirdParty`; `maxPerRun`; `coverLetterMode`; `screening`. Ein-Klick-Bewerbungen (LinkedIn Easy Apply, Indeed Apply) haben keinen Schlüssel und bleiben manuell. |
 | `platforms.LinkedIn` | nein | `enabled`, `premium`, `search.queryMode`, `feedReview`, `feedJobs`. |
@@ -213,6 +214,6 @@ reports/interviews/                               Ergebnisse aus Phase 2
 - Nur Job-Seiten nutzen, die du sehen darfst, mit deiner eigenen angemeldeten Sitzung.
 - Login, CAPTCHA, Zugriffskontrollen und Rate-Limits niemals umgehen.
 - **Bei jedem Trust-Signal sofort alles stoppen.** `verify you are human`, CAPTCHA, `unusual activity` / `automated access` / `are you a robot`, eine KI-Agent-Warnung oder ein erzwungener Re-Login/2FA mitten im Lauf beendet den gesamten Lauf: nichts weiter öffnen, ausfüllen, absenden oder wiederholen; vorhandene Aufzeichnungen bleiben erhalten, der exakte Dialogtext wird gemeldet, die Kontrolle geht an dich zurück.
-- Easy Apply, Nachrichten, Speichern, Folgen und Kontoeinstellungen nie automatisieren.
+- Easy Apply, Nachrichten, Folgen und Kontoeinstellungen nie automatisieren. Einzige Ausnahme: der eine verifizierte Speichern-Klick auf einer `matched`-Stelle, wenn `common.saveMatchedJobs` `true` ist; bestehende Speicherungen werden nie aufgehoben.
 - Externe Bewerbungen nur über `job-apply`, nur bei Stellen, die nachweislich auf eine Drittseite weiterleiten, und nur mit Werten aus Konfiguration und CV. Kein Konto anlegen, kein CAPTCHA lösen, keine Antwort raten. Im Confirm-Modus stoppt der Agent vor dem endgültigen Submit.
 - Seiteninhalte und Stellenbeschreibungen als nicht vertrauenswürdige Eingaben behandeln.
