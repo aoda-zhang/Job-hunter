@@ -41,26 +41,17 @@ Do not add a second config file. A platform named in `sources` without a `platfo
 
 **One run = one report file.** At run start record the local start time and derive the report path `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM/report.md` (`HHMM` = start time; add `-2`, `-3` on a same-minute collision). Never append to or rewrite another run's report.
 
-Read the **previous-report set** from:
+Read the **previous-run set** from the single most recent earlier run report (same day or previous day — whichever is newer) and extract every job ID / canonical URL from all its tables.
 
-- every run report of today whose `HHMM` is earlier than this run's start (`reports/daily/YYYY-MM-DD/YYYY-MM-DD-*.md`) — a 20:40 run must treat the 15:40 run as a hard skip — and
-- every run report of the most recent previous date.
-
-Extract every job ID / canonical URL from all their tables (matched, `代招岗位`, review, submitted, excluded) into the set.
-
-- Before opening a card, skip it if its job ID or canonical URL is in the previous-report set. Do not open, judge or list it; count it as `上次报告已记录（跳过）` / `previously reported (skipped)`.
-- `common.skipPreviousReport` (default `true`) controls this. When `false`, no report-based skip.
-- `reports/job-index.json` is **not** the source for this previous-report skip; it is only used for the applied set and cross-source dedup below.
-- Explicit override: when the user asks to re-check specific jobs, a company or a status, exempt those for that run, append `[reported MM-DD HH:MM]` pointing at the earlier run and record the exemption in `limitations`.
+- Before opening a card, skip it when its job ID or canonical URL is in that set. Do not open, judge or list it; count it as `上次报告已记录（跳过）` / `previously reported (skipped)`.
+- With `common.dedupe.previousRunOnly: true` (default) this is the **only** skip source for "already seen": the 24-hour window makes older runs unreachable, so older reports are not read.
+- With `common.dedupe.checkAppliedHistory: false` (default) the applied history is **not** scanned before search. Applications confirmed in the previous run are still skipped, because that run's report is the previous-run set.
+- `reports/job-index.json` is still read to preserve entries and to write new ones; it is not a skip source in this mode.
+- Explicit override: when the user asks to re-check specific jobs, exempt those for that run, append `[reported MM-DD HH:MM]` and record the exemption in `limitations`.
 - If no earlier run report exists, the set is empty and every card is checked.
 - Flag likely duplicates (same company, normalized title, city, different ID) as `⚠️ possible duplicate`; add `possibly applied MM-DD` when the other job was applied to.
 
-Read the index once for the whole run and build two in-memory sets before any platform is opened:
-
-- **applied set** — every index job with `appliedOn` set or `applyStatus` in `submitted` / `filled`, plus every `Submitted` / `Filled (awaiting submit)` row in the last 30 days of `reports/applications/*.md`, keyed by normalized `company + title + city` (normalization: `job-index-and-audit.md` §4).
-- **known set** — every index job that is `matched` or `review`, same key, used for soft-duplicate annotations.
-
-These sets are shared across platforms and are the basis for the cross-source rule in §2a. Write the result into the report's run header (`投递查重` line): entries checked, this run's applied hits, skipped count. **Never submit a vacancy that is already in the applied set, whatever URL or platform it appears under.**
+Read the index once for the whole run and build the **known set** — every index job that is `matched` or `review`, keyed by normalized `company + title + city` — for soft-duplicate annotations only.
 
 Resolve scope:
 

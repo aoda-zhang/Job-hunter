@@ -297,49 +297,23 @@ Only on a failed, interrupted or largely unusable run; always at the end. Cover 
 - The priority prompt and Easy Apply are ordering metadata only; neither ever creates or removes a job.
 - Never output candidate-fit, salary or visa judgments.
 
-## 11. Previous-report dedupe
+## 11. Previous-run dedupe
 
-A report is a single run's snapshot. At run start, the skip source is **every earlier run's report**, plus the latest previous-day runs:
+A report is a single run's snapshot. The skip source is the **single most recent earlier run** (same day or previous day, whichever is newer): every job ID / canonical URL in its tables is skipped before opening and appears nowhere in this run's report.
 
-1. all `reports/daily/YYYY-MM-DD/YYYY-MM-DD-*.md` of today whose `HHMM` is earlier than this run's start, and
-2. every run report of the most recent previous date (`reports/daily/<prev-date>/*.md`).
-
-Extract every job ID / canonical URL from all their tables into the **previous-report set**; a card in this set is not opened, not judged and not listed.
-
-**Apply preflight (mandatory, before the first platform).** Build the applied set from two local sources and record the result in the report header:
-
-- `reports/job-index.json`: every entry with `appliedOn` set or `applyStatus` in `submitted` / `filled`;
-- `reports/applications/*.md`: every `Submitted` / `Filled (awaiting submit)` row of the last 30 days.
-
-Any vacancy in that set is skipped on every platform, never opened, never listed and **never submitted again**, even when the run is a re-check or the posting reappeared with a new ID (match on normalized identity, not only URL). This is what keeps a 20:40 run from repeating the 15:40 run: the second run of the day lists only genuinely new postings and says `0 new` when nothing is left.
+With `common.dedupe.previousRunOnly` (`true` by default) no older report is read — the 24-hour window cannot reach it. With `common.dedupe.checkAppliedHistory` (`false` by default) the applied history is not scanned; applications from the previous run are covered because that run's report is the previous-run set.
 
 | Situation | Handling |
 |---|---|
-| Key in an earlier run's report of the same day | Do not open, judge or list; count as previously reported (skipped) |
-| Key in the previous day's runs | Do not open, judge or list; count as previously reported (skipped) |
-| `appliedOn` set | Do not open or judge; count as applied-skipped; never list |
-| Applied on another platform (normalized company + title + city) and `common.dedupe.skipApplied` is `true` | Do not open or judge; count as applied on another platform (skipped); never list, never apply again |
-| Same vacancy on two platforms, not applied (and `common.dedupe.crossSource` is `true`) | Keep the first source's row; annotate the second `⚠️ 同职位已在 <source> 出现` when it still appears |
-| Explicit re-check override | Exempt the named keys for that run; list normally and append `[reported MM-DD HH:MM]` |
-| No earlier report | Check every card |
+| Key in the most recent earlier run's report | Do not open, judge or list; count as previously reported (skipped) |
+| Applied in that earlier run | Already covered by the row above; never listed, never applied again |
+| Same vacancy on two platforms, not applied (and `common.dedupe.crossSource` is `true`) | Keep the first source's row; annotate the second `⚠️ 同职位已在 <source> 出现` |
+| Explicit re-check override | Exempt the named keys; list normally and append `[reported MM-DD HH:MM]` |
+| No earlier run | Check every card |
 
 - Markers never reduce today's opened count.
-- The same URL appears once per run file; the same vacancy may appear again in a later run only as `[reported MM-DD HH:MM]` after an explicit override, never as a duplicate row.
-- `Of which cross-day repeats` = matched rows with `[reported …]`, including `代招岗位` rows. With the default previous-report skip it is normally 0.
-- Use `MM-DD HH:MM` in markers so a repeat points at the exact run that reported it first; `MM-DD` alone is not enough on a multi-run day.
-
-Soft duplicates: same normalized company + title + city with a different ID → `⚠️ possible duplicate`, or `⚠️ possibly applied MM-DD` when applied. Annotate only; never merge or change counts. Normalization rules are in `job-index-and-audit.md`.
-
-Application marker: after the user confirms, append `[applied MM-DD]` to Notes and set `appliedOn`. Do not change the decision or counts.
-
-Application staging markers (written by `job-apply` only):
-
-- `[filled MM-DD]` — form complete and waiting for the user's Submit; `applyStatus: "filled"`, `appliedOn` still `null`.
-- `[applied MM-DD]` — submit confirmed on the page; set `appliedOn`.
-- `[apply blocked MM-DD]` — a blocker stopped the attempt; name it briefly. The same blocker must appear in Notes as `无法自动提交：<reason>`.
-- Easy Apply rows never get these markers from the agent; the user applies and confirms them.
-
-Cover letter: draft for every matched job when `common.isNeededCover` is `true` — Easy Apply and No Easy Apply alike, `代招岗位` rows included — whatever the page's `coverLetter` value says. Copy `cover-letter-template.md` exactly; fill only its placeholders from the page; leave unfillable placeholders unchanged and tell the user. Save the JSON plus `<First>_<Last>_<Role>_Cover_Letter.pdf` under `reports/cover-letters/<company-slug>/`. Never fabricate. Do not submit. If the template is missing, stop and tell the user to copy `cover-letter-template-example.md`.
+- The same URL appears once per run file; a repeated vacancy may appear again in a later run only as `[reported MM-DD HH:MM]` after an explicit override.
+- Use `MM-DD HH:MM` in markers so a repeat points at the exact run.
 
 ## 12. Update an existing report
 

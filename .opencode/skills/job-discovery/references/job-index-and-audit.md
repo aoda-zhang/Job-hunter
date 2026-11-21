@@ -82,9 +82,9 @@ Create the index when missing. If unparseable, back it up to `reports/job-index.
 
 The index is an application/history record; it is **not** a source for "already listed" decisions.
 
-1. Read every earlier run report of today (`reports/daily/YYYY-MM-DD/YYYY-MM-DD-*.md` with an earlier `HHMM`) and every run report of the most recent previous date, for the previous-report set.
+1. Read the single most recent earlier run report (`reports/daily/*/*/report.md`, newest first) for the previous-run set.
 2. Read `reports/job-index.json` to preserve existing entries, to collect `appliedOn`, and to build the cross-source applied set (§4).
-3. Read the last 30 days of `reports/applications/*.md` for `Submitted` / `Filled (awaiting submit)` rows and merge them into the applied set.
+3. With `common.dedupe.checkAppliedHistory: false` the applications log is not scanned; the previous run's report already covers it.
 4. If the index is missing, create it empty; do not rebuild it from old reports for dedupe.
 
 Record the pre-run result in the report header: applied entries checked, this run's hits, skipped count. The check runs before the first platform is opened and again before `job-apply` fills anything.
@@ -93,7 +93,7 @@ Record the pre-run result in the report header: applied entries checked, this ru
 
 Hard dedup: same job ID or canonical URL on one platform; same canonical URL or normalized identity across platforms.
 
-- **Previous-report set**: at run start, read every earlier run report of today plus every run report of the most recent previous date, and extract every job ID / canonical URL from all their tables. A card in this set is not opened, not judged and not listed; count it as "Previously reported (skipped)".
+- **Previous-run set**: at run start, read the single most recent earlier run report and extract every job ID / canonical URL from all its tables. A card in this set is not opened, not judged and not listed; count it as "Previously reported (skipped)".
 - `appliedOn` jobs count as "Already applied (skipped)".
 - `common.skipPreviousReport` (default `true`) enables this. The reports, not the index, drive this skip.
 - Override only on explicit user request (named jobs, a company, a status); exempt those keys for that run and record the exemption in `limitations`.
