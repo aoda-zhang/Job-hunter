@@ -55,10 +55,10 @@ case "$BACKEND" in
     [ -n "$SMTP_USER" ] || missing+=(SMTP_USER)
     [ -n "$SMTP_PASS" ] || missing+=(SMTP_PASS)
     if [ $#missing -gt 0 ]; then
-      print -u2 -- "missing email settings: $missing"
+      print -u2 -- "missing email settings: ${(j:, :)missing}"
       exit 2
     fi
-    if [ "$1" = "--check" ]; then
+    if [ "$ARG" = "--check" ]; then
       print -r -- "email config OK: SMTP $SMTP_USER -> $MAIL_TO_JOINED via $SMTP_HOST:$SMTP_PORT ($SMTP_SECURITY)"
       exit 0
     fi
@@ -75,7 +75,7 @@ case "$BACKEND" in
       exit 2
     fi
     [ -n "$MAIL_FROM" ] || { print -u2 -- "notifications.email.from is required for Resend"; exit 2; }
-    if [ "$1" = "--check" ]; then
+    if [ "$ARG" = "--check" ]; then
       print -r -- "email config OK: Resend -> $MAIL_TO_JOINED (sender: $MAIL_FROM; API key found in Keychain)"
       exit 0
     fi
@@ -171,6 +171,6 @@ rcpt_args=()
 while IFS= read -r addr; do
   [ -n "$addr" ] && rcpt_args+=(--mail-rcpt "$addr")
 done <<< "$MAIL_TO_LINES"
-curl --silent --show-error --max-time 45 --crlf "$tls[@]" \
+curl --silent --show-error --max-time 45 --crlf "${tls[@]}" \
   --url "$url" --user "$SMTP_USER:$SMTP_PASS" --mail-from "$MAIL_FROM" \
-  "$rcpt_args[@]" --upload-file "$message_file"
+  "${rcpt_args[@]}" --upload-file "$message_file"
