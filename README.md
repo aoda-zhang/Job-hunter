@@ -193,7 +193,9 @@ The index is what makes daily runs safe: a vacancy you already applied to is ski
 
 Tell the agent "I applied to X" and it records `appliedOn`; every later run skips that vacancy.
 
-**Email.** Set `notifications.email` in `job-hunter.config.json` (off by default). When enabled, the agent loads the `email-notify` skill after each run and sends one summary with the run time, counters and report path — no job details. The body follows `preferredReportLanguage`; the subject stays ASCII English. The exact layout is fixed by `.opencode/skills/email-notify/references/email-template.md`. Use `security: "ssl"` on port 465 or `"starttls"` on 587. The SMTP password lives in the config, so run `chmod 600 job-hunter.config.json`. Validate without sending:
+**Email.** Set `notifications.email` in `job-hunter.config.json` (off by default). When enabled, the agent loads the `email-notify` skill after each run and sends one summary with the run time, counters and report path — no job details. The body follows `preferredReportLanguage`; the subject stays ASCII English. The exact layout is fixed by `.opencode/skills/email-notify/references/email-template.md`.
+
+The email sender supports three backends: `resend` (Resend Email API), `smtp` and `mailapp`. For Resend, verify your sender domain, set `backend: "resend"` and store the API key in macOS Keychain under the service `jobhunter-resend-api-key` (the setup command is documented in `.opencode/skills/email-notify/SKILL.md`). The API key is not stored in the config or launchd plist. SMTP credentials remain in the local config; run `chmod 600 job-hunter.config.json` when using SMTP. Validate the selected backend without sending:
 
 ```bash
 .opencode/skills/email-notify/scripts/send-email.sh --check
@@ -225,7 +227,7 @@ This phase is manual and never runs during daily discovery.
 .opencode/skills/linkedin-feed-jobs/SKILL.md      feed hiring posts into the daily report
 .opencode/skills/company-research/SKILL.md        phase 2: research and interview prep
 .opencode/skills/cover-letter/                     JSON → tailored cover letter PDF
-.opencode/skills/email-notify/                    run-summary email via SMTP
+.opencode/skills/email-notify/                    run-summary email via Resend, SMTP or Mail.app
 job-hunter.config.example.json                    template to copy
 job-hunter.config.json                            your settings (git-ignored)
 reports/daily/                                    daily reports (git-ignored)
@@ -251,7 +253,7 @@ reports/interviews/                               phase 2 output
 | Will I apply twice to the same job? | Not if you record it. Say "I applied to X"; the index stores the date and later runs skip it. A job applied to on LinkedIn is also skipped on Indeed (`common.dedupe.skipApplied`). Repeats are tagged `[reported MM-DD]`. |
 | Same role posted under two job IDs or two platforms | Flagged `⚠️ possible duplicate` / `⚠️ same job on <source>`; if one was applied to, `⚠️ possibly applied MM-DD`. Nothing is merged or dropped automatically. |
 | How do I know whether jobs were missed? | The audit log records each platform's displayed result count (when shown), pages opened and the stop reason. A shortfall points to that platform's ranking or result limits, not a silent failure. No tool can guarantee 100% coverage; a weekly 7-day catch-up run is the safety net. |
-| How do I get an email after each run? | Set `notifications.email.enabled` to `true` and fill `to`, `from` and `smtp` in `job-hunter.config.json`. The `email-notify` skill sends one summary per run. Test with `send-email.sh --check`. |
+| How do I get an email after each run? | Set `notifications.email.enabled` to `true` and fill `to` and `from`, then configure the selected backend. For Resend, store the API key in macOS Keychain as documented in the email-notify skill. Test with `send-email.sh --check`. |
 | How do I change the daily time? | Edit `schedules.jobSearch.times` in `job-hunter.config.json`, then run `.opencode/scripts/apply-schedule.sh` or ask the agent. An empty array disables the job. The config alone does not change launchd. |
 
 ## 11. Safety
