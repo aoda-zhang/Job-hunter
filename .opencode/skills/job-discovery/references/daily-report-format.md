@@ -15,16 +15,20 @@ Format baseline for `reports/daily/`. Read before writing or updating a report. 
 
 ```json
 {
-  "fields": [
-    { "label": "First Name", "type": "text", "required": true },
-    { "label": "Salary expectation", "type": "text", "required": false }
-  ],
+  "first_name": "Qi",
+  "last_name": "Zhang",
+  "email": "zhangqi20031994@gmail.com",
+  "phone": "+86 191 0263 2826",
+  "city": "Chengdu, China",
+  "salary_expectation": "",
   "note": "apply DONE"
 }
 ```
 
-- `fields` lists what the application requires and nothing else: `label`, `type`, `required`. No job metadata, no candidate values, no `value` key, no `jobId`/`company`/`ats`/`applyUrl` inside the file — the folder name already identifies the vacancy.
-- `note` is the only status text: `apply DONE` when this run submitted the application automatically; otherwise one line starting with `blocked: ` and the concrete blocker, or `not applied: ` plus the reason (for example `not applied: LinkedIn Easy Apply — you apply manually`).
+- The file is a flat object: one key per field the application requires, value = the answer to fill. Key = the form label in `snake_case`, value = the configured answer, or `""` when the answer is unknown, unconfigured or unanswered (never `null`, never invented).
+- `note` is the only non-field key: `apply DONE` when this run submitted the application automatically, otherwise `blocked: <concrete blocker>` or `not applied: <reason>`.
+- No job metadata inside the file (`jobId`, `company`, `ats`, `applyUrl`, …): the folder name identifies the vacancy, the report row carries the link and status.
+- Easy Apply: open the apply modal read-only once, record the fields it shows, close it — **never submit and never fill it**.
 - The folder exists only for jobs that can be applied to: matched, not excluded, and not a one-click-only row. Third-party rows are included only when `common.thirdPartyPostings` is not `exclude`.
 - `report.md` never contains field tables; its `Apply form` cell carries only the short status.
 - Two runs that start in the same minute: append `-2`, `-3`, … (`2026-11-20-2101-2/`). Never merge them.

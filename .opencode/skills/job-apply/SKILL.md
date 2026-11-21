@@ -17,7 +17,7 @@ Run only when `applications.enabled` is `true`. `applications.externalApply` is 
 - `false` — never fill or submit. The form fields are still inspected inline by `job-discovery`; this skill records nothing new.
 - Legacy strings are still accepted: `submit` = `true`; `fill` = fill and upload but stop before Submit, leaving the tab open (confirm mode); `inspect` / `off` = `false`.
 
-Easy Apply has no config key and is always manual: never open, prefill or submit a platform one-click apply form — LinkedIn Easy Apply, Indeed Apply / `Schnellbewerbung` — whatever the config says.
+Easy Apply has no config key and is always manual: a one-click form (LinkedIn Easy Apply, Indeed Apply / `Schnellbewerbung`) may be opened once read-only to record its fields into `fields.json`, then closed — never fill it, never submit it, whatever the config says.
 
 When `job-discovery` already inspected the form inline, reuse its recorded fields instead of reopening the page.
 
