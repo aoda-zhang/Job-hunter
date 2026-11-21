@@ -6,8 +6,14 @@ Reference implementation for `sources: ["LinkedIn"]`. Follow this file for the s
 
 Open LinkedIn Jobs and use its AI job search. With `platforms.LinkedIn.search.queryMode: "prompt"` (default) enter `common.jobSearchPrompt` **verbatim**; with `"titles"` submit one short query per `common.jobTitles.include` entry; with `"custom"` use `platforms.LinkedIn.search.queries`.
 
-- Do not rewrite, split, translate or append cities.
+- Do not rewrite, split, translate, shorten or append cities.
 - Submit once per query. Re-submitting a changed prompt invalidates the filters you already set.
+
+**Query integrity is part of the run.** Type or paste `common.jobSearchPrompt` exactly; afterwards read the search input's value back and compare it with the config string (whitespace-trimmed). They must be identical. If they differ, clear the box, submit the config string again and re-apply the filters.
+
+Never edit the query to make pagination, filters or a stuck page work — that is a defect, not a workaround. If the page loses the query or the filters, restart from `https://www.linkedin.com/jobs/`, paste the config prompt again, re-apply `Past 24 hours` + `Full-time`, and verify both pills. Paginate only with the results pagination control.
+
+Record in the audit: `queryVerbatim: true` only after that comparison passed, plus the exact filters you verified as active. If you cannot restore the exact query, stop the source and record it — never search with a substitute string.
 - If the AI search is not available in the account's UI, fall back to the plain keyword search with the same query text and say so in `limitations`.
 
 ## 2. Filter mapping

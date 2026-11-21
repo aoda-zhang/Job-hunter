@@ -137,6 +137,8 @@ Path: `reports/runs/YYYY-MM-DD.jsonl`. Append one line per run; never overwrite.
   "reportPath": "reports/daily/2026-11-20/2026-11-20-2101.md",
   "scope": { "countries": ["Germany"], "locations": [] },
   "sources": ["LinkedIn", "Indeed"],
+  "queryVerbatim": true,
+  "uiFiltersVerified": true,
   "queriesBySource": {
     "LinkedIn": ["<jobSearchPrompt>"],
     "Indeed": ["Frontend Developer", "React Developer", "Fullstack Developer"]
@@ -179,6 +181,7 @@ Rules:
 - `reportPath` = this run's report file (`reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM/report.md`), exactly as written and published.
 - `sources` = platforms attempted, in order. `searchedBySource` = `completed` / `failed` / `skipped` with reason.
 - `queriesBySource` = the queries actually submitted, per source. Keep the prompt verbatim for `queryMode: "prompt"`.
+- `queryVerbatim` = `true` only when the search input value was read back and matched the config string exactly. `uiFiltersVerified` = `true` only when every configured filter (date posted, employment type, work mode) was confirmed active before reading results. Either one `false` is a defect to report, not a detail to hide.
 - `uiFilters` = only filters the platform offered; otherwise `{}`.
 - `resultsBySource` / `resultCount` = page count; `null` when absent. Page counts go in `resultPagesBySource`; `resultPagesOpened` = total.
 - Older `linkedinResultCount` equals `resultsBySource.LinkedIn`; read compatibly, never rewrite.

@@ -79,6 +79,8 @@ Write it as a plain list directly under the title, before the summary:
 - 结束时间：2026-11-20 21:51
 - 本轮来源：LinkedIn（Indeed 未在本轮执行）
 - 搜索范围：德国全境（未限定城市）
+- 查询词（原文）：<common.jobSearchPrompt 全文>
+- 平台筛选（已核验）：Past 24 hours · Full-time
 - 投递查重：运行前已核对 `reports/job-index.json` 与 `reports/applications/`，本轮命中已投递岗位 N 条，未重复投递
 - 本轮报告：`reports/daily/2026-11-20/2026-11-20-2101.md`
 ```
