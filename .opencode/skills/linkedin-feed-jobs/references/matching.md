@@ -104,7 +104,7 @@ Dedupe key, in order:
 1. canonical permalink;
 2. `normalized company | normalized title | normalized location`.
 
-Skip when the key already appears in today's report, the previous 7 daily reports, or `reports/job-index.json` as `appliedOn`, `matched` or `review`. When two posts describe the same job, keep the newer or the one that states more fields.
+Skip when the key already appears in today's report or the previous 7 daily reports as `matched` or `review`, or in today's `reports/applications/YYYY-MM-DD.md`. When two posts describe the same job, keep the newer or the one that states more fields.
 
 ## 9. Notes vocabulary
 

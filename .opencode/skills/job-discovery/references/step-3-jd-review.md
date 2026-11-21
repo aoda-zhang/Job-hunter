@@ -47,14 +47,14 @@ Draft a cover letter for **every matched vacancy** — Easy Apply, external and 
 
 - Generation is unconditional; only the upload follows `applications.coverLetterMode`.
 - The letter is always written in **English**, whatever `common.preferredReportLanguage` says.
-- A `Message to the Hiring Team` textarea counts as a cover-letter field: save a shortened 3–5 sentence version as `reports/cover-letters/<company-slug>/<jobId>-message.md` and put the text in the report; no PDF.
+- A `Message to the Hiring Team` textarea counts as a cover-letter field: save a shortened 3–5 sentence version as `<run>/<Company>-<JobTitle>/message.md` and put the text in the report; no PDF.
 - For a real upload use the `cover-letter` skill and template exactly — fill only placeholders, never invent, leave unfillable placeholders unchanged and tell the user.
 - Save the JSON plus `<First>_<Last>_<Role>_Cover_Letter.pdf` and record the path. Never upload or submit it.
 - If the template is missing, stop that step and tell the user to copy `cover-letter-template-example.md`.
 
 ## 5. Output
 
-- `matched` and `review` rows go to the report tables; `not_matched` goes to the excluded table. Every row that was inspected is also upserted in `reports/job-index.json`.
+- `matched` and `review` rows go to the report tables; `not_matched` goes to the excluded table. Every row that was inspected is recorded in this run's report and audit only.
 - Record `posterType` for every inspected vacancy; record `business` only from an explicit JD statement. For `third_party`, the client goes in Notes.
 - Read the top-applicant marker only when the platform reference defines it and the config enables it (LinkedIn: `platforms.LinkedIn.premium`). It orders rows and is never a check.
 - Never score fit, never filter on years, salary, visa, industry, architecture or company size. Record only page facts.

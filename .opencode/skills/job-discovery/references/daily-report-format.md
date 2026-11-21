@@ -37,7 +37,7 @@ Format baseline for `reports/daily/`. Read before writing or updating a report. 
 - The same run keeps one folder: later steps of that run (`job-apply`, `linkedin-feed-jobs`) edit the files the run created, not "today's report".
 - Create the directories when missing.
 - Deduplicate inside a run's report by canonical URL; without one, use `source + company + title + location` and flag a possible duplicate.
-- Keep `job-index.json`, `runs/` and `reports/applications/` out of the report and out of `common.reportRepo`. Run folders (report plus per-job `fields.json`, `cover-letter.json` and the PDF) are published.
+- Keep `runs/` and `reports/applications/` out of the report and out of `common.reportRepo`. Run folders (report plus per-job `fields.json`, `cover-letter.json` and the PDF) are published.
 
 Write human-readable text in `common.preferredReportLanguage`; fall back to English when absent or unsupported.
 
@@ -59,16 +59,15 @@ Translate `Daily Job Findings`; keep ` — YYYY-MM-DD HH:MM` (the run's start ti
 
 0. Run header (mandatory): run id, start time, end time, sources processed in this run, scope, apply-dedupe result
 1. Run summary
-2. job-audit (step 1 record: per-title counts + merged card list)
-3. Matched jobs — one section per source, in `sources` order (LinkedIn first, then Indeed)
+2. Matched jobs — one section per source, in `sources` order (LinkedIn first, then Indeed)
 4. `Agency / third-party postings` — only with confirmed third-party postings that passed every other check
 5. Feed-sourced jobs — only with matching feed hiring posts
-6. Needs manual review — only with entries
-7. `Submitted` — only when at least one application was submitted; always immediately before the excluded table
-8. Excluded jobs — always last job table
-9. Exception note — only on failure
+6. `Submitted` — only when at least one application was submitted
+7. Exception note — only on failure
 
-A normal run has sections 0, 1, 2, 3 and 6. Never write an empty section or "None".
+`report.md` lists **only vacancies worth applying to** (matched and submitted). Review and excluded jobs are not tables in the report: every merged card, its final status and the exact reason live in `job-audit.md`.
+
+A normal run has the run header, the summary and the matched sections. Never write an empty section or "None". The step-1 record **and every exclusion reason** live in `job-audit.md` next to the report.
 
 Apply-form field tables never go in the report. They are written per vacancy to `<run>/<Company>-<JobTitle>/fields.json`; the report's `Apply form` cell carries only the short status.
 
@@ -84,7 +83,7 @@ Write it as a plain list directly under the title, before the summary:
 - Scope: all of Germany (no city limit)
 - Search titles (in order): <common.searchTitles, separated by ·>
 - Platform filters (verified): Past 24 hours · Full-time
-- Apply dedupe: checked `reports/job-index.json` and `reports/applications/` before the run; N already-applied hits; none re-applied
+- Apply dedupe: previous run report and today's `reports/applications/` checked before the run; N already-applied hits; none re-applied
 - Report: `reports/daily/2026-11-20/2026-11-20-2101/report.md`
 ```
 
@@ -96,9 +95,9 @@ When `common.report.splitBySource` is `false`, section 3 is a single matched sec
 
 Apply the evidence rules (section 10) and cross-day rules (section 11) to the report.
 
-### 2.2 job-audit (step 1 record)
+### 2.2 job-audit is a separate file
 
-Mandatory in every run, immediately after the summary and before any matched table. It is the evidence that step 1 saw the whole result set; it is **not** a match list and never carries JD-derived fields.
+Mandatory in every run, but written to `<run>/job-audit.md`, never into `report.md`. The report header links to it (one line). It is the evidence that step 1 saw the whole result set; it is **not** a match list and never carries JD-derived fields.
 
 **Per-title table** — one row per configured search title, in config order:
 
@@ -115,14 +114,14 @@ Mandatory in every run, immediately after the summary and before any matched tab
 **Merged list** — one row per unique vacancy from step 1, after merging titles and sources:
 
 ```markdown
-| # | Company | Title | Link | Search titles | Status |
+| # | Company | Title | Link | Search titles | Status / reason |
 |---|---|---|---|---|---|
 | 1 | go-e | Frontend Engineer (m/f/x) | [Open](https://www.linkedin.com/jobs/view/4492956185/) | JavaScript Developer | sent to JD review |
 | 2 | ABOUT YOU | Senior Frontend Engineer (all genders) | [Open](https://www.linkedin.com/jobs/view/4492575758/) | JavaScript Developer · Full-Stack Developer | sent to JD review |
 | 3 | adesso SE | Trainee SAP Software Developer (all genders) | [Open](https://www.linkedin.com/jobs/view/4467504321/) | JavaScript Developer | removed by shallow filter |
 ```
 
-- `Status` is exactly one of: `sent to JD review`, `removed by shallow filter`, `previously reported`, `already applied (skipped)`, `applied on another platform (skipped)`.
+- `Status / reason` is the final state after step 3, written in the report language, e.g. `标题不符合`, `第二层过滤：sap`, `早期严格匹配：标题不含配置职位`, `JD 为德语`, `JD 要求德语 B2 > 配置 A2`, `技术栈不符`, `匹配（Easy Apply）`, `匹配（外部投递）`, `需复核：工作模式未标注`, `上次已记录（跳过）`. Every row of the merged list gets exactly one final status.
 - `Search titles`: every search title that returned this vacancy, separated by ` · `.
 - `Link`: canonical URL, always `[Open](url)`.
 - `removed by shallow filter` requires an obviously wrong title (other function, or a `jobTitles.excludeWords` word). `Software Engineer`, `Developer`, `Engineer` and anything ambiguous **must** be `sent to JD review`.
@@ -161,7 +160,7 @@ Keep it short: one row group per metric, one column per source plus a total. Eve
 ```
 
 - Use the source names from `sources`, in order. When a source was disabled or failed, write `—` in its cells and name the reason in the audit/limitations.
-- The first five rows are the step-1 funnel and must match the `job-audit` counts exactly.
+- The `检查 JD` / funnel rows must match the counts in `job-audit.md` exactly.
 - Write `cannot determine` when unsupported; never estimate.
 - The audit JSONL keeps the full counts (excluded, third-party postings, inspected forms); the summary table shows only the rows above.
 - `Matched` includes confirmed third-party postings listed in `Agency / third-party postings`.
@@ -318,9 +317,9 @@ Always the last job table.
 |---|---|---|---|---|---|---|---|---|---|---|
 ```
 
-- `City`: page location; `Not specified` when absent.
-- `Posted`: relative time; `(reposted)`; `Not specified` when absent.
-- `Exclusion reason`: name the dimension (JD language / language requirement / title / keywords / work mode / employment type / seniority / poster type) plus one short evidence fragment.
+- `City`: page location; translate `Not specified` into the report language.
+- `Posted`: relative time, translated into the report language; `(reposted)` translated too; `Not specified` translated when absent.
+- `Exclusion reason`: name the dimension (JD language / language requirement / title / keywords / work mode / employment type / seniority / poster type) plus one short evidence fragment. **Write the whole reason in `common.preferredReportLanguage`** — dimension name and evidence prefix included; the quoted JD evidence may stay in its original language.
 - `poster type` is a valid reason only when `common.thirdPartyPostings` is `exclude`; in `separate` or `include` mode a third-party posting is judged on the other dimensions.
 - Group similar reasons. Do not paste long JD passages.
 - Duplicate relationships may be noted; never double-count.

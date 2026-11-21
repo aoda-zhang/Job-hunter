@@ -12,7 +12,7 @@ No application code, backend, database, cloud service, CLI or CI pipeline is req
 
 First copy `job-hunter.config.example.json` to `job-hunter.config.json`, then customize your local file. The personal config is ignored by Git.
 
-- `sources`: job platforms to search, **in this order**. `["LinkedIn","Indeed"]` means LinkedIn runs first, then Indeed. Each entry needs a `platforms.<name>` block. Dedicated references ship for `LinkedIn` and `Indeed`; a platform without a reference is skipped, not guessed.
+- `sources`: configured job platforms and their **order**. `["LinkedIn","Indeed"]` means LinkedIn is processed first when both are due; `schedules` decides which platform runs when (`linkedinJobSearch`, `indeedJobSearch`). Each entry needs a `platforms.<name>` block. Dedicated references ship for `LinkedIn` and `Indeed`; a platform without a reference is skipped, not guessed.
 - `common`: shared preferences — `countries`, `locations`, `lookbackHours`, `workModes`, `employmentTypes`, `seniority.include`, `thirdPartyPostings`, `skipPreviousReport`, `jobTitles.include`, `jdLanguages`, `technicalKeywords`, `sortBy`, `sortDirection`, `preferredReportLanguage`, `reportRepo`, `isNeededCover`, plus `dedupe` and `report`.
   - `common.countries`: required country-level scope boundary used to validate results, not to build the query. `common.locations`: optional cities; when absent or empty the whole country is in scope.
   - `common.searchTitles`: required ordered list of short job titles, one query per entry, submitted exactly as written on every platform; if it is empty the agent stops and asks.
@@ -36,7 +36,7 @@ Country, location and posting date define search scope only. Without `locations`
 
 Open this repository locally in OpenCode, select the **Job Hunter** primary agent (press `Tab` to switch agents if needed), and simply ask it to find suitable jobs.
 
-You interact with the Primary Agent only. It routes the request and loads `job-discovery` automatically. The skill reads the single config, checks which browser tools are actually available, walks `sources` in order (LinkedIn first, then Indeed), sends each platform one query per `common.searchTitles` entry, applies that platform's configured UI filters, opens vacancy pages, inspects the JD, applies the configured matching filters and saves the daily report to:
+You interact with the Primary Agent only. It routes the request and loads `job-discovery` automatically. The skill reads the single config, checks which browser tools are actually available, runs only the platforms due in this run's `schedules` block, in `sources` order, sends each platform one query per `common.searchTitles` entry, applies that platform's configured UI filters, opens vacancy pages, inspects the JD, applies the configured matching filters and saves the daily report to:
 
 `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM/report.md`
 

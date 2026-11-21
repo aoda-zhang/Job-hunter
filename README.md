@@ -10,7 +10,7 @@ Job Hunter is a small set of OpenCode instructions (one agent + six skills) plus
 
 A run does three steps:
 
-1. **Collects** — every platform in `sources`, in order, one query per `common.searchTitles` entry with that platform's configured filters. It records only company, job title, canonical link and job id for every card, and writes them to the report's `job-audit` section.
+1. **Collects** — only the platforms due in this run's schedule (see `schedules`), in `sources` order, one query per `common.searchTitles` entry with that platform's configured filters. It records only company, job title, canonical link and job id for every card, and writes them to the report's `job-audit` section.
 2. **Merges** — deduplicates the cards across titles and platforms and removes only titles that are *obviously* wrong. `Software Engineer`, `Developer` and anything ambiguous survive to be decided from the JD.
 3. **Reviews** — opens each remaining posting once and classifies it as matched, needs review, or not matched. Easy Apply forms are opened read-only and their fields recorded in `fields.json`; external forms are inspected and, when `applications.enabled` is `true`, filed by `job-apply`.
 
@@ -58,7 +58,7 @@ Edit `job-hunter.config.json` — it is Git-ignored, so your preferences stay lo
 3. **`common.jobTitles.include`** — the titles you accept; used for matching and the shallow title filter, never as search queries.
 4. **`common.jdLanguages.include`** and **`common.technicalKeywords`** — the language and stack you can work with.
 5. Optionally set `common.workModes`, `common.employmentTypes`, `common.seniority` and `common.thirdPartyPostings` (`separate` by default).
-6. Keep `sources` in the order you want them searched — `["LinkedIn","Indeed"]` runs LinkedIn first.
+6. Keep `sources` in the order you want them searched. `schedules` decides *when* each platform runs (`linkedinJobSearch`, `indeedJobSearch`); `sources` only orders the platforms that are due.
 
 Then:
 
@@ -85,6 +85,8 @@ The file has three layers: `sources` (run order), `common` (shared preferences),
 | `common.lookbackHours` | yes | Posting window in hours. Drives each platform's date filter and is checked again on each posting. |
 | `common.searchTitles` | yes | Ordered list of short titles, one query per entry, submitted exactly as written on every configured platform. |
 | `common.jobTitles.include` | yes | Accepted title variants, used for matching and the shallow title filter. |
+| `common.jobTitles.shallowExclude` | no | String array; a title containing any entry (case-insensitive) is removed by the step-2 shallow filter without opening the JD. |
+| `common.jobTitles.earlyStrictMatch` | no | When `true`, step 2 applies the strict title gate: a normalized/translated title without an `include` phrase (or with an `excludeWords` word) is dropped without opening the JD. |
 | `common.jdLanguages.include` | yes | Accepted JD languages, e.g. `["English"]`. Indeed maps it to its `Language` filter. |
 | `common.jdLanguages.acceptGermanJdWithEnglishWorkingLanguage` | no | When `true`, a German JD still matches if it explicitly names English as the working, team or company language. |
 | `common.jdLanguages.maxRequiredLevel` | no | Optional explicit language-level limits, e.g. `{"German": "A2", "English": "C1"}`. If the JD requires a level above the configured one, the job is excluded as `language requirement`. Bare "German required" counts as B1; "nice to have/plus/optional" is not a requirement. |
@@ -114,7 +116,7 @@ The file has three layers: `sources` (run order), `common` (shared preferences),
 | `platforms.Indeed.search.lookbackHours` | no | Overrides `common.lookbackHours` for Indeed only — currently `168` (7 days) while LinkedIn stays at 24 hours. |
 | `platforms.Indeed.search.filters` | no | Which Indeed controls to bind: `date` (always on), `employmentType` (on — selects `Full-time` from `common.employmentTypes`), `language` (off — read the JD), `remote` (off), `quickApply` (off — it hides external-ATS jobs). A dimension with `false` is judged from the posting page. |
 | `notifications.email` | no | Optional SMTP block for run-summary emails. Off by default; when `enabled`, one summary is sent after each run. |
-| `schedules.jobSearch` | no | Daily job search launchd job. `times` is an array of `HH:MM` strings; `weekdays` is an optional array of launchd weekdays (`0`–`7`, `1` = Monday, `5` = Friday; empty = every day); an empty `times` array disables the job. `timezone` must match the system. |
+| `schedules.linkedinJobSearch` | no | Daily job search launchd job. `times` is an array of `HH:MM` strings; `weekdays` is an optional array of launchd weekdays (`0`–`7`, `1` = Monday, `5` = Friday; empty = every day); an empty `times` array disables the job. `timezone` must match the system. |
 | `schedules.linkedinFeedReview` | no | Feed pass launchd job: `times`, `weekdays`, `timezone`. An empty `times` array disables the separate feed job. |
 
 Notes:
@@ -123,13 +125,13 @@ Notes:
 - A dimension is active only when you restrict it. Listing all three work modes, all employment types, or leaving `seniority.include` empty means "no filter".
 - `platforms.LinkedIn.feedReview.excludeTopics` is the only exclusion list, covering both topics and content types. The skill has no built-in exclusion list; an empty array disables these exclusions (the time window still applies).
 - Scope vs filter: country, city and posting date decide *what to search*. Only the dimensions above decide whether a vacancy *matches*.
-- Cross-platform order: run `sources` in order. A vacancy already applied to on LinkedIn is not opened on Indeed, not listed again and never applied to twice (`common.dedupe.skipApplied`).
+- Cross-platform order: when several platforms are due, run them in `sources` order. A vacancy already applied to on LinkedIn is not opened on Indeed, not listed again and never applied to twice (`common.dedupe.skipApplied`).
 - Current search shape: LinkedIn uses a **24-hour** window (`common.lookbackHours: 24`); Indeed uses **7 days** (`platforms.Indeed.search.lookbackHours: 168`). Both judge the JD itself — Indeed gets short keyword queries, applies the `Date` and `Full-time` filters, and reads JD language, work mode and keywords from each posting (`filters.language: false`, `filters.remote: false`).
 - Application policy: **one-click apply rows stay yours** (LinkedIn Easy Apply, Indeed Quick application / Schnellbewerbung) — the agent never opens them. Every external, non-one-click match is filled and, with `externalApply: true`, submitted once by `job-apply`; with `false` it only inspects the fields. A vacancy already applied to on the other platform is skipped, so nothing is submitted twice. Remember `applicant` and `applications.screening` must be filled for the agent to submit; a missing required answer blocks that job instead of guessing.
 
 The daily job runs as **two separate OpenCode sessions in a fixed order** — LinkedIn first (discovery + external applications + feed hiring posts), then Indeed — so neither session has to hold both platforms at once. `JOB_HUNTER_PHASES=linkedin zsh .opencode/scripts/daily-run.sh` runs a single phase; the default is `linkedin,indeed`. Each phase merges into the same daily report and index, and Indeed skips anything already applied to on LinkedIn.
 
-**Schedule.** Editing `schedules.jobSearch` in the config does not change launchd by itself. After changing `times`, `weekdays` or `timezone`, run `.opencode/scripts/apply-schedule.sh` (or ask the agent to change the schedule). launchd uses the Mac's local time, so `timezone` must match the system timezone. An empty `times` array unloads and removes the job search schedule; adding times recreates it.
+**Schedule.** Editing `schedules.linkedinJobSearch` in the config does not change launchd by itself. After changing `times`, `weekdays` or `timezone`, run `.opencode/scripts/apply-schedule.sh` (or ask the agent to change the schedule). launchd uses the Mac's local time, so `timezone` must match the system timezone. An empty `times` array unloads and removes the job search schedule; adding times recreates it.
 
 The LinkedIn feed has its own launchd timer. Set `schedules.linkedinFeedReview.times` to an array of `HH:MM` values, optionally restrict it with `.weekdays` (`[1,2,3,4,5]` = Monday–Friday), and run the same script; an empty array disables that job. Each run reads the Recent feed once without checking the following list: it replies only to posts whose author role matches `common.jobTitles.include` and whose author location is confirmed inside `common.countries`/`common.locations`, with no daily minimum (zero is valid), adds hiring posts whose title and stated location match the config to `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM/report.md`, emails the replies and job rows when notifications are enabled, and publishes `reports/linkedin-feed/YYYY-MM-DD.md` plus the updated daily report to `common.reportRepo`.
 
@@ -167,7 +169,7 @@ A vacancy applied to on LinkedIn is skipped on Indeed, and the other way round: 
 |---|---|
 | Each discovery run | `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM/report.md` |
 | LinkedIn feed review | `reports/linkedin-feed/YYYY-MM-DD.md` |
-| Cover letter drafts | `reports/cover-letters/<company-slug>/<jobId>.md` and `<...>.pdf` |
+| Cover letter drafts | `<run>/<Company>-<JobTitle>/cover-letter.json`, `cover-letter.pdf` |
 | Interview preparation | `reports/interviews/<company-slug>/` |
 
 The daily report is grouped by platform in `sources` order (LinkedIn first, then Indeed). Inside each platform the matched jobs are split into **Easy Apply** and **No Easy Apply** parts (prompted LinkedIn Premium rows first inside each part, then company size), and every submitted row leaves its source section for a single **Submitted** section placed just before the excluded jobs. The run summary has one column per platform plus a total. A separate `Agency / third-party postings` table follows when confirmed third-party postings pass the same checks, then a review table when needed, and the excluded jobs with the exact reason last. For the No Easy Apply part, the agent fills the third-party form and, with `externalApply: true`, submits it; with `fill` it leaves the tab open for your Submit. Every job table starts with the company name, then notes, apply-form status and link; the `Source` column is last because each section already names the platform. Any external job that could not be submitted automatically carries `Not auto-submitted: <reason>` in Notes.
@@ -175,7 +177,7 @@ The daily report is grouped by platform in `sources` order (LinkedIn first, then
 **Matched and excluded tables** each include two extra application-process columns:
 
 - **Easy Apply** — `Yes`/`No`/`Unknown`: whether the page shows a one-click apply button on the platform (LinkedIn "Easy Apply", Indeed "Quick application" / "Schnellbewerbung"). Used for the workflow split (Easy Apply vs No Easy Apply); the split is never a filter.
-- **Cover letter** — `Yes`/`No`/`Unknown`: whether the page or application form explicitly says a cover letter is required. When `Yes`, the job remains in the report, and `common.isNeededCover` is `true`, the agent drafts the content and can render a PDF via the `cover-letter` skill (small JSON + fixed renderer), saving it under `reports/cover-letters/<company-slug>/`. The `.md` template remains the content baseline. It never auto-submits.
+- **Cover letter** — `Yes`/`No`/`Unknown`: whether the page or application form explicitly says a cover letter is required. When `Yes`, the job remains in the report, and `common.isNeededCover` is `true`, the agent drafts the content and can render a PDF via the `cover-letter` skill (small JSON + fixed renderer), saving `cover-letter.json` and the PDF in that vacancy's run folder. The `.md` template remains the content baseline. It never auto-submits.
 
 Reports follow the fixed format reference at `.opencode/skills/job-discovery/references/daily-report-format.md` and are written in `common.preferredReportLanguage` (default `English`). The reference fixes the structure; only the human-readable text is translated.
 
@@ -185,7 +187,7 @@ Reports follow the fixed format reference at `.opencode/skills/job-discovery/ref
 
 | File | Purpose |
 |---|---|
-| `reports/job-index.json` | Every vacancy ever inspected, its latest status, `easyApply`, `coverLetter`, and the date you applied |
+| `reports/applications/YYYY-MM-DD.md` | Application log for that date (local only) |
 | `reports/runs/YYYY-MM-DD.jsonl` | One audit line per run: result count, pages opened, stop reason, all counters |
 | `cover-letter-template.md` | Your personal cover letter content baseline (root). The agent uses it for wording and fills the job-specific parts; the `cover-letter` skill renders the PDF |
 
@@ -230,7 +232,7 @@ job-hunter.config.example.json                    template to copy
 job-hunter.config.json                            your settings (git-ignored)
 reports/daily/                                    daily reports (git-ignored)
 reports/linkedin-feed/                            feed review reports (git-ignored)
-reports/job-index.json                            seen jobs and applied dates (git-ignored)
+reports/applications/YYYY-MM-DD.md                 application log (git-ignored)
 reports/applications/                             external application log, personal data (git-ignored)
 reports/runs/                                     run audit logs (git-ignored)
 reports/interviews/                               phase 2 output
@@ -252,7 +254,7 @@ reports/interviews/                               phase 2 output
 | Same role posted under two job IDs or two platforms | Flagged `⚠️ possible duplicate` / `⚠️ same job on <source>`; if one was applied to, `⚠️ possibly applied MM-DD`. Nothing is merged or dropped automatically. |
 | How do I know whether jobs were missed? | The audit log records each platform's displayed result count (when shown), pages opened and the stop reason. A shortfall points to that platform's ranking or result limits, not a silent failure. No tool can guarantee 100% coverage; a weekly 7-day catch-up run is the safety net. |
 | How do I get an email after each run? | Set `notifications.email.enabled` to `true` and fill `to`, `from` and `smtp` in `job-hunter.config.json`. The `email-notify` skill sends one summary per run. Test with `send-email.sh --check`. |
-| How do I change the daily time? | Edit `schedules.jobSearch.times` in `job-hunter.config.json`, then run `.opencode/scripts/apply-schedule.sh` or ask the agent. An empty array disables the job. The config alone does not change launchd. |
+| How do I change the daily time? | Edit `schedules.linkedinJobSearch.times` in `job-hunter.config.json`, then run `.opencode/scripts/apply-schedule.sh` or ask the agent. An empty array disables the job. The config alone does not change launchd. |
 
 ## 11. Safety
 

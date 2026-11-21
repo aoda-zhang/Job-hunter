@@ -35,7 +35,9 @@
         "Senior Frontend Developer",
         "React Developer",
         "Senior React Developer"
-      ]
+      ],
+      "shallowExclude": [],
+      "earlyStrictMatch": false
     },
     "jdLanguages": {
       "include": [
@@ -195,7 +197,7 @@
     }
   },
   "schedules": {
-    "jobSearch": {
+    "linkedinJobSearch": {
       "times": [],
       "weekdays": [
         1,

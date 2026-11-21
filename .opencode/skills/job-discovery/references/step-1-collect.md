@@ -4,7 +4,7 @@ Read this file when starting a run. It builds the `job-audit` list: every card t
 
 ## 1. Queries
 
-For each source in `sources` order, submit **one query per `common.searchTitles` entry**, in order, one at a time.
+For each source selected for this run (`SKILL.md` §1.1), in `sources` order, submit **one query per `common.searchTitles` entry**, in order, one at a time. A platform whose schedule is not due today is not opened at all.
 
 - `queryMode: "titles"` (default) → `common.searchTitles`.
 - `queryMode: "custom"` → `platforms.<name>.search.queries`.
@@ -50,7 +50,7 @@ Cards in the previous-run set or with `appliedOn` set are not opened or judged: 
 
 ## 5. job-audit output
 
-Write the section required by `daily-report-format.md` §2.2.
+Write `<run>/job-audit.md` (separate from `report.md`) with these tables.
 
 **Per-title table** — config order, one row per title:
 

@@ -53,7 +53,7 @@ If the post states no location or no specific role, skip. Never infer a location
 
 ## 5. Deduplicate
 
-Read every run report of today (`reports/daily/YYYY-MM-DD/YYYY-MM-DD-*.md`), every run report of the previous 7 dates, and `reports/job-index.json` before adding a row.
+Read every run report of today (`reports/daily/YYYY-MM-DD/YYYY-MM-DD-*.md`) and every run report of the previous 7 dates before adding a row. Never read `reports/job-index.json`.
 
 Skip when:
 

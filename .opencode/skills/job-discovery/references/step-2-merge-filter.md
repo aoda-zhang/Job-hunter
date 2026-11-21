@@ -15,14 +15,14 @@ Read this file after every source in step 1 is collected. It turns the raw `job-
 Apply, before the title filter:
 
 - the previous-run set → status `previously reported`;
-- `appliedOn` entries → status `already applied (skipped)`;
+- entries in today's `reports/applications/YYYY-MM-DD.md` → status `already applied (skipped)`;
 - the applied set from another platform → status `applied on another platform (skipped)`.
 
 None of these are opened in step 3 and none appear in the matched, review or excluded tables.
 
 ## 3. Shallow title filter
 
-This is a **title-only** filter. Drop a row only when the title is *obviously* outside the family:
+This is a **title-only** filter. First check `common.jobTitles.shallowExclude`: when the published title contains any configured string (case-insensitive substring), set the row to `removed by shallow filter` immediately — no JD is opened. **Guard:** after the usual normalization and German-title translation, a title that contains any `common.jobTitles.include` phrase is never dropped by this list; it goes to JD review. The list only removes titles that cannot be a configured role anyway (e.g. pure SAP/consultant/internship titles). Then drop a row when the title is *obviously* outside the family:
 
 - it names a clearly different profession: `UX Designer`, `Product Manager`, `Talent Acquisition`, `Sales Engineer`, `Accountant`;
 - it contains a `common.jobTitles.excludeWords` word: `Lead`, `Staff`, `Principal`, `Architect`, `Manager`, `Head of`, `CTO`, `Director`, `VP`;
@@ -31,6 +31,15 @@ This is a **title-only** filter. Drop a row only when the title is *obviously* o
 **Never drop** `Software Engineer`, `Developer`, `Engineer`, `Product Engineer`, `Application Engineer`, `Full-Stack`, `Frontend`, `Backend`, `Web`, a German equivalent (`Entwickler`, `Ingenieur`, `Softwareentwickler`, …), or any title containing a configured role noun.
 
 When in doubt, keep it. `Software Engineer` is not a mismatch — it is an unknown that step 3 decides from the JD. Never remove a row because it "looks unlikely".
+
+### 3.1 Early strict title match (`common.jobTitles.earlyStrictMatch`)
+
+When the flag is `true`, apply the step-3 title gate here instead of opening the JD:
+
+- Normalize and translate the published title exactly as `step-3-jd-review.md` §2.1 describes (gender markers and punctuation stripped, `Softwareentwickler` → `Software Engineer`, `Entwickler` → `Developer`, `Ingenieur` → `Engineer`, …).
+- If the normalized title does not contain any `common.jobTitles.include` phrase, or contains a `jobTitles.excludeWords` word, set the row to `removed by early strict title match` and never open it.
+- This is a title-only gate: it does not read the JD, does not judge language, keywords, work mode or seniority.
+- With the flag `false` the old behaviour applies: ambiguous titles are kept for step 3.
 
 ## 4. Update job-audit
 

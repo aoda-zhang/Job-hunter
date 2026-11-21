@@ -85,6 +85,8 @@ cp job-hunter.config.example.json job-hunter.config.json
 | `common.lookbackHours` | 是 | 发布时间窗口（小时）。决定各平台的日期筛选，并在打开每个职位时再次核对。 |
 | `common.searchTitles` | 是 | 按顺序逐一提交的短职位名清单，每个平台一条查询，原文提交。 |
 | `common.jobTitles.include` | 是 | 接受的职位名称变体，用于匹配和浅过滤（不作为搜索词）。 |
+| `common.jobTitles.shallowExclude` | 否 | 字符串数组；职位名包含其中任一项（不区分大小写）时，在第二层浅过滤直接剔除，不打开 JD。 |
+| `common.jobTitles.earlyStrictMatch` | 否 | 为 `true` 时，第二层过滤直接套用严格标题门槛：规范化/翻译后不含 `include` 短语或含 `excludeWords` 的标题不打开 JD。 |
 | `common.jdLanguages.include` | 是 | 接受的 JD 语言，例如 `["English"]`。Indeed 会映射到它的 `Language` 筛选。 |
 | `common.jdLanguages.acceptGermanJdWithEnglishWorkingLanguage` | 否 | 为 `true` 时，德语 JD 只要明确写明英语是工作/团队/公司语言，也算命中。 |
 | `common.jdLanguages.maxRequiredLevel` | 否 | 可选的语言等级上限，例如 `{"German": "A2", "English": "C1"}`。JD 明确要求高于该等级时，按 `language requirement` 排除。只写“German required”按 B1 计算；“nice to have/plus/optional”不算要求。 |
@@ -114,7 +116,7 @@ cp job-hunter.config.example.json job-hunter.config.json
 | `platforms.Indeed.search.lookbackHours` | 否 | 只覆盖 Indeed 的时间窗口——当前是 `168`（7 天），LinkedIn 保持 24 小时。 |
 | `platforms.Indeed.search.filters` | 否 | 绑定哪些 Indeed 筛选器：`date`（始终开）、`employmentType`（开——按 `common.employmentTypes` 选 `Full-time`）、`language`（关——读 JD 判断）、`remote`（关）、`quickApply`（关——会隐藏外部 ATS 岗位）。开关为 `false` 的维度一律从职位页判断。 |
 | `notifications.email` | 否 | 可选 SMTP 配置，用于发送运行摘要邮件；默认关闭。`enabled` 为 `true` 时每次运行后发送一封摘要。 |
-| `schedules.jobSearch` | 否 | 每日 job search 的 launchd 定时任务。`times` 是 `HH:MM` 字符串数组；`weekdays` 是可选的 launchd 星期数组（`0`–`7`，`1` 为周一，`5` 为周五，空数组表示每天）；空 `times` 表示不启动。`timezone` 必须和系统时区一致。 |
+| `schedules.linkedinJobSearch` | 否 | 每日 job search 的 launchd 定时任务。`times` 是 `HH:MM` 字符串数组；`weekdays` 是可选的 launchd 星期数组（`0`–`7`，`1` 为周一，`5` 为周五，空数组表示每天）；空 `times` 表示不启动。`timezone` 必须和系统时区一致。 |
 | `schedules.linkedinFeedReview` | 否 | Feed 任务的 launchd 定时：`times`、`weekdays`、`timezone`。空 `times` 表示不启动独立的 feed 任务。 |
 
 补充说明：
@@ -128,7 +130,7 @@ cp job-hunter.config.example.json job-hunter.config.json
 
 每日任务现在是**两个独立的 OpenCode 会话、固定顺序**：先 LinkedIn（检索 + 外部投递 + Feed 招聘帖），再 Indeed。这样每个会话只持有一个平台，避免一起跑时卡顿。`JOB_HUNTER_PHASES=linkedin zsh .opencode/scripts/daily-run.sh` 可以只跑单个阶段，默认是 `linkedin,indeed`。两个阶段写入同一份日报和索引，Indeed 会跳过 LinkedIn 已投递的职位。
 
-**定时任务。** 只改配置里的 `schedules.jobSearch` 不会自动改变 launchd。改完 `times`、`weekdays` 或 `timezone` 后，运行 `.opencode/scripts/apply-schedule.sh`（或直接让 Agent 改时间）。launchd 使用 Mac 的本地时间，所以 `timezone` 必须和系统时区一致。`times` 为空数组会卸载并删除 job search 定时任务；填入时间会重新创建。
+**定时任务。** 只改配置里的 `schedules.linkedinJobSearch` 不会自动改变 launchd。改完 `times`、`weekdays` 或 `timezone` 后，运行 `.opencode/scripts/apply-schedule.sh`（或直接让 Agent 改时间）。launchd 使用 Mac 的本地时间，所以 `timezone` 必须和系统时区一致。`times` 为空数组会卸载并删除 job search 定时任务；填入时间会重新创建。
 
 LinkedIn feed 有独立的定时器。把 `schedules.linkedinFeedReview.times` 设成 `HH:MM` 数组，可用 `.weekdays` 限定星期（`[1,2,3,4,5]` 表示周一到周五），再运行同一个脚本；空数组表示不启动这个任务。每次运行只看 Recent feed，不检查关注列表：只回复作者岗位匹配 `common.jobTitles.include`、且作者地点确认在 `common.countries`/`common.locations` 内的帖子，没有每日最低数量（0 条也是正常结果），把匹配的招聘帖追加到本轮自己的 `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM/report.md`，在启用邮件通知时把回复草稿和招聘帖一起发送，并在配置了 `common.reportRepo` 时推送 `reports/linkedin-feed/YYYY-MM-DD.md` 和更新后的日报。
 
@@ -176,7 +178,7 @@ Agent 必须**严格串行**：一次只搜一个查询、一次只开一个职�
 
 | 文件 | 作用 |
 |---|---|
-| `reports/job-index.json` | 所有检查过的职位、最近判定，以及你的投递日期 |
+| `reports/applications/YYYY-MM-DD.md` | 当天投递日志（仅本地） |
 | `reports/runs/YYYY-MM-DD.jsonl` | 每次运行一行审计：各平台结果数、翻页数、停止原因、各项计数 |
 
 职位索引让每日运行变得安全：已投递的职位在打开前就被跳过；任何一天出现过的重复职位标注 `[reported MM-DD]`；同一岗位换个 job ID 再发一次会标 `⚠️ possible duplicate`。审计日志让「漏没漏」可量化：某个平台显示 300 条而只检查了 120 条时，日志会记录少掉的 180 条去了哪里、为什么停止翻页。
@@ -220,7 +222,7 @@ job-hunter.config.example.json                    配置模板
 job-hunter.config.json                            你的配置（Git 忽略）
 reports/daily/                                    每日日报（Git 忽略）
 reports/linkedin-feed/                            feed review 报告（Git 忽略）
-reports/job-index.json                            已见职位与投递日期（Git 忽略）
+reports/applications/YYYY-MM-DD.md                 当天投递日志（Git 忽略）
 reports/applications/                             外部投递记录，含个人信息（Git 忽略）
 reports/runs/                                     运行审计日志（Git 忽略）
 reports/interviews/                               第二阶段产出
@@ -242,7 +244,7 @@ reports/interviews/                               第二阶段产出
 | 同一岗位出现两个 job ID | 标 `⚠️ possible duplicate`；其中一个已投递时标 `⚠️ possibly applied MM-DD`。不会自动合并或删除。 |
 | 怎么知道有没有漏岗位 | 审计日志记录各平台显示的结果总数（页面提供时）、翻页数和停止原因。数量对不上说明是该平台的排序或结果上限造成的，而不是静默失败。任何工具都无法保证 100% 覆盖；每周跑一次 7 天窗口是兜底。 |
 | 怎么让每次运行后给我发邮件 | 在 `job-hunter.config.json` 里把 `notifications.email.enabled` 设为 `true`，填好 `to`、`from` 和 `smtp`。`email-notify` skill 每次运行发送一封摘要。可用 `send-email.sh --check` 校验。 |
-| 怎么改每天的运行时间 | 修改 `job-hunter.config.json` 里的 `schedules.jobSearch.times`，然后运行 `.opencode/scripts/apply-schedule.sh`，或直接让 Agent 改。空数组会关闭任务；只改配置不会改变 launchd。 |
+| 怎么改每天的运行时间 | 修改 `job-hunter.config.json` 里的 `schedules.linkedinJobSearch.times`，然后运行 `.opencode/scripts/apply-schedule.sh`，或直接让 Agent 改。空数组会关闭任务；只改配置不会改变 launchd。 |
 
 ## 11. 安全边界
 

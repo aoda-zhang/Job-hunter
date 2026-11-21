@@ -94,7 +94,7 @@ Du sprichst immer nur mit dem Job-Hunter-Agenten. Er lädt `job-discovery` selbs
 | `platforms.LinkedIn` | nein | `enabled`, `premium`, `search.queryMode`, `feedReview`, `feedJobs`. |
 | `platforms.Indeed` | nein | `enabled`, `domain`, `search.queryMode` (`titles` Standard oder `custom` mit `queries`), `maxPagesPerQuery`, `lookbackHours`, `filters` (`date` / `employmentType` / `language` / `remote` / `quickApply`). |
 | `notifications.email` | nein | Optionaler SMTP-Block für Zusammenfassungsmails. |
-| `schedules.jobSearch` / `schedules.linkedinFeedReview` | nein | launchd-Zeitpläne: `times` (`HH:MM`), `weekdays`, `timezone`. Leeres `times` deaktiviert den Job. |
+| `schedules.linkedinJobSearch` / `schedules.linkedinFeedReview` | nein | launchd-Zeitpläne: `times` (`HH:MM`), `weekdays`, `timezone`. Leeres `times` deaktiviert den Job. |
 
 Hinweise:
 
@@ -103,7 +103,7 @@ Hinweise:
 - Umfang und Filter sind getrennt: Land, Stadt und Datum entscheiden, *wo und wie aktuell* gesucht wird. Nur die Kriterien oben entscheiden, ob eine Stelle *passt*.
 - Reihenfolge: Eine Stelle, auf die du dich bei LinkedIn beworben hast, wird bei Indeed nicht mehr geöffnet, nicht gelistet und nicht erneut abgeschickt (`common.dedupe.skipApplied`).
 
-**Zeitplan.** Änderungen an `schedules.jobSearch` in der Konfiguration ändern launchd nicht von selbst. Nach `times`, `weekdays` oder `timezone` `.opencode/scripts/apply-schedule.sh` ausführen (oder den Agenten bitten). launchd nutzt die lokale Zeit des Macs, daher muss `timezone` zur Systemzeitzone passen. Ein leeres `times` entlädt und entfernt den Job.
+**Zeitplan.** Änderungen an `schedules.linkedinJobSearch` in der Konfiguration ändern launchd nicht von selbst. Nach `times`, `weekdays` oder `timezone` `.opencode/scripts/apply-schedule.sh` ausführen (oder den Agenten bitten). launchd nutzt die lokale Zeit des Macs, daher muss `timezone` zur Systemzeitzone passen. Ein leeres `times` entlädt und entfernt den Job.
 
 ## 6. Wie Stellen gefiltert werden
 

@@ -27,7 +27,7 @@ When `job-discovery` already inspected the form inline, reuse its recorded field
 
 Candidate vacancies:
 
-1. Read this run's report `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM/report.md` and `reports/job-index.json`. When this skill runs as part of a discovery run, `HHMM` is that run's start time; never read or edit another run's report.
+1. Read this run's report `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM/report.md` and today's `reports/applications/YYYY-MM-DD.md`. When this skill runs as part of a discovery run, `HHMM` is that run's start time; never read or edit another run's report.
 2. **Pre-apply check (mandatory).** Before opening any form, read the previous run's report plus this run's rows: a vacancy that appears in the previous run was already handled there. A candidate that matches is `skipped: already applied` — no form opened, no field filled, no second submission. With `common.dedupe.checkAppliedHistory: false` older history is not scanned. Record the count in this run's report.
 3. Take only rows in the matched tables of this run's report (or the agency/third-party table only when `applications.excludeThirdParty` is `false`). When the pass is scoped to one platform, take only that platform's rows. Never take `review`, excluded, expired or feed-sourced rows unless `applications.scope` explicitly says `review` or `all`.
 4. Easy Apply belongs to the user. Apply only when the Apply button is confirmed to leave the platform for a third-party/employer application page. Require `easyApply: "no"`, then click Apply once and verify the destination host is neither `linkedin.com` nor `indeed.com`/`smartapply.indeed.com`. If the flow stays on the platform, opens a one-click form, shows `unknown`, or the destination cannot be confirmed, skip the job, record `skipped: easy apply / external redirect not confirmed`, and leave it to the user.
@@ -92,7 +92,7 @@ If the user is present, a login/CAPTCHA/2FA blocker may be handed to them with t
 1. Open the canonical job URL, click Apply once and confirm the destination leaves the platform (`linkedin.com`, `indeed.com`, `smartapply.indeed.com`); if it does not, record `skipped: easy apply` and stop.
 2. Record the ATS name, host, final `applyUrl`, and any login / account-creation / CAPTCHA / file blocker.
 3. Record every visible form field: label, type, required flag, options, and the value that would be filled from section 5. Unknown or unconfigured values become `needs confirmation (<config key>)`; legal declarations always become `needs confirmation`; privacy/data/talent-pool/contact/interview-recording consents become `agreed`.
-4. If the form shows a cover-letter field, required or optional, draft it from `cover-letter-template.md` and save `reports/cover-letters/<company-slug>/<jobId>.md`; also export `.../<jobId>.pdf` when the form expects an upload. Record the path.
+4. If the form shows a cover-letter field, required or optional, draft it from `cover-letter-template.md` and save `<run>/<Company>-<JobTitle>/cover-letter.md`; also export `cover-letter.pdf` when the form expects an upload. Record the path.
 5. Never type, upload, check consent, or submit. Write the field map to `<run>/<Company>-<JobTitle>/fields.json` (folder = company + job title, e.g. `Wolt-Senior-Software-Engineer`; object of field → answer, `""` when unknown, plus `note`), then close the inspection tab immediately; do not leave it for a batch cleanup. The daily report carries only the `Apply form` status.
 6. Record `applyStatus: "not_started"`, `applyForm: "inspected"`, `applyChannel`, `applyUrl`, `coverLetterDraft` and `applyNote: "form inspected"`; use `applyForm: "blocked"` with the concrete blocker when the form cannot be reached.
 
@@ -148,7 +148,7 @@ Salary, availability and "tell us about yourself" free-text boxes use only the t
 
 ## 6. Record results
 
-Update `reports/job-index.json` for every attempted job. Keep existing fields; add or update:
+Do not write `reports/job-index.json` (legacy). Record the same facts in `reports/applications/YYYY-MM-DD.md` and the job's Notes in this run's report:
 
 - `easyApply`, `applyType`: `easy_apply` / `external` / `unknown`.
 - `applyStatus`: `not_started` / `filled` / `submitted` / `blocked` / `failed` / `skipped`.

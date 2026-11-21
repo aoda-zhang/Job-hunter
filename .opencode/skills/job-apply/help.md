@@ -11,6 +11,11 @@ One row per blocker. `job-apply` appends a row every time an automatic submissio
 | 5 | 2026-11-20 | EMIL Group | Senior/Leading Software Engineer (f/m/d/x) | — | Blocked by a Cloudflare Turnstile human check | answered | Skip for now; I will apply manually |
 | 6 | 2026-11-20 | Kombo / Almedia / TeleClinic / Air Apps | — | — | Browser relay dropped before the form was complete | answered | Infrastructure issue; retry on the next run |
 
+| 7 | 2026-11-21 | go-e | Frontend Engineer (m/f/x) | — | Greenhouse form did not load; job board 404 | open | — |
+| 8 | 2026-11-21 | Leapsome | Senior Software Engineer in Test / SDET | `relocation_required` | Required yes/no: do you require relocation support | open | — |
+| 9 | 2026-11-21 | Riverty | Frontend Engineer - Angular | — | SmartRecruiters application page rendered blank | open | — |
+| 10 | 2026-11-21 | Skalar | Senior Software Engineer (w/m/d) | — | reCAPTCHA challenge on submit | open | — |
+
 ## How this file is used
 
 - **On every blocked submission**, append one row: date, company, role, the exact field label, the concrete blocker, `open`, and `—`.

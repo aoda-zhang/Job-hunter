@@ -2,7 +2,7 @@
 # Apply schedule blocks from job-hunter.config.json to launchd.
 # Usage: apply-schedule.sh [--dry-run]
 #
-# Job search (LinkedIn phase): schedules.jobSearch.times[] / .timezone
+# LinkedIn job search: schedules.linkedinJobSearch.times[] / .timezone
 # Indeed (weekly phase):        schedules.indeedJobSearch.times[] / .timezone
 # LinkedIn feed review:         schedules.linkedinFeedReview.times[] / .timezone
 #                               empty times array = no job
@@ -158,16 +158,16 @@ disable_job() {
 }
 
 apply_job_search() {
-  if [ "$(jq -r '(.schedules.jobSearch // null) != null' "$CONFIG")" != "true" ]; then
-    disable_job "$JOB_LABEL" "$JOB_PLIST" "no schedules.jobSearch block; job search job disabled"
+  if [ "$(jq -r '(.schedules.linkedinJobSearch // null) != null' "$CONFIG")" != "true" ]; then
+    disable_job "$JOB_LABEL" "$JOB_PLIST" "no schedules.linkedinJobSearch block; job search job disabled"
     return 0
   fi
 
   local tz
-  tz="$(jq -r '.schedules.jobSearch.timezone // empty' "$CONFIG")"
+  tz="$(jq -r '.schedules.linkedinJobSearch.timezone // empty' "$CONFIG")"
   check_timezone "$tz" || return 1
-  read_times '.schedules.jobSearch.times' 'schedules.jobSearch.times' || return 1
-  read_weekdays '.schedules.jobSearch.weekdays' 'schedules.jobSearch.weekdays' || return 1
+  read_times '.schedules.linkedinJobSearch.times' 'schedules.linkedinJobSearch.times' || return 1
+  read_weekdays '.schedules.linkedinJobSearch.weekdays' 'schedules.linkedinJobSearch.weekdays' || return 1
 
   if [ "$DRY_RUN" = "1" ]; then
     if [ ${#TIMES[@]} -eq 0 ]; then
@@ -241,7 +241,7 @@ apply_feed_review() {
   fi
 
   local tz
-  tz="$(jq -r '.schedules.linkedinFeedReview.timezone // .schedules.jobSearch.timezone // empty' "$CONFIG")"
+  tz="$(jq -r '.schedules.linkedinFeedReview.timezone // .schedules.linkedinJobSearch.timezone // empty' "$CONFIG")"
   check_timezone "$tz" || return 1
   read_times '.schedules.linkedinFeedReview.times' 'schedules.linkedinFeedReview.times' || return 1
   read_weekdays '.schedules.linkedinFeedReview.weekdays' 'schedules.linkedinFeedReview.weekdays' || return 1
@@ -313,7 +313,7 @@ apply_indeed_search() {
   fi
 
   local tz
-  tz="$(jq -r '.schedules.indeedJobSearch.timezone // .schedules.jobSearch.timezone // empty' "$CONFIG")"
+  tz="$(jq -r '.schedules.indeedJobSearch.timezone // .schedules.linkedinJobSearch.timezone // empty' "$CONFIG")"
   check_timezone "$tz" || return 1
   read_times '.schedules.indeedJobSearch.times' 'schedules.indeedJobSearch.times' || return 1
   read_weekdays '.schedules.indeedJobSearch.weekdays' 'schedules.indeedJobSearch.weekdays' || return 1

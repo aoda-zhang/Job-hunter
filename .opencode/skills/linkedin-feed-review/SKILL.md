@@ -98,7 +98,7 @@ Add `## Feed hiring posts` with the matched rows. When none match, write one lin
 
 If `notifications.email.enabled`, load `email-notify` and send one email with the checklist replies and job rows.
 
-If `common.reportRepo` is set, clone/pull it, copy the report to `reports/linkedin-feed/YYYY-MM-DD.md`, commit `docs: add LinkedIn feed review for YYYY-MM-DD`, push and verify. Never force-push. Never publish `job-index.json` or `reports/runs/`.
+If `common.reportRepo` is set, clone/pull it, copy the report to `reports/linkedin-feed/YYYY-MM-DD.md`, commit `docs: add LinkedIn feed review for YYYY-MM-DD`, push and verify. Never force-push. Never publish `reports/runs/` or `reports/applications/`.
 
 ## 8. Merge
 
