@@ -44,7 +44,8 @@ Any other missing field is not fatal for the whole run: fill what is known, leav
 
 ## 3. Hard rules
 
-- Never create an account, set a password, verify an email, complete SSO, or accept an account-creation step.
+- Never create an account, set a password, verify an email, complete SSO, or accept an account-creation step. A form that requires registration is abandoned (`help.md` row, `fixed`): the user's policy is to skip it.
+- When the phone country code is locked to a value other than the configured one, try the configured code first; if it cannot be set, abandon the application and record the blocker.
 - Never solve or bypass a CAPTCHA, bot check, phone verification or rate limit. Stop that job and record `blocked`.
 - **Stop-all rule.** A platform trust or automation-suspicion dialog (`verify you are human`, CAPTCHA, `unusual activity` / `unusual traffic`, `automated access`, `are you a robot`, an AI-agent warning, a forced re-login/2FA mid-run) ends the entire run immediately: stop filling, submit nothing further, keep every open tab as it is, record the platform and the exact dialog text, and tell the user to take over. Never retry after it.
 - Never submit when `applications.externalApply` is `fill` (legacy confirm mode). Stop before the final Submit/Send button.
@@ -101,6 +102,8 @@ If the user is present, a login/CAPTCHA/2FA blocker may be handed to them with t
 | Email | `applicant.email` | exact |
 | Phone / Mobile | `applicant.phone` | exact, keep country code |
 | Current location / City | `applicant.currentCity` | empty → leave blank |
+| City on a form that only accepts German cities | `applicant.germanFormCity` | use it only when the form rejects the configured city |
+| "Have you worked at <company>?" / "Do you have relatives at <company>?" | `applications.screening.workedAtCompanyOrRelative` | exact Yes/No |
 | Country | derived from phone or location | never guess without config |
 | Nationality (free text) | `applicant.nationality` | exact, e.g. `Chinese` |
 | Country of citizenship (select) | `applicant.citizenships` | exact option text from the list; blank when no option matches |
