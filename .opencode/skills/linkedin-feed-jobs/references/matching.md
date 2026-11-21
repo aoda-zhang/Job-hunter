@@ -34,7 +34,7 @@ A variant is allowed only when it keeps the configured role's meaning:
 - abbreviation expansion, but only to the full form of a configured term;
 - the local-language translation of the configured title.
 
-Reject a post whose role is not in the configured set, even when it shares a stack with a configured role. When a post lists several roles, it passes when at least one listed role passes and the post states the location.
+Reject a post whose role is not in the configured set, even when it shares a stack with a configured role. Also reject any title containing a word from `common.jobTitles.excludeWords` (default `lead`, `staff`, `principal`, `head of`, `manager`, `architect`, `cto`, `director`, `vp`) — a lead or staff role is not a configured role. When a post lists several roles, it passes when at least one listed role passes and the post states the location.
 
 Never add a title that is not in the config. Never treat the query terms as the matching set.
 
