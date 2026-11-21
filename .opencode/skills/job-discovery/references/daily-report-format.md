@@ -33,14 +33,15 @@ Translate `Daily Job Findings`; keep ` — YYYY-MM-DD HH:MM` (the run's start ti
 1. Run summary
 2. Matched jobs — one section per source, in `sources` order (LinkedIn first, then Indeed)
 3. `代招岗位` (third-party postings) — only with confirmed third-party postings that passed every other check
-4. Apply-form fields — only for an inspected external apply form that was not submitted successfully
-5. Feed-sourced jobs — only with matching feed hiring posts
-6. Needs manual review — only with entries
-7. `已提交` (submitted jobs) — only when at least one application was submitted; always immediately before the excluded table
-8. Excluded jobs — always last job table
-9. Exception note — only on failure
+4. Feed-sourced jobs — only with matching feed hiring posts
+5. Needs manual review — only with entries
+6. `已提交` (submitted jobs) — only when at least one application was submitted; always immediately before the excluded table
+7. Excluded jobs — always last job table
+8. Exception note — only on failure
 
-A normal run has sections 0, 1, 2 and 6. Never write an empty section or "None".
+A normal run has sections 0, 1, 2 and 5. Never write an empty section or "None".
+
+Apply-form field tables never go in the report. They are written per vacancy to `reports/jobs/<jobId>/fields.md`; the report's `Apply form` cell carries only the short status.
 
 ### 2.1 Run header
 
@@ -62,7 +63,7 @@ Write it as a plain list directly under the title, before the summary:
 
 When `common.report.splitBySource` is `false`, section 2 is a single matched section with the same parts; everything else is unchanged.
 
-Apply the evidence rules (section 11) and cross-day rules (section 12) to the report.
+Apply the evidence rules (section 10) and cross-day rules (section 11) to the report.
 
 ## 3. Run summary
 
@@ -158,7 +159,7 @@ Columns:
 | # | Sequential in final display order |
 | Company | Company on the page; if poster ≠ employer, put the poster here and the employer in Notes |
 | Notes | Verifiable facts only: stack, level, contract, poster/employer mismatch, conflicts; ≤ about 90 characters; no fit language. Every external row (`Easy Apply` = `No` / `Unknown`) that was not submitted ends with `无法自动提交：<reason>` (`Not auto-submitted: <reason>` in other report languages), naming the concrete cause: login or account creation, a required field the config cannot answer, rejected value, CAPTCHA, expired posting, browser/relay failure, or a policy skip |
-| Apply form | `Inspected (N fields)` linking to the job's block in section 6; `Blocked — <reason>` when the form is login-walled; empty for Easy Apply |
+| Apply form | `Inspected` (details in `reports/jobs/<jobId>/fields.md`), `Blocked` or `Submitted`; empty for Easy Apply |
 | Link | `[Open](canonical URL)` actually visited in this run |
 | Size | Range shown on the page, e.g. `51-200`, `9,000`, `10001+`; `Not specified` when absent |
 | Business (`公司业务` in a Chinese report) | One short phrase, only when the JD explicitly states the company's product, market or industry, e.g. `B2B logistics SaaS`; `Not stated` when absent; never infer from the company name, domain or another page; ≤ about 40 characters |
@@ -205,37 +206,7 @@ Only with at least one confirmed third-party posting that passed every active ch
 - Never infer full-time, English JD, on-site/hybrid or a seniority level from the poster type; read it from the posting.
 - These rows count as matched in the summary, cross-day repeats and possible-duplicate checks.
 
-## 6. Apply-form fields
-
-Only with at least one inspected external apply form **that was not successfully submitted**. A vacancy whose application was submitted successfully (`applyStatus: "submitted"` / `appliedOn` set) gets **no** block here: its record lives only in `reports/applications/YYYY-MM-DD.md`. In the matched table its `Apply form` cell reads `已提交` (`Submitted`). Keep blocks for every block that is not submitted yet: `blocked`, `filled` (waiting for the user's Submit), `failed`, and inspected-only rows.
-
-One block per non-submitted matched `No Easy Apply` vacancy, in the same order as the matched tables and numbered to match them (`<source> #<n>` when the report is split by source).
-
-```markdown
-### 3. Zalando — Software Engineer (Kotlin) - Transport Planning Optimization
-ATS: Zalando Careers · Link: https://jobs.zalando.com/... · Login: No · Cover letter: Optional
-Draft: reports/cover-letters/zalando/4465977883.md
-
-| # | Field | Type | Required | Value to fill |
-|---|---|---|---|---|
-| 1 | First Name | text | Yes | Qi |
-| 2 | Last Name | text | Yes | Zhang |
-| 3 | Email | email | Yes | zhangqi20031994@gmail.com |
-| 4 | Phone | tel | Yes | +86 191 0263 2826 |
-| 5 | Salary expectations | number | Yes | 70000 |
-| 6 | Background check | radio | Yes | needs confirmation (legal declaration) |
-```
-
-- `Value to fill` is the exact config/CV value. When the config lacks it, write `needs confirmation (<config key>)`; never invent.
-- Legal declarations (background check, sanctions, criminal record, disability, veteran status) are always `needs confirmation`.
-- Privacy, data-processing, talent-pool, contact and interview-recording consents are always `同意`.
-- A `Message to the Hiring Team` / `Message to the team` box counts as a cover-letter field: write the shortened 3–5 sentence text in the value cell and save it as `reports/cover-letters/<slug>/<jobId>-message.md`; no PDF.
-- `Login: Yes` means the form was blocked: omit the field table and write `Blocker: <reason>` instead.
-- `Cover letter` is `Required` / `Optional` / `Not shown` / `Message box`. When the field exists, write the saved draft path and export a PDF only for a real upload.
-- Never paste a full JD or free text here; only field labels, types, requirements and mapped values.
-- When the form was not submitted, the job's Notes must also end with `无法自动提交：<reason>`; a `Blocker` line in this block is not enough on its own.
-
-## 7. Feed-sourced jobs
+## 6. Feed-sourced jobs
 
 Only with at least one matching feed hiring post. Never write an empty section. `job-discovery` must preserve this section.
 
@@ -257,11 +228,11 @@ Only with at least one matching feed hiring post. Never write an empty section. 
 - Deduplicate against matched, review and existing feed rows. One job = one section.
 - Renumber `#` after merging.
 
-## 8. Needs manual review
+## 7. Needs manual review
 
 Only with entries. Use the matched table. In Notes, name the unknown check (title / language / keywords / work mode / employment type) and the concrete reason (JD did not load, too short, truncated, mixed language, field not exposed). Group rows by source in `sources` order, then order them as in Matched jobs (Easy Apply first, then No Easy Apply) without adding the part headings; start prompted rows' Notes with `Top applicant`. An unknown check never becomes a match or an exclusion.
 
-## 9. Excluded jobs
+## 8. Excluded jobs
 
 Always the last job table.
 
@@ -281,11 +252,11 @@ Always the last job table.
 - `Link` is mandatory: `[Open](URL)` for the page opened in this run.
 - Never use excluded URLs as a cross-day dedup key.
 
-## 10. Exception note
+## 9. Exception note
 
 Only on a failed, interrupted or largely unusable run; always at the end. Cover what happened, how many rows it affected, and where it stopped. Maximum 3 lines. Never list routine parameters.
 
-## 11. Evidence and consistency
+## 10. Evidence and consistency
 
 - Use only facts visible on the page or verified in the browser.
 - Mark `matched` only when every active dimension is confirmed. `matched` includes confirmed third-party rows listed in `代招岗位`.
@@ -300,7 +271,7 @@ Only on a failed, interrupted or largely unusable run; always at the end. Cover 
 - The priority prompt and Easy Apply are ordering metadata only; neither ever creates or removes a job.
 - Never output candidate-fit, salary or visa judgments.
 
-## 12. Previous-report dedupe
+## 11. Previous-report dedupe
 
 A report is a single run's snapshot. At run start, the skip source is **every earlier run's report**, plus the latest previous-day runs:
 
@@ -344,7 +315,7 @@ Application staging markers (written by `job-apply` only):
 
 Cover letter: draft for every matched job when `common.isNeededCover` is `true` — Easy Apply and No Easy Apply alike, `代招岗位` rows included — whatever the page's `coverLetter` value says. Copy `cover-letter-template.md` exactly; fill only its placeholders from the page; leave unfillable placeholders unchanged and tell the user. Save the JSON plus `<First>_<Last>_<Role>_Cover_Letter.pdf` under `reports/cover-letters/<company-slug>/`. Never fabricate. Do not submit. If the template is missing, stop and tell the user to copy `cover-letter-template-example.md`.
 
-## 13. Update an existing report
+## 12. Update an existing report
 
 Only the current run's own file may be updated, and only by this run's later steps (`job-apply`, `linkedin-feed-jobs`). Never reopen or edit another run's report, and never merge two runs into one file.
 
