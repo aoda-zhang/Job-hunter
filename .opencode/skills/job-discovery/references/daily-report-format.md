@@ -15,23 +15,16 @@ Format baseline for `reports/daily/`. Read before writing or updating a report. 
 
 ```json
 {
-  "jobId": "linkedin-4484812650",
-  "company": "Wolt",
-  "title": "Senior Software Engineer (Fullstack) - Merchant EMEA",
-  "source": "LinkedIn",
-  "status": "inspected | blocked | submitted | not_started",
-  "ats": "Greenhouse",
-  "applyUrl": "https://job-boards.greenhouse.io/wolt/jobs/8141574",
-  "blocker": "",
-  "coverLetter": "optional | required | not_shown | unknown",
   "fields": [
     { "label": "First Name", "type": "text", "required": true },
     { "label": "Salary expectation", "type": "text", "required": false }
-  ]
+  ],
+  "note": "apply DONE"
 }
 ```
 
-- `fields` lists every visible field with what the application asks for: `label`, `type`, `required`. **No candidate values**: never write a name, email, phone, salary, answer or empty `value` key into `fields.json`. Values stay in `job-hunter.config.json` and are applied when filling.
+- `fields` lists what the application requires and nothing else: `label`, `type`, `required`. No job metadata, no candidate values, no `value` key, no `jobId`/`company`/`ats`/`applyUrl` inside the file — the folder name already identifies the vacancy.
+- `note` is the only status text: `apply DONE` when this run submitted the application automatically; otherwise one line starting with `blocked: ` and the concrete blocker, or `not applied: ` plus the reason (for example `not applied: LinkedIn Easy Apply — you apply manually`).
 - The folder exists only for jobs that can be applied to: matched, not excluded, and not a one-click-only row. Third-party rows are included only when `common.thirdPartyPostings` is not `exclude`.
 - `report.md` never contains field tables; its `Apply form` cell carries only the short status.
 - Two runs that start in the same minute: append `-2`, `-3`, … (`2026-11-20-2101-2/`). Never merge them.
