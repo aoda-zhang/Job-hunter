@@ -29,7 +29,7 @@ Format baseline for `reports/daily/`. Read before writing or updating a report. 
 - `note` is the only non-field key: `apply DONE` when this run submitted the application automatically, otherwise `blocked: <concrete blocker>` or `not applied: <reason>`.
 - No job metadata inside the file (`jobId`, `company`, `ats`, `applyUrl`, …): the folder name identifies the vacancy, the report row carries the link and status.
 - Easy Apply: open the apply modal read-only once, record the fields it shows, close it — **never submit and never fill it**.
-- Folder name = company + published job title, spaces → hyphens and gender markers dropped: `AboutYou-Senior-TypeScript-Developer`, `Wolt-Senior-Software-Engineer`. Never use ids or dates in the name.
+- Folder name = company + published job title, spaces → hyphens, umlauts transliterated (`ä`→`ae`, `ö`→`oe`, `ü`→`ue`, `ß`→`ss`) and gender markers dropped: `AboutYou-Senior-TypeScript-Developer`, `Wolt-Senior-Software-Engineer`. Never use ids or dates in the name.
 - The folder exists only for jobs that can be applied to: matched, not excluded, and not a one-click-only row. Third-party rows are included only when `common.thirdPartyPostings` is not `exclude`.
 - `report.md` never contains field tables; its `Apply form` cell carries only the short status.
 - Two runs that start in the same minute: append `-2`, `-3`, … (`2026-11-20-2101-2/`). Never merge them.

@@ -171,6 +171,17 @@ Update this run's report too (the file this run created, `reports/daily/YYYY-MM-
 
 Every result other than `submitted` — `blocked`, `filled`, `failed`, or `skipped` because the flow could not be confirmed or the browser failed — must end that job's Notes in today's daily report with `无法自动提交：<reason>`, using the same concrete wording as the applications row. A submitted row never carries the marker, and Easy Apply rows are manual by design and do not need it.
 
+## 6a. Blocked-field queue (`help.md`)
+
+Keep `.opencode/skills/job-apply/help.md` as the user-facing to-do list for blocked fields.
+
+- Every blocked submission appends one row: date, company, role, the exact field label, the concrete blocker, `Status: open`, empty answer.
+- One row per company + role + field. When the same blocker reappears, update its date; never duplicate an open row.
+- When the user answers a field, write the answer in `Answer / next step` and set `Status: answered`.
+- Once the value is in `job-hunter.config.json` (or the flow is fixed), set `Status: fixed`.
+- Before filling a form, read `help.md`: a field with `Status: answered` is filled from that answer; an `open` field still blocks and is reported again.
+- Never write candidate values into `help.md`, and never publish it.
+
 ## 7. Report back
 
 State: attempted, filled, submitted, blocked, failed, skipped; the per-job status list with links; the exact config keys needed to unblock anything; and which tabs are waiting for the user's Submit. Never claim a submit that was not confirmed on the page. Never close a filled tab.
