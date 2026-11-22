@@ -18,6 +18,8 @@ Read `job-hunter.config.json` (Git-ignored). Never use the example as personal s
 - `common.countries` / `common.locations` — scope. Empty `locations` = the whole country.
 - `common.lookbackHours`, `workModes`, `employmentTypes`, `seniority.include` — scope and filters.
 - `common.jobTitles.include`, `jdLanguages.*`, `technicalKeywords.*` — **matching only, never queries**.
+- `common.jobTitles.stackExclude` — optional string array; a title containing any of these **whole words/phrases** (case-insensitive) is removed in step 2 before any JD is opened, **unless** the title also contains a `stackIncludeOverride` phrase. This is a primary-stack gate: it intentionally beats the `jobTitles.include` guard. Use whole-word matching so `Java` does not match `JavaScript`.
+- `common.jobTitles.stackIncludeOverride` — optional string array; if a title contains one of these frontend terms, a `stackExclude` hit does not remove it, and the row goes to JD review.
 - `common.jobTitles.shallowExclude` — optional string array; a title containing any of these strings (case-insensitive) is removed in step 2 before any JD is opened, unless the normalized/translated title also contains a `jobTitles.include` phrase (that guard always wins).
 - `common.jobTitles.earlyStrictMatch` — when `true`, step 2 also applies the strict title gate: a normalized/translated title without an include phrase (or with an exclude word) is removed before any JD is opened.
 - `common.thirdPartyPostings`, `dedupe.*`, `report.*`, `sortBy`, `preferredReportLanguage`, `reportRepo`, `isNeededCover`.

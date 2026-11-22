@@ -53,26 +53,34 @@ SIGNATURE_GAP = 41.7
 ENCLOSURES_GAP = 13.9
 
 P1 = (
-    "As a {job_title} with over {years_experience} years of experience building and "
-    "maintaining complex enterprise software, I would own your {backend_scope} and "
-    "contribute to your {product}."
+    "My name is {first_name} {last_name}. I'm a {job_title} with over {years_experience} years "
+    "of experience building and maintaining complex enterprise software, and I'd like to own "
+    "your {backend_scope} and contribute to your {product}."
 )
 P2_FULLSTACK = (
-    "{tech_points} are the tools I use daily. At {current_company} I have {achievement}. "
-    "I also {achievement_2}. I work end-to-end, from analysis and API design through "
-    "testing and code review."
+    "{tech_points} have been my core stack for years. At {current_company}, I {achievement}. "
+    "The platform serves 3.6 million investors and over 5,000 advisors.",
+    "I'm particularly proud of {achievement_design_tokens}. I also {achievement_2}.",
+)
+P2_BACKEND = (
+    "{tech_points} have been my core stack for years. At {current_company}, I {achievement}. "
+    "The platform serves 3.6 million investors and over 5,000 advisors. The work most relevant "
+    "to this role is that I {achievement_2}.",
 )
 P2_AI = (
-    "{ai_delivery}. On the product side I have {achievement}, and I also {achievement_2}. "
-    "{tech_points} are the tools I use daily, and I work end-to-end from API design through "
-    "testing and code review."
+    "{ai_delivery}. The platform serves 3.6 million investors and over 5,000 advisors. "
+    "On the product side, I am particularly proud of {achievement_design_tokens}. "
+    "I also {achievement_2}. {tech_points} are the tools I use daily, and I work end-to-end "
+    "from API design through testing and code review.",
 )
 P3_PARTS = (
     "{company_fact} {jd_match}",
     "My German is at A2 and improving, and my working language is English. I can provide my own "
     "visa/work permit for Germany within five to eight weeks and do not require visa sponsorship. "
-    "I am ready to relocate to {relocation_city}, and my notice period is 30 days.",
-    "I would be glad to discuss the projects above in an interview. Thank you for your consideration.",
+    "I am ready to relocate to {relocation_city}, and my notice period is 30 days. "
+    "I'd welcome the opportunity to contribute to {company}'s engineering team. "
+    "You can reach me via WhatsApp using the number in my CV header or by email. "
+    "Thank you for your time and consideration.",
 )
 
 REQUIRED_FIELDS = (
@@ -81,9 +89,9 @@ REQUIRED_FIELDS = (
 )
 BANNED_PHRASES = (
     "hiermit bewerbe ich mich", "mein name ist", "years old", "with great interest",
-    "immediately drawn", "next step in my career", "take care of your",
-    "sustainable success of your", "i believe we're a match", "i led",
-    "teamfähig", "belastbar", "flexibel", "whatsapp", "onboard remotely",
+    "immediately drawn", "take care of your",
+    "sustainable success of your", "i led",
+    "teamfähig", "belastbar", "flexibel", "onboard remotely",
     "you write that", "before that i was",
 )
 MIN_WORDS, MAX_WORDS = 200, 320
@@ -289,9 +297,14 @@ class Letter:
         # Fixed template body; only the placeholder fields change.
         self.y = BODY_Y
         focus = (self.f.get("manulife_focus") or "fullstack").lower()
-        p2 = P2_AI if focus == "ai" else P2_FULLSTACK
+        if focus == "ai":
+            p2 = P2_AI
+        elif focus == "backend":
+            p2 = P2_BACKEND
+        else:
+            p2 = P2_FULLSTACK
         body_texts = []
-        for template in (P1, p2, *P3_PARTS):
+        for template in (P1, *p2, *P3_PARTS):
             text = template.format(**self.f)
             body_texts.append(text)
             self.paragraph(text)

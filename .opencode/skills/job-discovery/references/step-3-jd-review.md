@@ -29,6 +29,12 @@ Strictly sequential: one posting, one tab, one row at a time.
 
 Disabled checks are skipped. Confirmed mismatch → `not_matched`, stop. Any `unknown` with no mismatch → `review`. Otherwise `matched`.
 
+**Primary-stack gate.** Before accepting a technical-keyword hit, check the JD's primary stack. If the role's main language/framework is in `common.jobTitles.stackExclude` and `applications.screening.techYears` for it is `0`, classify `not_matched` with reason `primary stack: <stack>`. A secondary mention of React/TypeScript does not override a Java/Python primary stack. Examples:
+
+- A Java/Spring Boot backend role that mentions React in the product description → `not_matched` (`primary stack: Java/Spring Boot`).
+- A Python backend role that asks for "some React" → `not_matched` (`primary stack: Python`).
+- A React/TypeScript role that mentions Python for a small internal tool → keep, because the primary stack is frontend/TypeScript.
+
 **Third-party gate.** Only a `third_party` posting matched on every active dimension enters the agency/third-party section. A confirmed mismatch goes to Excluded with that reason; an `unknown` goes to review. Never assume full-time, English JD, work mode or seniority from the poster type.
 
 ## 3. Save matched postings

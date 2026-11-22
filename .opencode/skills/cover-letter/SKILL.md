@@ -46,7 +46,7 @@ Layout is DIN 5008 on **A4** (595 × 842 pt), margins left 2.5 cm, right 2.0 cm,
 - `product` → `and contribute to your <product>`
 - `tech_points` → `are the tools I use daily`
 - `company_fact` + `jd_match` → the third paragraph, both from the JD
-- `manulife_focus` → `fullstack` (React + Node end-to-end) or `ai` (AI agents/skills in the team); never both
+- `manulife_focus` → `fullstack` (frontend/full-stack roles: end-to-end delivery + design tokens + PDF), `backend` (backend roles: end-to-end + REST APIs + PDF only), or `ai` (AI roles: AI harness + design tokens + PDF); never mix them
 
 Everything else is fixed and comes from `cover-letter-personal.json`: name, job title, years of experience, current company, the two Manulife achievements, the AI delivery sentence, German level, work permit and notice period, closing and signature. Never repeat the achievement text in the JSON; edit it once in `cover-letter-personal.json`.
 
@@ -68,7 +68,11 @@ Rules:
 
 - Items 1–6 are mandatory. Salary is written **only** when the ad asks; the German level may be stated for Germany-based roles even when German is not required.
 - `company_fact` and `jd_match` must come from the JD; never invent a company detail or a quote. Do not write `You write that …` unless the sentence is verbatim.
-- Choose **one** Manulife angle via `manulife_focus`: `fullstack` (React + Node end-to-end) or `ai` (AI agents/skills in production). Judge from the role: AI/SDET/AI-platform roles → `ai`; product/frontend/platform roles → `fullstack`. Never write both.
+- Choose **one** Manulife angle via `manulife_focus`:
+  - `fullstack` — frontend or full-stack roles: end-to-end delivery + design-token modernization + PDF refactor.
+  - `backend` — backend roles: end-to-end delivery + REST APIs + PDF refactor only; do not include the design-token story.
+  - `ai` — AI/SDET/AI-platform roles: AI engineering harness + design-token modernization + PDF refactor.
+  Never write more than one angle.
 - Banned phrases, checked before every render: `Hiermit bewerbe ich mich`, `Mein Name ist`, `I am … years old`, `with great interest`, `I was immediately drawn`, `next step in my career`, `take care of your`, `sustainable success of your`, `I believe we're a match`, `teamfähig`, `belastbar`, `flexibel`, leadership claims (`I led`), and any unverified claim (remote onboarding, WhatsApp, a technology with no CV evidence).
 - No previous employer; only the current role (`current_company`).
 - Do not claim leadership: write `worked on` / `contributed to`, never `I led`.

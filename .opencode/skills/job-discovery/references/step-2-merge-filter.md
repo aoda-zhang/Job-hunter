@@ -20,7 +20,26 @@ Apply, before the title filter:
 
 None of these are opened in step 3 and none appear in the matched, review or excluded tables.
 
-## 3. Shallow title filter
+## 3. Primary-stack filter
+
+Before the title filter, apply the primary-stack gate. It is title-only and intentionally runs before the `jobTitles.include` guard.
+
+1. Normalize and translate the published title as in §4.1.
+2. Match each `common.jobTitles.stackExclude` entry case-insensitively as a **whole word or whole phrase**. Do not use naive substring matching: `java` must not match `JavaScript`.
+3. If the title contains a `stackExclude` term and does **not** contain any `common.jobTitles.stackIncludeOverride` term, set the row to `removed by primary-stack filter` and never open the JD.
+4. If the title also contains a `stackIncludeOverride` term (for example `Full-Stack Developer (React/Python)`), keep it for JD review.
+
+Examples:
+
+- `Senior Software Engineer (Java/SpringBoot)` → removed (Java/Spring, no React/TS/JS/frontend override).
+- `Senior Python Software Engineer` → removed (Python, no override).
+- `Full-Stack Developer (Python)` → removed (Python, no explicit frontend override).
+- `Full-Stack Developer (React/Python)` → kept (React override); step 3 still applies the primary-stack gate.
+- `JavaScript Developer` → kept (`JavaScript` is not `Java`; whole-word matching).
+
+Why this exists: a generic `Software Engineer` title can hide a Java/Python role. A Java/Python primary stack is a confirmed mismatch even when React appears as a secondary keyword.
+
+## 4. Shallow title filter
 
 This is a **title-only** filter. First check `common.jobTitles.shallowExclude`: when the published title contains any configured string (case-insensitive substring), set the row to `removed by shallow filter` immediately — no JD is opened. **Guard:** after the usual normalization and German-title translation, a title that contains any `common.jobTitles.include` phrase is never dropped by this list; it goes to JD review. The list only removes titles that cannot be a configured role anyway (e.g. pure SAP/consultant/internship titles). Then drop a row when the title is *obviously* outside the family:
 
@@ -32,7 +51,7 @@ This is a **title-only** filter. First check `common.jobTitles.shallowExclude`: 
 
 When in doubt, keep it. `Software Engineer` is not a mismatch — it is an unknown that step 3 decides from the JD. Never remove a row because it "looks unlikely".
 
-### 3.1 Early strict title match (`common.jobTitles.earlyStrictMatch`)
+### 4.1 Early strict title match (`common.jobTitles.earlyStrictMatch`)
 
 When the flag is `true`, apply the step-3 title gate here instead of opening the JD:
 
@@ -41,7 +60,7 @@ When the flag is `true`, apply the step-3 title gate here instead of opening the
 - This is a title-only gate: it does not read the JD, does not judge language, keywords, work mode or seniority.
 - With the flag `false` the old behaviour applies: ambiguous titles are kept for step 3.
 
-## 4. Update job-audit
+## 5. Update job-audit
 
 - Set `Status` to `removed by shallow filter` for every dropped row; the title itself is the reason.
 - Leave every surviving row at `sent to JD review`.
@@ -53,6 +72,6 @@ This run: 2 search titles · 324 cards · 228 unique · 18 removed by shallow fi
 
 - The merged list keeps its merged order (company, then title); `#` restarts at 1.
 
-## 5. Hand off
+## 6. Hand off
 
 Step 3 opens the `sent to JD review` rows in the order they appear in `job-audit`, one at a time. A row that was deduplicated, skipped or shallow-filtered is never opened.
