@@ -23,6 +23,9 @@ reports/daily/
 # LinkedIn feed review reports (local only)
 reports/linkedin-feed/
 
+# LinkedIn networking/outreach lists (personal data, local only)
+reports/outreach/
+
 # Local job index, applied status and run audit logs (never pushed)
 reports/job-index.json
 reports/job-index.json.bak
