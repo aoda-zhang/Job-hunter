@@ -5,7 +5,7 @@ description: Search LinkedIn posts by hiring keywords for the titles, locations 
 
 # LinkedIn Feed Jobs
 
-Read-only. Find hiring posts through keyword search plus a Recent-feed pass, match them against the config, add matches to this run's timestamped report. Never apply, message, like, comment, react, repost, follow or connect. Never change `job-discovery` output.
+Read-only. Find hiring posts through keyword search plus a Recent-feed pass, match them against the config, add matches to that feed pass's report. This skill runs **only inside the feed pass** (`feed-review-run.sh`, next to `linkedin-feed-review`); a normal job-search run must never load it or open the LinkedIn feed. Never apply, message, like, comment, react, repost, follow or connect. Never change `job-discovery` output.
 
 ## 1. Read config
 

@@ -34,7 +34,7 @@ Format baseline for `reports/daily/`. Read before writing or updating a report. 
 - `report.md` never contains field tables; its `Apply form` cell carries only the short status.
 - Two runs that start in the same minute: append `-2`, `-3`, â€¦ (`2026-11-20-2101-2/`). Never merge them.
 - A second run on the same day gets its own new folder. **Never merge across runs, never append today's results to an earlier run's folder, and never rewrite an earlier run's report.**
-- The same run keeps one folder: later steps of that run (`job-apply`, `linkedin-feed-jobs`) edit the files the run created, not "today's report".
+- The same run keeps one folder: a later step of that run (`job-apply`) edits the files the run created, not "today's report". Feed hiring posts are written only by the separate feed pass, never by `job-discovery`.
 - Create the directories when missing.
 - Deduplicate inside a run's report by canonical URL; without one, use `source + company + title + location` and flag a possible duplicate.
 - Keep `runs/` and `reports/applications/` out of the report and out of `common.reportRepo`. Run folders (report plus per-job `fields.json`, `cover-letter.json` and the PDF) are published.
@@ -376,7 +376,7 @@ With `common.dedupe.previousRunOnly` (`true` by default) no older run is read â€
 
 ## 12. Update an existing report
 
-Only the current run's own file may be updated, and only by this run's later steps (`job-apply`, `linkedin-feed-jobs`). Never reopen or edit another run's report, and never merge two runs into one file.
+Only the current run's own file may be updated, and only by this run's later step (`job-apply`). Feed hiring posts belong to the separate feed pass. Never reopen or edit another run's report, and never merge two runs into one file.
 
 Keep existing entries and evidence inside that file. Preserve `Agency / third-party postings` and `Feed-sourced jobs` sections and their rows. Add or correct only with new evidence. Never silently rewrite an old conclusion; state the reason when new config changes a decision. When the header's `End` or apply-dedupe line becomes outdated, update those two lines.
 

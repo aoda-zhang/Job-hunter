@@ -108,7 +108,7 @@ cp job-hunter.config.example.json job-hunter.config.json
 | `platforms.LinkedIn.enabled` / `.premium` | 否 | `premium: true` 时，带 `You'd be a top applicant` 提示的命中岗位在所属部分内优先排序；`enabled: false` 跳过该平台。 |
 | `platforms.LinkedIn.search.queryMode` | 否 | `titles`（默认，每个 `common.searchTitles` 一条）或 `custom`（自带 `search.queries`）。 |
 | `platforms.LinkedIn.feedReview` | 否 | Feed 任务设置：`lookbackHours`、`maxPosts`、`excludeTopics`、`replyLanguage`。 |
-| `platforms.LinkedIn.feedJobs` | 否 | 招聘帖搜索：`enabled`、`lookbackHours`（feed 帖时间窗，缺省继承 `common.lookbackHours`）、`searchKeywords`、`maxQueries`、`maxPagesPerQuery`、`maxScreens`、`locationTerms`、`includeRecentFeed`。 |
+| `platforms.LinkedIn.feedJobs` | 否 | 招聘帖搜索，**只属于独立的 feed 任务**（职位检索任务绝不使用）：`enabled`、`lookbackHours`（feed 帖时间窗，缺省继承 `common.lookbackHours`）、`searchKeywords`、`maxQueries`、`maxPagesPerQuery`、`maxScreens`、`locationTerms`、`includeRecentFeed`。 |
 | `platforms.Indeed.enabled` | 否 | `false` 时跳过 Indeed，但仍保留在 `sources` 里。 |
 | `platforms.Indeed.domain` | 否 | 例如 `de.indeed.com`，要和 `common.countries` 一致。 |
 | `platforms.Indeed.search.queryMode` | 否 | `titles`（默认，每个 `common.searchTitles` 一条）或 `custom`（自带 `search.queries`）。 |
@@ -129,7 +129,7 @@ cp job-hunter.config.example.json job-hunter.config.json
 - 跨平台顺序：按 `sources` 顺序运行。在 LinkedIn 投递过的职位，到 Indeed 不再打开、不再列出、也不会重复投递（`common.dedupe.skipApplied`）。
 - 当前检索形态：LinkedIn 用 **24 小时**窗口（`common.lookbackHours: 24`），Indeed 用 **7 天**（`platforms.Indeed.search.lookbackHours: 168`）。两者都是自己读 JD 判断：Indeed 用短关键词，套 `Date` 和 `Full-time` 两个筛选，JD 语言、工作模式和关键词仍从职位页判断（`filters.language: false`、`filters.remote: false`）。
 
-每日任务现在是**两个独立的 OpenCode 会话、固定顺序**：先 LinkedIn（检索 + 外部投递 + Feed 招聘帖），再 Indeed。这样每个会话只持有一个平台，避免一起跑时卡顿。`JOB_HUNTER_PHASES=linkedin zsh .opencode/scripts/daily-run.sh` 可以只跑单个阶段，默认是 `linkedin,indeed`。两个阶段写入同一份日报和索引，Indeed 会跳过 LinkedIn 已投递的职位。
+每日任务现在是**两个独立的 OpenCode 会话、固定顺序**：先 LinkedIn（检索 + 外部投递），再 Indeed。这样每个会话只持有一个平台，避免一起跑时卡顿。Feed 招聘帖搜索不属于职位检索任务，只在独立的 feed 任务里执行。`JOB_HUNTER_PHASES=linkedin zsh .opencode/scripts/daily-run.sh` 可以只跑单个阶段，默认是 `linkedin,indeed`。两个阶段写入同一份日报和索引，Indeed 会跳过 LinkedIn 已投递的职位。
 
 **定时任务。** 只改配置里的 `schedules.linkedinJobSearch` 不会自动改变 launchd。改完 `times`、`weekdays` 或 `timezone` 后，运行 `.opencode/scripts/apply-schedule.sh`（或直接让 Agent 改时间）。launchd 使用 Mac 的本地时间，所以 `timezone` 必须和系统时区一致。`times` 为空数组会卸载并删除 job search 定时任务；填入时间会重新创建。
 
