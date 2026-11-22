@@ -85,7 +85,7 @@ Du sprichst immer nur mit dem Job-Hunter-Agenten. Er lädt `job-discovery` selbs
 | `common.technicalKeywords.*` | ja | `include` = Technologien in der JD; `matchMode` = `any` (ein Begriff genügt) / `all`. |
 | `common.workModes` / `common.employmentTypes` / `common.seniority.include` | nein | Optionale Filter. Alle Werte auflisten oder leer lassen = kein Filter. |
 | `common.thirdPartyPostings` | nein | `separate` (Standard) = eigene Tabelle `Agentur / Drittanbieter-Stellen`; `include` = mit normalen Treffern; `exclude` = ausgeschlossen. |
-| `common.skipPreviousReport` | nein | Standard `true`. Überspringt Stellen aus dem letzten Tagesbericht. |
+| `common.skipPreviousReport` | nein | Standard `true`. Überspringt jede Stelle aus der Merged-List der letzten `job-audit.md`, unabhängig vom Endstatus (matched, review, ausgeschlossen, flach gefiltert, übersprungen). Nur ohne diese Audit-Datei wird auf die Tabellen des letzten Berichts zurückgegriffen; der Fallback wird vermerkt. |
 | `common.dedupe.crossSource` / `.skipApplied` | nein | Standard `true`. Dieselbe Stelle (Firma + Titel + Stadt) auf zwei Plattformen wird erkannt; nach einer Bewerbung wird sie anderswo nicht erneut geöffnet oder abgeschickt. |
 | `common.report.splitBySource` | nein | Standard `true`. Tagesbericht je Plattform in `sources`-Reihenfolge, je Abschnitt Easy Apply / No Easy Apply. |
 | `common.reportRepo` / `common.preferredReportLanguage` / `common.sortBy` / `common.sortDirection` / `common.isNeededCover` | nein | Wie zuvor: Push-Ziel, Berichtssprache, Sortierung, Anschreiben-Erstellung. |

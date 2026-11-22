@@ -14,7 +14,7 @@ Read this file after every source in step 1 is collected. It turns the raw `job-
 
 Apply, before the title filter:
 
-- the previous-run set → status `previously reported`;
+- the previous-run set → status `previously reported` (built from the previous run's `job-audit.md` merged list, every status; see `job-index-and-audit.md` §1);
 - entries in today's `reports/applications/YYYY-MM-DD.md` → status `already applied (skipped)`;
 - the applied set from another platform → status `applied on another platform (skipped)`.
 

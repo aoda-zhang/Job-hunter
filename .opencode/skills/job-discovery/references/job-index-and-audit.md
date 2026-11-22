@@ -15,10 +15,10 @@ Both active files are Git-ignored and local only: never publish them to `common.
 
 The skip sources are exactly two:
 
-1. **Previous-run set** — the single most recent earlier run report (`reports/daily/*/*/report.md`, newest first). Extract every job ID / canonical URL from all its tables. A card in this set is not opened, not judged and not listed; count it as `previously reported`.
+1. **Previous-run set** — every job ID / canonical URL in the merged list of the single most recent earlier run's `<run>/job-audit.md`, **whatever its status** (`sent to JD review`, `matched`, `needs review`, `excluded`, `removed by shallow filter`, `previously reported`, `already applied (skipped)`). A vacancy the previous run merged, opened, excluded, left in review or shallow-filtered is examined once and never re-opened by the next run. Fallback only when that `job-audit.md` is missing or has no merged list: use the previous `report.md` tables and record the fallback in `limitations`. A card in this set is not opened, not judged and not listed; count it as `previously reported`.
 2. **Today's applications** — every row in `reports/applications/YYYY-MM-DD.md`, mapped to normalized `company + title + city`. Those vacancies are `already applied (skipped)` on any platform.
 
-Everything else is checked. No older report is read (`common.dedupe.previousRunOnly`) and no older application log is read (`common.dedupe.checkAppliedHistory: false`).
+Everything else is checked. No older run's audit is read (`common.dedupe.previousRunOnly`) and no older application log is read (`common.dedupe.checkAppliedHistory: false`).
 
 - Override only on explicit user request (named jobs, a company, a status); exempt those keys for that run and record the exemption in `limitations`.
 - The first run of a day with no earlier report and no application log checks everything.
@@ -128,7 +128,7 @@ Rules:
 - `jobAudit` = the step-1 funnel from the report.
 - `resultsBySource` / `resultCount` = the count the platform displayed; `null` when absent.
 - `matched` / `review` / `excluded` are this run's counts. Never write a day total.
-- `appliedSkipped` = jobs in today's log for the same platform; `appliedElsewhereSkipped` = cards skipped because another platform already had the application; `previouslyReportedSkipped` = cards found in the previous daily report.
+- `appliedSkipped` = jobs in today's log for the same platform; `appliedElsewhereSkipped` = cards skipped because another platform already had the application; `previouslyReportedSkipped` = cards found in the previous run's `job-audit.md` merged list (fallback: its report tables).
 - `saved` = matched rows whose Save click was verified this run; `savedAlready` = matched rows already in the saved list and left untouched; `saveFailed` = matched rows recorded as `not saved: <reason>`. All three are `0` when `common.saveMatchedJobs` is not `true`.
 - `thirdPartyMatched` is a subset of `matched`.
 - `limitations`: only actual limitations; empty on a normal run.

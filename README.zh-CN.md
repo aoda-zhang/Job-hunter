@@ -94,7 +94,7 @@ cp job-hunter.config.example.json job-hunter.config.json
 | `common.technicalKeywords.matchMode` | 是 | `any`：命中任意一个即可；`all`：必须全部命中。 |
 | `common.workModes` / `common.employmentTypes` / `common.seniority.include` | 否 | 可选匹配维度。全列或为空 = 不筛选。 |
 | `common.thirdPartyPostings` | 否 | `separate`（默认）：确认是替第三方客户招聘的猎头/中介岗位，通过其他检查后放进独立的 `代招岗位` 表；`include`：与普通命中混排；`exclude`：排除。证据不足的进复核。 |
-| `common.skipPreviousReport` | 否 | 默认 `true`。上一次日报里出现过的职位直接跳过。 |
+| `common.skipPreviousReport` | 否 | 默认 `true`。上一轮 `job-audit.md` 合并列表里出现过的职位直接跳过，无论上一轮最终状态是 matched、review、excluded、浅过滤还是已跳过；仅当该 audit 缺失时回退到上一轮日报表格，并记录回退。 |
 | `common.dedupe.crossSource` | 否 | 默认 `true`。公司 + 职位 + 城市（规范化后）相同即视为同一职位，第二个平台的行加注记而不重复列出。 |
 | `common.dedupe.skipApplied` | 否 | 默认 `true`。某个职位在一个平台投递过，其他平台就跳过，永不重复投递。 |
 | `common.report.splitBySource` | 否 | 默认 `true`。日报按平台分节，顺序同 `sources`，每节再分 Easy Apply / No Easy Apply。 |

@@ -83,7 +83,7 @@ Write it as a plain list directly under the title, before the summary:
 - Scope: all of Germany (no city limit)
 - Search titles (in order): <common.searchTitles, separated by ·>
 - Platform filters (verified): Past 24 hours · Full-time
-- Apply dedupe: previous run report and today's `reports/applications/` checked before the run; N already-applied hits; none re-applied
+- Apply dedupe: previous run `job-audit.md` merged list and today's `reports/applications/` checked before the run; N already-applied hits; none re-applied
 - Saved: N matched jobs saved on the platform (LinkedIn N · Indeed N); M not saved
 - Report: `reports/daily/2026-11-20/2026-11-20-2101/report.md`
 ```
@@ -356,18 +356,20 @@ Only on a failed, interrupted or largely unusable run; always at the end. Cover 
 
 ## 11. Previous-run dedupe
 
-A report is a single run's snapshot. The skip source is the **single most recent earlier run** (same day or previous day, whichever is newer): every job ID / canonical URL in its tables is skipped before opening and appears nowhere in this run's report.
+A report is a single run's snapshot. The skip source is the **single most recent earlier run** (same day or previous day, whichever is newer): every job ID / canonical URL in that run's `job-audit.md` **merged list** is skipped before opening — regardless of the status it ended with last time (matched, review, excluded, shallow-filtered or skipped) — and appears nowhere in this run's report. Only when that audit file is missing or has no merged list does the skip source fall back to the previous `report.md` tables; record that fallback in `limitations`.
 
-With `common.dedupe.previousRunOnly` (`true` by default) no older report is read — the 24-hour window cannot reach it. With `common.dedupe.checkAppliedHistory` (`false` by default) the applied history is not scanned; applications from the previous run are covered because that run's report is the previous-run set.
+With `common.dedupe.previousRunOnly` (`true` by default) no older run is read — the 24-hour window cannot reach it. With `common.dedupe.checkAppliedHistory` (`false` by default) the applied history is not scanned; applications from the previous run are covered because that run's audit is the previous-run set.
 
 | Situation | Handling |
 |---|---|
-| Key in the most recent earlier run's report | Do not open, judge or list; count as previously reported (skipped) |
+| Key in the most recent earlier run's `job-audit.md` merged list | Do not open, judge or list; count as previously reported (skipped) |
+| Key only in that run's `report.md` (no audit) | Same handling, after the documented fallback |
 | Applied in that earlier run | Already covered by the row above; never listed, never applied again |
 | Same vacancy on two platforms, not applied (and `common.dedupe.crossSource` is `true`) | Keep the first source's row; annotate the second `⚠️ same job on <source>` |
 | Explicit re-check override | Exempt the named keys; list normally and append `[reported MM-DD HH:MM]` |
 | No earlier run | Check every card |
 
+- A previous `review` or `excluded` row is not re-opened: the run that judged it is the authority for the 24-hour window. A config change or a failed page does not retroactively reopen it; only an explicit re-check override does.
 - Markers never reduce today's opened count.
 - The same URL appears once per run file; a repeated vacancy may appear again in a later run only as `[reported MM-DD HH:MM]` after an explicit override.
 - Use `MM-DD HH:MM` in markers so a repeat points at the exact run.
