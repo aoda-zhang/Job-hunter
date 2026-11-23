@@ -19,6 +19,11 @@ One row per blocker. `job-apply` appends a row every time an automatic submissio
 | 11 | 2026-11-22 | Atolls | Senior Software Engineer (Java/SpringBoot) (m/f/x) | `have_you_heard_of_atolls_before_finding_out_about_this_role` | Required yes/no question, no config entry | open | — |
 | 12 | 2026-11-22 | Eye Security | Senior Software Engineer (m/f/x) | `work_authorization` (radio) | Four options (EU/EEA citizen, unrestricted permit, employer-tied permit, needs sponsorship) — none matches "own permit in 5-8 weeks, no sponsorship" | open | — |
 | 13 | 2026-11-22 | Resaro | Software Engineer | production-workload / AWS / Kubernetes experience (radio) | Required screening questions with no config entry | open | — |
+| 14 | 2026-11-23 | Thieme | (Senior) Fullstack Engineer (m/f/d) Marketing | `strasse`, `plz` (Street, Postcode) | Required address fields with no config entry (own application portal jobs.thieme.com) | open | — |
+| 15 | 2026-11-23 | Thieme | (Senior) Fullstack Engineer (m/f/o) | — | Employer page jobs.thieme.com reports "The job offer you searched for was not found" although LinkedIn still shows it | open | — |
+| 16 | 2026-11-23 | chargecloud | (Senior) Frontend Engineer (all genders) | `Birthday` | Required date field with no config entry | open | — |
+| 17 | 2026-11-23 | chargecloud | (Senior) Frontend Engineer (all genders) | `How many years of experience do you have with Vue.js/Nuxt.js?` | Required select (0-2 / 3-5 / 5+) with no configured Vue.js years | open | — |
+| 18 | 2026-11-23 | chargecloud | (Senior) Frontend Engineer (all genders) | `Certificate` (upload) | Required document upload; no certificate file configured | open | — |
 
 ## How this file is used
 
