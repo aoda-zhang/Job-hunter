@@ -124,7 +124,7 @@
     },
     "tech_points": {
       "type": "string",
-      "description": "2-3 technologies extracted from the JD that also appear in the CV, e.g. 'React and TypeScript' or 'React, TypeScript and Node.js'. No more than 3."
+      "description": "2-3 named technologies extracted from the JD that also appear in the CV, e.g. 'React and TypeScript' or 'React, TypeScript and Node.js'. No more than 3. Each item must be a concrete language, framework, library, runtime, database or cloud service. Never use categories or work areas: 'component libraries', 'frameworks', 'design systems', 'frontend', 'backend', 'tools' are not technologies."
     },
     "non_tech_1": {
       "type": "string",

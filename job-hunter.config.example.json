@@ -64,6 +64,9 @@
     "sortDirection": "desc",
     "preferredReportLanguage": "English",
     "reportRepo": "",
+    "reportExpiryHours": 0,
+    "reportExpiryCheckMinutes": 15,
+    "reportExpiryMode": "purge-history",
     "isNeededCover": false,
     "saveMatchedJobs": false,
     "dedupe": {

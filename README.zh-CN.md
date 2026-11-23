@@ -101,6 +101,7 @@ cp job-hunter.config.example.json job-hunter.config.json
 | `common.isNeededCover` | 否 | 为 `true` 时，留在报告里的命中/复核岗位若 JD 要求求职信，就生成一封。可用 `cover-letter` skill 渲染 PDF。默认 `false`。 |
 | `common.saveMatchedJobs` | 否 | 默认 `false`。为 `true` 时，每个最终判定为 `matched` 的岗位（普通命中与确认的代招岗位，含之后被提交的行）都会在分类完成后、在来源平台的职位页点一次已验证的 Save/收藏。无论你是否投递、投递是否成功都会保存；复核、排除、过期和跳过的岗位永不保存，已收藏的岗位不会被取消，缺少按钮或需要登录时只记为 `not saved: <原因>`。 |
 | `common.reportRepo` | 否 | 可选 Git 地址。配置后每次运行会把当天日报提交并推送到该仓库。 |
+| `common.reportExpiryHours` | 否 | 默认 `0`（关闭）。配置 `common.reportRepo` 后，已推送的报告在发布提交超过这个小时数后会被移除；本地日报不受影响。`common.reportExpiryCheckMinutes`（默认 `15`）决定清理检查的间隔；`common.reportExpiryMode` 为 `purge-history`（默认，把分支重写成一个空根提交）或 `delete-repo`。 |
 | `common.sortBy` / `common.sortDirection` | 否 | 各部分（Easy Apply、No Easy Apply）内、Premium 提示行之后的排序方式；已提交的行按全局「已提交」一节排序。`companySize` 配合 `asc` / `desc`；不填则按发现顺序。 |
 | `common.preferredReportLanguage` | 否 | 日报和摘要邮件正文的语言，例如 `English`、`German`、`Chinese`，默认 `English`。 |
 | `applicant` | 否 | 用于填第三方申请表的身份信息：`firstName`、`lastName`、`phone`、`email`、`currentCity`、`linkedinUrl`、`portfolioUrl`、`cvPath`、`availableInGermanyFrom`、`governmentEmployee`。身份必填项缺失会停止投递；筛选问题缺失只会阻塞对应岗位。 |
@@ -173,7 +174,7 @@ Agent 必须**严格串行**：一次只搜一个查询、一次只开一个职�
 
 同一职位在 LinkedIn 投递过，就不会在 Indeed 再次出现或再次投递；未投递的重复职位只加注记，不合并。
 
-`job-hunter.config.json` 和 `reports/daily/` 都被 Git 忽略。如果配置了 `common.reportRepo`，每次运行后只会把当天日报提交并推送到你指定的仓库。
+`job-hunter.config.json` 和 `reports/daily/` 都被 Git 忽略。如果配置了 `common.reportRepo`，每次运行后只会把当天日报提交并推送到你指定的仓库。配置 `common.reportExpiryHours` 后，已推送的副本超过该小时数会再次被删除；本地日报永远不会被删除。
 
 **本地记忆。** 另外两个文件只留在你的机器上，永远不会被推送：
 

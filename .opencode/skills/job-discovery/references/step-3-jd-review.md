@@ -53,7 +53,7 @@ Active only when `common.saveMatchedJobs` is `true`. Skipped entirely when it is
 Record `easyApply` (`yes` / `no` / `unknown`), `applyType` (`easy_apply` / `external` / `unknown`) and `coverLetter` (`yes` / `no` / `unknown`) for every inspected vacancy. They never affect classification.
 
 - `easy_apply` — open the one-click form once, read-only, record every visible field (label, type, required, options, mapped value) into `<run>/<Company>-<JobTitle>/fields.json`, close it. **Never type, upload or submit.** The row stays with the user.
-- `external` — click Apply once, confirm the destination leaves the platform, and inspect the employer form read-only: ATS, host, final `applyUrl`, blockers and every field into `fields.json`. `job-apply` files it after the report; a blocker is written by `job-apply` as `blocked: <reason>` in `fields.json` plus one row in `.opencode/skills/job-apply/help.md` (`Status: open`).
+- `external` — click Apply once, confirm the destination leaves the platform, and inspect the employer form read-only: ATS, host, final `applyUrl`, blockers and every field into `fields.json`. `job-apply` files it after the report; a blocker is written by `job-apply` as `blocked: <reason>` in `fields.json` plus one entry in `.opencode/skills/job-apply/help.json` (`status: "open"`).
 - `unknown` — do not click; record it and leave the row for the user.
 
 The daily report carries only the short `Apply form` status, never a field table.
@@ -66,7 +66,7 @@ Draft a cover letter for **every matched vacancy** — Easy Apply, external and 
 - The letter is always written in **English**, whatever `common.preferredReportLanguage` says.
 - A `Message to the Hiring Team` textarea counts as a cover-letter field: save a shortened 3–5 sentence version as `<run>/<Company>-<JobTitle>/message.md` and put the text in the report; no PDF.
 - For a real upload use the `cover-letter` skill and template exactly — fill only placeholders, never invent, leave unfillable placeholders unchanged and tell the user.
-- Save the JSON plus `<First>_<Last>_<Role>_Cover_Letter.pdf` and record the path. Never upload or submit it.
+- Save the JSON plus `<First>_<Last>_Cover_Letter.pdf` and record the path. Never upload or submit it.
 - If the template is missing, stop that step and tell the user to copy `cover-letter-template-example.md`.
 
 ## 6. Output

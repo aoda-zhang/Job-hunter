@@ -27,6 +27,7 @@ First copy `job-hunter.config.example.json` to `job-hunter.config.json`, then cu
   - `common.dedupe.crossSource` / `.skipApplied`: recognise the same company + title + city on two platforms, and never apply to a vacancy twice.
   - `common.report.splitBySource`: one matched section per platform, in `sources` order.
   - `common.reportRepo`: optional Git URL where the daily report is pushed after each run.
+  - `common.reportExpiryHours`: default `0` (off). With `reportRepo` set, a pushed report is removed from that repo once its publishing commit is older than this many hours; `common.reportExpiryCheckMinutes` (default `15`) controls the cleanup interval and `common.reportExpiryMode` is `purge-history` (default: rewrite the branch to one empty root commit) or `delete-repo`. The local report is never deleted.
   - `common.preferredReportLanguage`: language of the daily report, e.g. `English`, `German`, `Chinese`; defaults to `English`.
 - `platforms.LinkedIn`: `enabled`, `premium` (order `You'd be a top applicant` matches first), `search.queryMode`, `feedReview`, `feedJobs`.
 - `platforms.Indeed`: `enabled`, `domain`, and `search` — `queryMode` (`titles` by default, or `custom` with `queries`), `maxPagesPerQuery`, `lookbackHours`, `filters` (`date` / `employmentType` / `language` / `remote` / `quickApply`).

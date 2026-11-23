@@ -6,6 +6,8 @@
 # Indeed (weekly phase):        schedules.indeedJobSearch.times[] / .timezone
 # LinkedIn feed review:         schedules.linkedinFeedReview.times[] / .timezone
 #                               empty times array = no job
+# Report expiry:                common.reportExpiryHours / common.reportExpiryCheckMinutes
+#                               runs .opencode/scripts/expire-reports.sh on an interval
 set -u
 setopt NULL_GLOB
 
@@ -17,6 +19,8 @@ FEED_LABEL="ai.jobhunter.feedreview"
 FEED_PLIST="${JOB_HUNTER_FEED_PLIST:-$HOME/Library/LaunchAgents/${FEED_LABEL}.plist}"
 INDEED_LABEL="ai.jobhunter.indeed"
 INDEED_PLIST="${JOB_HUNTER_INDEED_PLIST:-$HOME/Library/LaunchAgents/${INDEED_LABEL}.plist}"
+EXPIRE_LABEL="ai.jobhunter.expire"
+EXPIRE_PLIST="${JOB_HUNTER_EXPIRE_PLIST:-$HOME/Library/LaunchAgents/${EXPIRE_LABEL}.plist}"
 
 DRY_RUN=0
 if [ "${1:-}" = "--dry-run" ]; then
@@ -383,8 +387,83 @@ EOF
   print -r -- "indeed job applied: ${(j:,:)TIMES} $(weekday_label) (${tz:-system time}), label $INDEED_LABEL"
 }
 
+apply_report_expiry() {
+  local remote hours minutes interval
+  remote="$(jq -r '.common.reportRepo // empty' "$CONFIG")"
+  hours="$(jq -r '.common.reportExpiryHours // 0' "$CONFIG")"
+  minutes="$(jq -r '.common.reportExpiryCheckMinutes // 15' "$CONFIG")"
+
+  if [ -z "$remote" ]; then
+    disable_job "$EXPIRE_LABEL" "$EXPIRE_PLIST" "no common.reportRepo; report expiry job disabled"
+    return 0
+  fi
+  if ! [[ "$hours" =~ '^[0-9]+([.][0-9]+)?$' ]]; then
+    print -u2 -- "common.reportExpiryHours must be a non-negative number, got: $hours"
+    return 1
+  fi
+  if ! awk -v h="$hours" 'BEGIN { exit !(h > 0) }'; then
+    disable_job "$EXPIRE_LABEL" "$EXPIRE_PLIST" "report expiry off (common.reportExpiryHours=$hours); $EXPIRE_LABEL unloaded and plist removed"
+    return 0
+  fi
+  if ! [[ "$minutes" =~ '^[0-9]+$' ]] || [ "$minutes" -lt 1 ]; then
+    print -u2 -- "common.reportExpiryCheckMinutes must be a positive integer, got: $minutes"
+    return 1
+  fi
+
+  interval=$(( minutes * 60 ))
+
+  if [ "$DRY_RUN" = "1" ]; then
+    print -r -- "report expiry job: every ${minutes}m, expires published reports after ${hours}h, plist=$EXPIRE_PLIST"
+    return 0
+  fi
+
+  mkdir -p "$(dirname "$EXPIRE_PLIST")"
+  {
+    cat <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>$EXPIRE_LABEL</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/zsh</string>
+    <string>$REPO/.opencode/scripts/expire-reports.sh</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>$REPO</string>
+  <key>StartInterval</key>
+  <integer>$interval</integer>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>$HOME/Library/Logs/jobhunter-expire.launchd.log</string>
+  <key>StandardErrorPath</key>
+  <string>$HOME/Library/Logs/jobhunter-expire.launchd.err.log</string>
+</dict>
+</plist>
+EOF
+  } > "$EXPIRE_PLIST"
+
+  if ! plutil -lint "$EXPIRE_PLIST" >/dev/null 2>&1; then
+    print -u2 -- "generated plist is invalid: $EXPIRE_PLIST"
+    return 1
+  fi
+
+  launchctl bootout "gui/$(id -u)/$EXPIRE_LABEL" 2>/dev/null || true
+  if ! launchctl bootstrap "gui/$(id -u)" "$EXPIRE_PLIST"; then
+    print -u2 -- "launchctl bootstrap failed for $EXPIRE_PLIST"
+    return 1
+  fi
+
+  print -r -- "report expiry job applied: every ${minutes}m, TTL ${hours}h, label $EXPIRE_LABEL"
+}
+
 rc=0
 apply_job_search || rc=1
 apply_indeed_search || rc=1
 apply_feed_review || rc=1
+apply_report_expiry || rc=1
 exit $rc

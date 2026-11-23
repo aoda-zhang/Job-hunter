@@ -39,6 +39,8 @@ Create `<run>/<Company>-<JobTitle>/cover-letter.json` — the vacancy folder of 
 
 Layout is DIN 5008 on **A4** (595 × 842 pt), margins left 2.5 cm, right 2.0 cm, sender block starting 4.5 cm from the top (recipient block below it), bottom 2.5 cm. Sender block top right, recipient block left (company + city; add `company_street` only when you know it), place and date right-aligned, bold subject line without `Betreff` or a final period, salutation with a comma, left-aligned body, `Kind regards` without a comma, and the signature. Only these fields change per application. Fill 2–3 technical points and exactly 2 non-technical points from the JD; do not invent a technology the JD does not mention or the CV does not support.
 
+**`tech_points` is named technologies only.** The sentence `{tech_points} have been my core stack for years.` only accepts concrete languages, frameworks, libraries, runtimes, databases or cloud services that appear in the CV — e.g. `TypeScript, React and Node.js` or `Java, Spring Boot and SAPUI5`. Never put a category, work area or discipline there: `component libraries`, `frameworks`, `libraries`, `design systems`, `frontend`, `backend`, `full-stack`, `tooling`, `tools` are not technologies. `render.py` rejects such a value instead of rendering.
+
 - `company` → recipient block and subject context
 - `role` → `Application as <role>`
 - `company_city` → recipient block (`company_street` only when known)
@@ -110,7 +112,7 @@ python3 .opencode/skills/cover-letter/scripts/render.py <run>/<Company>-<JobTitl
 
 The script prints the absolute PDF path. Verify the file exists.
 
-Output naming: `<First>_<Last>_<JD role>_Cover_Letter.pdf`, next to the JSON — the role as published in the JD with the `(m/f/d)` / `(all genders)` marker stripped, exactly like the CV name (`Qi_Zhang_<Role>_CV.pdf`). A JD that dictates a file name overrides it through `"filename"` in the JSON. **One vacancy = one PDF**: never copy or render the same letter to a second filename.
+Output naming: `Qi_Zhang_Cover_Letter.pdf` — one generic name for every letter, next to the JSON. A JD that dictates a file name overrides it through `"filename"` in the JSON. **One vacancy = one PDF**: never copy or render the same letter to a second filename.
 
 To rebuild the yellow base template (personal facts filled, company/JD placeholders highlighted):
 

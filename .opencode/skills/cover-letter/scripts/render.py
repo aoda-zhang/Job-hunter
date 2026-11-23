@@ -94,6 +94,17 @@ BANNED_PHRASES = (
     "teamfähig", "belastbar", "flexibel", "onboard remotely",
     "you write that", "before that i was",
 )
+
+# {tech_points} is only ever a list of named technologies (language, framework,
+# library, runtime, database, cloud service). Categories and work areas are not
+# technologies and must never be listed there.
+NON_TECH_TERMS = (
+    "component libraries", "component library", "libraries", "library",
+    "frameworks", "framework", "technologies", "technology", "tech stack",
+    "tooling", "tools", "frontend", "front-end", "backend", "back-end",
+    "fullstack", "full-stack", "web development", "software development",
+    "design system", "design systems", "ui", "ux",
+)
 MIN_WORDS, MAX_WORDS = 200, 320
 
 DEFAULTS = {
@@ -173,6 +184,14 @@ class Letter:
         if missing:
             raise ValueError("missing template fields: " + ", ".join(missing))
         self.f = {k: clean(v) for k, v in fields.items()}
+        tech = self.f.get("tech_points", "").lower()
+        for term in NON_TECH_TERMS:
+            if re.search(rf"(?<![a-z0-9]){re.escape(term)}(?![a-z0-9])", tech):
+                raise ValueError(
+                    "tech_points must list named technologies only "
+                    f"(language, framework, library, runtime, database, cloud service); "
+                    f"{term!r} is a category, not a technology: {self.f['tech_points']!r}"
+                )
         self.reg = fitz.Font(fontfile=str(FONT_REG))
         self.bold = fitz.Font(fontfile=str(FONT_BOLD))
         self.fill_header = bool(data.get("fill_header", True))
@@ -182,15 +201,10 @@ class Letter:
         self.page_no = 0
         self.y = BODY_Y
 
-        # File name follows the applicant convention used for the CV:
-        # <First>_<Last>_<JD role>_Cover_Letter.pdf, with the gender marker
-        # stripped the same way the CV does it. A JD that dictates a file name
-        # overrides it through "filename".
-        role = re.sub(
-            r"\s*[\(\[]?(m/f/d|m/w/d|f/m/d|w/m/d|f/m/d/x|all genders|gn)[\)\]]?",
-            "", fields["role"], flags=re.I,
-        )
-        base_name = f"{fields['first_name']}_{fields['last_name']}_{role}_Cover_Letter"
+        # One generic file name for every letter:
+        # <First>_<Last>_Cover_Letter.pdf, next to the JSON. A JD that dictates
+        # a file name overrides it through "filename".
+        base_name = f"{fields['first_name']}_{fields['last_name']}_Cover_Letter"
         name = data.get("filename") or re.sub(r"[^A-Za-z0-9]+", "_", base_name).strip("_")
         out_dir = Path(data.get("__input_dir") or Path.cwd())
         default = out_dir / f"{name}.pdf"

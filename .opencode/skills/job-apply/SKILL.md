@@ -9,7 +9,7 @@ Run locally in this repository with the configured browser tools. This skill ins
 
 ## 1. Preconditions and scope
 
-Read `job-hunter.config.json` first, then `.opencode/skills/job-apply/help.md`. `help.md` is the blocked-field queue: an `answered` row supplies the value for that field, an `open` row still blocks, and a `fixed` row is already in the config. Never start filling without reading it.
+Read `job-hunter.config.json` first, then `.opencode/skills/job-apply/help.json`. `help.json` is the blocked-field queue: an entry with `status: "answered"` supplies `answer` for that field, `open` still blocks, and `fixed` is already in the config. Never start filling without reading it.
 
 Run only when `applications.enabled` is `true`. `applications.externalApply` is the single mode switch:
 
@@ -21,7 +21,7 @@ Easy Apply has no config key and is always manual: a one-click form (LinkedIn Ea
 
 **Easy Apply recording (always).** For every matched one-click vacancy, open the apply modal once, read-only, and write each visible field (label, type, required flag, options, mapped value) to `<run>/<Company>-<JobTitle>/fields.json` with `note: "easy apply - user submits"`. Close the modal without typing, without accepting anything and without submitting. The row stays in the `Easy Apply` part for the user.
 
-**External blockers (always).** For a matched external vacancy, attempt it. When it cannot be completed — login or account creation, a required unconfigured field, a rejected value, CAPTCHA, upload restriction, expired posting — set `note: "blocked: <reason>"` in that job's `fields.json` and append one row to `.opencode/skills/job-apply/help.md` with `Status: open`. One row per company + role + field; never duplicate an open row.
+**External blockers (always).** For a matched external vacancy, attempt it. When it cannot be completed — login or account creation, a required unconfigured field, a rejected value, CAPTCHA, upload restriction, expired posting — set `note: "blocked: <reason>"` in that job's `fields.json` and append one object to `.opencode/skills/job-apply/help.json` with `status: "open"` (format in section 6a). One object per company + role + field; never duplicate an open entry.
 
 When `job-discovery` already inspected the form inline, reuse its recorded fields instead of reopening the page.
 
@@ -49,7 +49,7 @@ Any other missing field is not fatal for the whole run: fill what is known, leav
 ## 3. Hard rules
 
 - **English only on the form.** Everything typed into an application — free-text answers, motivation, additional information, cover letter, uploaded documents — is in **English**, whatever `common.preferredReportLanguage` says. The report language is for the user's report; it never changes what an employer receives.
-- Never create an account, set a password, verify an email, complete SSO, or accept an account-creation step. A form that requires registration is abandoned (`help.md` row, `fixed`): the user's policy is to skip it.
+- Never create an account, set a password, verify an email, complete SSO, or accept an account-creation step. A form that requires registration is abandoned (`help.json` entry, `fixed`): the user's policy is to skip it.
 - When the phone country code is locked to a value other than the configured one, try the configured code first; if it cannot be set, abandon the application and record the blocker.
 - Never solve or bypass a CAPTCHA, bot check, phone verification or rate limit. Stop that job and record `blocked`.
 - **Stop-all rule.** A platform trust or automation-suspicion dialog (`verify you are human`, CAPTCHA, `unusual activity` / `unusual traffic`, `automated access`, `are you a robot`, an AI-agent warning, a forced re-login/2FA mid-run) ends the entire run immediately: stop filling, submit nothing further, keep every open tab as it is, record the platform and the exact dialog text, and tell the user to take over. Never retry after it.
@@ -72,18 +72,18 @@ Any other missing field is not fatal for the whole run: fill what is known, leav
 **One application at a time.** Finish a job completely (open → inspect → fill → submit/stop → record → close the tab) before opening the next one. Never open several application forms in parallel, never loop over multiple jobs inside one script, and never leave more than one form tab open (except a `fill`-mode tab the user must submit).
 2. Read the apply control first. If it is labeled `Easy Apply`, `Quick application` or `Schnellbewerbung` (or a localized equivalent of a one-click platform apply), do not click it: record `skipped: easy apply`, leave the job to the user and move on. Otherwise click `Apply` once, follow a same-tab redirect or new tab, and record the final `applyUrl` and the ATS host. If the destination is still `linkedin.com` or `indeed.com` / `smartapply.indeed.com`, treat it as a one-click apply: close without filling anything and record `skipped: easy apply`. If the destination cannot be confirmed as a third-party page, stop and record `skipped: external redirect not confirmed`.
 3. Identify the ATS from the host and page, e.g. `greenhouse.io`, `lever.co`, `myworkdayjobs.com`, `personio.de`, `smartrecruiters.com`, `successfactors.com`, `recruitee.com`, `join.com`, `softgarden.io`, `homerun.co`, `bamboohr.com`, `ashbyhq.com`, `icims.com`, `taleo.net`, or the employer's own careers portal.
-4. Detect blockers before filling: login wall, "create an account", password field, email verification, SSO, CAPTCHA, unsupported location, file-upload restriction. Stop, record `blocked` with the concrete reason, and append the row to `help.md` (company, role, field, reason, `open`). A required field with no configured or answered value is a blocker too — never guess it.
+4. Detect blockers before filling: login wall, "create an account", password field, email verification, SSO, CAPTCHA, unsupported location, file-upload restriction. Stop, record `blocked` with the concrete reason, and append the entry to `help.json` (company, role, field, kind, reason, `status: "open"`). A required field with no configured or answered value is a blocker too — never guess it.
 5. Fill every visible field from the mapping in section 5. Never guess. Every matched job has a cover letter (discovery renders one for all of them); when it is missing, render it from `cover-letter-template.md` before filling, never skip it. Leave unknown optional fields empty. For unknown required fields, stop and record the field name.
 6. Upload `applicant.cvPath` as the resume/CV. Keep the original filename.
 7. Cover letter: follow `applications.coverLetterMode`.
    - `never` — leave empty even when optional.
    - `required-only` — only when the form marks it required.
    - `always` — whenever the form offers it.
-   - For a text box, paste the filled template. For a file upload, use the job's existing `<First>_<Last>_<Role>_Cover_Letter.pdf`; create the JSON and render it first when the job has none, and upload it only when the accept list includes `.pdf`; otherwise record `blocked — cover letter file must be exported to PDF` and stop.
+   - For a text box, paste the filled template. For a file upload, use the job's existing `<First>_<Last>_Cover_Letter.pdf`; create the JSON and render it first when the job has none, and upload it only when the accept list includes `.pdf`; otherwise record `blocked — cover letter file must be exported to PDF` and stop.
 8. Re-read the completed form. Check identity, phone, dates, salary and every yes/no answer against the config. Fix only with configured values.
 9. When `applications.externalApply` is `fill`: do not click Submit. Capture a screenshot, list any remaining required field, leave the tab open on the completed form, and record `applyStatus: "filled"` with `filledAt`. Never close the tab or reload away from the form.
 10. When `applications.externalApply` is `true` (or the legacy `submit`) and the form is complete: click Submit once. Verify a confirmation page or confirmation text/email. Record `applyStatus: "submitted"`, `appliedOn`, `applicationRef`. Close the tab only after the confirmation is captured. If a validation error appears and cannot be resolved from the config, record `blocked` and stop.
-11. On any unexpected error, record `failed` with the exact error text, append it to `help.md`, and continue with the next job.
+11. On any unexpected error, record `failed` with the exact error text, append it to `help.json`, and continue with the next job.
 
 If the user is present, a login/CAPTCHA/2FA blocker may be handed to them with the `handoff` tool. On an unattended/scheduled run, never wait for a person: record `blocked` and continue.
 
@@ -104,14 +104,15 @@ If the user is present, a login/CAPTCHA/2FA blocker may be handed to them with t
 | Last name / Family name / Surname | `applicant.lastName` | exact |
 | Native-script family name (e.g. `Familienname - Chinesisch`) | `applicant.nativeLastName` | exact; empty → leave blank |
 | Native-script given name (e.g. `Vorname - Chinesisch`) | `applicant.nativeFirstName` | exact; empty → leave blank |
+| Date of birth / Birthday | `applicant.dateOfBirth` | exact ISO date (`1994-03-20`, shown as 20/03/1994 where the form asks for DD/MM/YYYY); never guess |
 | Email | `applicant.email` | exact |
 | Phone / Mobile | `applicant.phone` | exact, keep country code |
 | Current location / City | `applicant.currentCity` | empty → leave blank |
 | City on a form that only accepts German cities | `applicant.germanFormCity` | use it only when the form rejects the configured city |
 | "Have you worked at <company>?" / "Do you have relatives at <company>?" | `applications.screening.workedAtCompanyOrRelative` | exact Yes/No |
 | Country | derived from phone or location | never guess without config |
-| Nationality (free text) | `applicant.nationality` | exact, e.g. `Chinese` |
-| Country of citizenship (select) | `applicant.citizenships` | exact option text from the list; blank when no option matches |
+| Nationality (free text) | `applicant.nationality` | exact; **always `Chinese`** |
+| Country of citizenship (select) | `applicant.citizenships` | exact option text; **always `China`** when offered; blank when no option matches |
 | "Are you a national/citizen of <work country>?" | derived: `applicant.citizenships` vs the posting's work country | `Yes` only when the work country is in the list, otherwise `No`; the work country comes from the posting's stated location, never guessed |
 | "Which country are you a citizen of?" (select) | `applicant.citizenships[0]` | exact option text |
 | LinkedIn | `applicant.linkedinUrl` | empty → leave blank |
@@ -146,6 +147,8 @@ If the user is present, a login/CAPTCHA/2FA blocker may be handed to them with t
 
 Salary, availability and "tell us about yourself" free-text boxes use only the template and configured values, and are written in English. Never add experience, achievements or numbers that are not in the CV or config.
 
+**Nationality is always China.** Every question about nationality, citizenship, 国籍 or national identity is answered `Chinese` / `China` — never another country. Country of residence is a different question and follows `applicant.countryOfResidence`.
+
 ## 6. Record results
 
 Do not write `reports/job-index.json` (legacy). Record the same facts in `reports/applications/YYYY-MM-DD.md` and the job's Notes in this run's report:
@@ -179,16 +182,47 @@ Update this run's report too (the file this run created, `reports/daily/YYYY-MM-
 
 Every result other than `submitted` — `blocked`, `filled`, `failed`, or `skipped` because the flow could not be confirmed or the browser failed — must end that job's Notes in today's daily report with `Not auto-submitted: <reason>`, using the same concrete wording as the applications row. A submitted row never carries the marker, and Easy Apply rows are manual by design and do not need it.
 
-## 6a. Blocked-field queue (`help.md`)
+## 6a. Blocked-field queue (`help.json`)
 
-Keep `.opencode/skills/job-apply/help.md` as the user-facing to-do list for blocked fields.
+`.opencode/skills/job-apply/help.json` is the machine-readable blocked-field queue and the user's to-do list. It is local working state: never publish it, and never copy applicant values from `job-hunter.config.json` into it.
 
-- Every blocked submission appends one row: date, company, role, the exact field label, the concrete blocker, `Status: open`, empty answer.
-- One row per company + role + field. When the same blocker reappears, update its date; never duplicate an open row.
-- When the user answers a field, write the answer in `Answer / next step` and set `Status: answered`.
-- Once the value is in `job-hunter.config.json` (or the flow is fixed), set `Status: fixed`.
-- Before filling a form, read `help.md`: a field with `Status: answered` is filled from that answer; an `open` field still blocks and is reported again.
-- Never write candidate values into `help.md`, and never publish it.
+Structure (enforced by `help.schema.json`):
+
+```json
+{
+  "schemaVersion": 1,
+  "updatedAt": "YYYY-MM-DD",
+  "blockers": [
+    {
+      "id": "b-001",
+      "date": "YYYY-MM-DD",
+      "company": "Company as published",
+      "role": "Job title as published, or null",
+      "field": "exact field label, or null",
+      "kind": "field",
+      "reason": "the concrete blocker",
+      "status": "open",
+      "answer": null
+    }
+  ]
+}
+```
+
+- `kind` is one of `field` (unconfigured or rejected value), `login`, `captcha`, `upload`, `infrastructure` (browser/relay failure), `unavailable` (expired, 404, blank page).
+- `status` is one of `open`, `answered`, `fixed`.
+- `answer` is `null` while `open`; a non-empty string once `answered` or `fixed`.
+
+Rules:
+
+- Before filling a form, read `help.json`. `status: "answered"` → use `answer` for that company + role + field. `open` → still blocks and is reported again. `fixed` → the value is already in `job-hunter.config.json`.
+- Every blocked submission appends one object: date, company, role, the exact field label (`null` when the blocker is not one field), `kind`, the concrete reason, `status: "open"`, `answer: null`.
+- One object per company + role + field. When the same blocker reappears, update its `date`; never add a duplicate open object.
+- An entry with `company: "Any"` and `role: null` is a global rule (e.g. nationality), not a blocker: apply it to every form.
+- When the user answers, set `status: "answered"` and write the answer.
+- Once the value is in `job-hunter.config.json` (or the flow is fixed), set `status: "fixed"`.
+- `id` is `b-NNN`; the next id is the current maximum + 1. Never reuse or renumber an id.
+- Update `updatedAt` whenever the file changes.
+- Validate before saving: `jq empty .opencode/skills/job-apply/help.json`. Never leave a trailing comma, comment or duplicate key; the file must stay valid JSON.
 
 ## 7. Report back
 

@@ -87,7 +87,7 @@ Platform mechanics live in `references/linkedin.md` and `references/indeed.md`; 
 1. **Report** — this run's file, in `common.preferredReportLanguage`, following `references/daily-report-format.md`: run header, summary, matched, review, excluded. The step-1 record is a separate `<run>/job-audit.md`.
 2. **Application log** — record every attempted application in `reports/applications/YYYY-MM-DD.md`; never write `reports/job-index.json`.
 3. **Audit** — append one JSON line to `reports/runs/YYYY-MM-DD.jsonl` with real `runAt`, `finishedAt`, `durationSeconds`, `reportPath` and the fields in `references/job-index-and-audit.md`. Never write `finishedAt` in advance.
-4. **Publish** — when `reportRepo` is set, push only the run folder. Never publish the index, runs or applications.
+4. **Publish** — when `reportRepo` is set, push only the run folder. Never publish the index, runs or applications. Published copies are temporary: the `report-cleanup` skill removes them after `common.reportExpiryHours` (default `0` = off). With `reportExpiryMode: "delete-repo"` the whole repo is deleted, so if the clone fails because the remote is gone, recreate it first with `gh repo create <owner>/<name> --public`, then push. A missing remote is expected, never a publish failure — never re-push expired content.
 5. **Apply** — when `applications.enabled` is `true`, load `job-apply` after the report and index are written.
 6. **Email** — when `notifications.email.enabled` is `true`, send one summary via `email-notify`.
 

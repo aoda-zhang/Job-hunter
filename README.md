@@ -101,6 +101,7 @@ The file has three layers: `sources` (run order), `common` (shared preferences),
 | `common.isNeededCover` | no | When `true`, a job kept in the report (`matched` or `review`) whose JD requires a cover letter gets one. The agent drafts it from the JD and CV and can render a PDF with the `cover-letter` skill (`python3 .opencode/skills/cover-letter/scripts/render.py <json>`). Default `false`. |
 | `common.saveMatchedJobs` | no | Default `false`. When `true`, every vacancy that ends as `matched` (normal and confirmed agency/third-party, including rows later submitted) gets one verified Save/bookmark click on its source platform page, right after classification. It happens whether or not you apply and whatever the apply outcome. Review, excluded, expired and skipped rows are never saved; an existing save is never toggled off, and a missing control or sign-in wall is only recorded as `not saved: <reason>`. |
 | `common.reportRepo` | no | Optional Git URL. When set, the day's report is committed and pushed there after each run. |
+| `common.reportExpiryHours` | no | Default `0` (off). With `common.reportRepo` set, a pushed report is removed from that repo once its publishing commit is older than this many hours. The local report is never deleted. `common.reportExpiryCheckMinutes` (default `15`) sets how often the cleanup timer checks; `common.reportExpiryMode` is `purge-history` (default: rewrite the branch to one empty root commit) or `delete-repo`. |
 | `common.sortBy` / `common.sortDirection` | no | Ordering inside each part (Easy Apply, No Easy Apply), after prompted rows; submitted rows use the global Submitted section order. `companySize` with `asc` or `desc`; omit for discovery order. |
 | `common.preferredReportLanguage` | no | Language of the daily report and the summary email body, e.g. `English`, `German`, `Chinese`. Defaults to `English`. |
 | `applicant` | no | Identity used to fill external applications: `firstName`, `lastName`, `phone`, `email`, `currentCity`, `linkedinUrl`, `portfolioUrl`, `cvPath`, `availableInGermanyFrom`, `governmentEmployee`. Missing required identity fields stop the apply run; missing screening answers only block the affected job. |
@@ -182,7 +183,7 @@ The daily report is grouped by platform in `sources` order (LinkedIn first, then
 
 Reports follow the fixed format reference at `.opencode/skills/job-discovery/references/daily-report-format.md` and are written in `common.preferredReportLanguage` (default `English`). The reference fixes the structure; only the human-readable text is translated.
 
-`job-hunter.config.json`, `reports/daily/`, and `cover-letter-template.md` are Git-ignored. If you set `common.reportRepo`, only that day's report is committed and pushed to your chosen repository after each run.
+`job-hunter.config.json`, `reports/daily/`, and `cover-letter-template.md` are Git-ignored. If you set `common.reportRepo`, only that day's report is committed and pushed to your chosen repository after each run. With `common.reportExpiryHours` set, that pushed copy is deleted again once it is older than that many hours; the local report is never deleted.
 
 **Local memory.** Three more files stay on your machine and are never pushed:
 

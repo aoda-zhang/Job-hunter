@@ -42,3 +42,4 @@ tmp/
 .temp/
 .DS_Store
 *.pdf
+.venv-coverletter/

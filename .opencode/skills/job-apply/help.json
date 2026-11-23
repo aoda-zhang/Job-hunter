@@ -1,0 +1,215 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-11-23",
+  "blockers": [
+    {
+      "id": "b-001",
+      "date": "2026-11-20",
+      "company": "ABOUT YOU",
+      "role": "Senior Frontend Engineer - Checkout",
+      "field": "city",
+      "kind": "field",
+      "reason": "The form rejects \"Chengdu, China\" (German cities only)",
+      "status": "answered",
+      "answer": "Munich"
+    },
+    {
+      "id": "b-002",
+      "date": "2026-11-20",
+      "company": "ABOUT YOU",
+      "role": "Senior Frontend Engineer (all genders)",
+      "field": "country_code",
+      "kind": "field",
+      "reason": "Phone prefix is prefilled with +49 and cannot be changed to +86",
+      "status": "answered",
+      "answer": "If a German number is mandatory, abandon the application, but always try +86 first"
+    },
+    {
+      "id": "b-003",
+      "date": "2026-11-20",
+      "company": "NiCE",
+      "role": "Senior AI Software Engineer",
+      "field": "Relatives at NICE / previously worked at NICE",
+      "kind": "field",
+      "reason": "Required yes/no question with no config entry",
+      "status": "answered",
+      "answer": "I have never worked at any German company; whenever asked whether I or a relative worked at the applying company, answer No"
+    },
+    {
+      "id": "b-004",
+      "date": "2026-11-20",
+      "company": "Kärcher",
+      "role": "Senior Software Engineer - Kärcher Connected Cleaning (m/w/d)",
+      "field": null,
+      "kind": "login",
+      "reason": "Login or account creation required",
+      "status": "answered",
+      "answer": "If registration is required, abandon the application"
+    },
+    {
+      "id": "b-005",
+      "date": "2026-11-20",
+      "company": "EMIL Group",
+      "role": "Senior/Leading Software Engineer (f/m/d/x)",
+      "field": null,
+      "kind": "captcha",
+      "reason": "Blocked by a Cloudflare Turnstile human check",
+      "status": "answered",
+      "answer": "Skip for now; I will apply manually"
+    },
+    {
+      "id": "b-006",
+      "date": "2026-11-20",
+      "company": "Kombo / Almedia / TeleClinic / Air Apps",
+      "role": null,
+      "field": null,
+      "kind": "infrastructure",
+      "reason": "Browser relay dropped before the form was complete",
+      "status": "answered",
+      "answer": "Infrastructure issue; retry on the next run"
+    },
+    {
+      "id": "b-007",
+      "date": "2026-11-21",
+      "company": "go-e",
+      "role": "Frontend Engineer (m/f/x)",
+      "field": null,
+      "kind": "unavailable",
+      "reason": "Greenhouse form did not load; job board 404",
+      "status": "open",
+      "answer": null
+    },
+    {
+      "id": "b-008",
+      "date": "2026-11-21",
+      "company": "Leapsome",
+      "role": "Senior Software Engineer in Test / SDET",
+      "field": "relocation_required",
+      "kind": "field",
+      "reason": "Required yes/no: do you require relocation support",
+      "status": "open",
+      "answer": null
+    },
+    {
+      "id": "b-009",
+      "date": "2026-11-21",
+      "company": "Riverty",
+      "role": "Frontend Engineer - Angular",
+      "field": null,
+      "kind": "infrastructure",
+      "reason": "SmartRecruiters application page rendered blank",
+      "status": "open",
+      "answer": null
+    },
+    {
+      "id": "b-010",
+      "date": "2026-11-21",
+      "company": "Skalar",
+      "role": "Senior Software Engineer (w/m/d)",
+      "field": null,
+      "kind": "captcha",
+      "reason": "reCAPTCHA challenge on submit",
+      "status": "open",
+      "answer": null
+    },
+    {
+      "id": "b-011",
+      "date": "2026-11-22",
+      "company": "Atolls",
+      "role": "Senior Software Engineer (Java/SpringBoot) (m/f/x)",
+      "field": "have_you_heard_of_atolls_before_finding_out_about_this_role",
+      "kind": "field",
+      "reason": "Required yes/no question, no config entry",
+      "status": "open",
+      "answer": null
+    },
+    {
+      "id": "b-012",
+      "date": "2026-11-22",
+      "company": "Eye Security",
+      "role": "Senior Software Engineer (m/f/x)",
+      "field": "work_authorization",
+      "kind": "field",
+      "reason": "Required radio with four options (EU/EEA citizen, unrestricted permit, employer-tied permit, needs sponsorship); none matches \"own permit in 5-8 weeks, no sponsorship\"",
+      "status": "open",
+      "answer": null
+    },
+    {
+      "id": "b-013",
+      "date": "2026-11-22",
+      "company": "Resaro",
+      "role": "Software Engineer",
+      "field": "production-workload / AWS / Kubernetes experience",
+      "kind": "field",
+      "reason": "Required screening radio questions with no config entry",
+      "status": "open",
+      "answer": null
+    },
+    {
+      "id": "b-014",
+      "date": "2026-11-23",
+      "company": "Thieme",
+      "role": "(Senior) Fullstack Engineer (m/f/d) Marketing",
+      "field": "strasse, plz",
+      "kind": "field",
+      "reason": "Required Street and Postcode fields with no config entry (employer portal jobs.thieme.com)",
+      "status": "open",
+      "answer": null
+    },
+    {
+      "id": "b-015",
+      "date": "2026-11-23",
+      "company": "Thieme",
+      "role": "(Senior) Fullstack Engineer (m/f/o)",
+      "field": null,
+      "kind": "unavailable",
+      "reason": "Employer page jobs.thieme.com reports \"The job offer you searched for was not found\" although LinkedIn still shows it",
+      "status": "open",
+      "answer": null
+    },
+    {
+      "id": "b-016",
+      "date": "2026-11-23",
+      "company": "chargecloud",
+      "role": "(Senior) Frontend Engineer (all genders)",
+      "field": "Birthday",
+      "kind": "field",
+      "reason": "Required date field with no config entry",
+      "status": "fixed",
+      "answer": "1994-03-20 (20/03/1994)"
+    },
+    {
+      "id": "b-017",
+      "date": "2026-11-23",
+      "company": "chargecloud",
+      "role": "(Senior) Frontend Engineer (all genders)",
+      "field": "How many years of experience do you have with Vue.js/Nuxt.js?",
+      "kind": "field",
+      "reason": "Required select (0-2 / 3-5 / 5+) with no configured Vue.js years",
+      "status": "fixed",
+      "answer": "0-2 (0 years: Vue.js and Nuxt.js are not in the CV)"
+    },
+    {
+      "id": "b-018",
+      "date": "2026-11-23",
+      "company": "chargecloud",
+      "role": "(Senior) Frontend Engineer (all genders)",
+      "field": "Certificate",
+      "kind": "upload",
+      "reason": "Required document upload; no certificate file configured",
+      "status": "fixed",
+      "answer": "Manually submitted 2026-11-23; certificate not uploaded"
+    },
+    {
+      "id": "b-019",
+      "date": "2026-11-23",
+      "company": "Any",
+      "role": null,
+      "field": "Nationality / citizenship / national identity",
+      "kind": "field",
+      "reason": "Recurring rule: every nationality or national-identity question is answered China",
+      "status": "fixed",
+      "answer": "Chinese (China)"
+    }
+  ]
+}

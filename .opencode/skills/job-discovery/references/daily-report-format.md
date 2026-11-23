@@ -10,7 +10,7 @@ Format baseline for `reports/daily/`. Read before writing or updating a report. 
 ```text
 <run>/<Company>-<JobTitle>/fields.json                       # every form field, required and optional
 <run>/<Company>-<JobTitle>/cover-letter.json                 # template fields for this vacancy
-<run>/<Company>-<JobTitle>/Qi_Zhang_<Role>_Cover_Letter.pdf  # the rendered letter
+<run>/<Company>-<JobTitle>/<First>_<Last>_Cover_Letter.pdf  # the rendered letter
 ```
 
 ```json
@@ -210,7 +210,7 @@ Split the section's matched jobs into exactly two parts, in this order. The spli
 ```
 
 - Every other matched job that is not submitted: `Easy Apply = No`, plus `Unknown`.
-- These are the external applications. The form is inspected, recorded in `fields.json`, and filed by `job-apply` (fill/submit per `applications.externalApply`); when it cannot be filed, the blocker goes to `help.md`.
+- These are the external applications. The form is inspected, recorded in `fields.json`, and filed by `job-apply` (fill/submit per `applications.externalApply`); when it cannot be filed, the blocker goes to `help.json`.
 - An `Unknown` row is allowed here only with `external redirect not verified` in Notes.
 - Keep the heading text `No Easy Apply` in every language.
 - Number = rows in this part / total non-submitted rows in this section.

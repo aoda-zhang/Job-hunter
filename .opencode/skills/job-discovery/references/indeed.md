@@ -107,7 +107,7 @@ Record while the job is open; these are informational and never affect match/rev
 
 **Quick application form** — open it once, read-only, record every visible field into `<run>/<Company>-<JobTitle>/fields.json`, close it. Never fill, upload or submit it; the row stays with the user.
 
-**External form** — click `Continue to the application` once, record the ATS, host, final `applyUrl` and every field read-only. `job-apply` files it after the report; a blocker becomes `blocked: <reason>` in `fields.json` plus a row in `.opencode/skills/job-apply/help.md`.
+**External form** — click `Continue to the application` once, record the ATS, host, final `applyUrl` and every field read-only. `job-apply` files it after the report; a blocker becomes `blocked: <reason>` in `fields.json` plus one entry in `.opencode/skills/job-apply/help.json`.
 
 ## 8. Access boundaries
 

@@ -74,7 +74,7 @@ Record these while the job page is open; they never affect classification.
 
 **Easy Apply form:** open the modal once, read-only, record every visible field into `<run>/<Company>-<JobTitle>/fields.json`, close it. Never fill, upload or submit.
 
-**External form:** click Apply once, confirm the destination is not `linkedin.com`, then inspect read-only: ATS, host, final `applyUrl`, blockers and every field. `job-apply` files it after the report; a blocker becomes `blocked: <reason>` in `fields.json` plus a row in `.opencode/skills/job-apply/help.md`. Draft the cover letter when the form asks for one.
+**External form:** click Apply once, confirm the destination is not `linkedin.com`, then inspect read-only: ATS, host, final `applyUrl`, blockers and every field. `job-apply` files it after the report; a blocker becomes `blocked: <reason>` in `fields.json` plus one entry in `.opencode/skills/job-apply/help.json`. Draft the cover letter when the form asks for one.
 
 **Cover letter:** `Yes` when required, `No` when explicitly optional or absent, `Unknown` when unstated. The form's field is authoritative; a page-only mention is a hint.
 
