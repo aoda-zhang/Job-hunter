@@ -88,7 +88,7 @@ cp job-hunter.config.example.json job-hunter.config.json
 | `common.jobTitles.shallowExclude` | 否 | 字符串数组；职位名包含其中任一项（不区分大小写）时，在第二层浅过滤直接剔除，不打开 JD。 |
 | `common.jobTitles.earlyStrictMatch` | 否 | 为 `true` 时，第二层过滤直接套用严格标题门槛：规范化/翻译后不含 `include` 短语或含 `excludeWords` 的标题不打开 JD。 |
 | `common.jdLanguages.include` | 是 | 接受的 JD 语言，例如 `["English"]`。Indeed 会映射到它的 `Language` 筛选。 |
-| `common.jdLanguages.acceptGermanJdWithEnglishWorkingLanguage` | 否 | 为 `true` 时，德语 JD 只要明确写明英语是工作/团队/公司语言，也算命中。 |
+| `germanJdPass` | 否 | 第二部分：可选的德语 JD 补充投递。`enabled`（默认 `false`）、`reportFile`、`requireEnglishWorkingLanguage`、`minStackMatches`（默认 `2`，JD 至少命中几个 `common.technicalKeywords`；不强制 React）。每次运行把整份清单逐个处理完，不设数量上限。开启后，标题通过但 JD 为德语的岗位不再直接排除，而是记入 `<run>/german-jd-audit.md`；第一部分发布后，agent 挑出强匹配（React/TypeScript 前端或高级前端、React/Node.js 全栈）去投递，并写 `<run>/both-lan.md`。关闭 = 德语 JD 照旧排除。 |
 | `common.jdLanguages.maxRequiredLevel` | 否 | 可选的语言等级上限，例如 `{"German": "A2", "English": "C1"}`。JD 明确要求高于该等级时，按 `language requirement` 排除。只写“German required”按 B1 计算；“nice to have/plus/optional”不算要求。 |
 | `common.technicalKeywords.include` | 是 | 要在 JD 中查找的技术关键词。 |
 | `common.technicalKeywords.matchMode` | 是 | `any`：命中任意一个即可；`all`：必须全部命中。 |
@@ -101,7 +101,7 @@ cp job-hunter.config.example.json job-hunter.config.json
 | `common.isNeededCover` | 否 | 为 `true` 时，留在报告里的命中/复核岗位若 JD 要求求职信，就生成一封。可用 `cover-letter` skill 渲染 PDF。默认 `false`。 |
 | `common.saveMatchedJobs` | 否 | 默认 `false`。为 `true` 时，每个最终判定为 `matched` 的岗位（普通命中与确认的代招岗位，含之后被提交的行）都会在分类完成后、在来源平台的职位页点一次已验证的 Save/收藏。无论你是否投递、投递是否成功都会保存；复核、排除、过期和跳过的岗位永不保存，已收藏的岗位不会被取消，缺少按钮或需要登录时只记为 `not saved: <原因>`。 |
 | `common.reportRepo` | 否 | 可选 Git 地址。配置后每次运行会把当天日报提交并推送到该仓库。 |
-| `common.reportExpiryHours` | 否 | 默认 `0`（关闭）。配置 `common.reportRepo` 后，已推送的报告在发布提交超过这个小时数后会被移除；本地日报不受影响。`common.reportExpiryCheckMinutes`（默认 `15`）决定清理检查的间隔；`common.reportExpiryMode` 为 `purge-history`（默认，把分支重写成一个空根提交）或 `delete-repo`。 |
+| `common.reportExpiryHours` | 否 | 默认 `0`（关闭）。配置 `common.reportRepo` 后，已推送的报告在发布提交超过这个小时数后会被移除；本地日报不受影响。清理改为每次发布后挂一次性 launchd 任务（`reportExpiryCheckMinutes` 已忽略）；`common.reportExpiryMode` 为 `purge-history`（默认，把分支重写成一个空根提交）或 `delete-repo`。 |
 | `common.sortBy` / `common.sortDirection` | 否 | 各部分（Easy Apply、No Easy Apply）内、Premium 提示行之后的排序方式；已提交的行按全局「已提交」一节排序。`companySize` 配合 `asc` / `desc`；不填则按发现顺序。 |
 | `common.preferredReportLanguage` | 否 | 日报和摘要邮件正文的语言，例如 `English`、`German`、`Chinese`，默认 `English`。 |
 | `applicant` | 否 | 用于填第三方申请表的身份信息：`firstName`、`lastName`、`phone`、`email`、`currentCity`、`linkedinUrl`、`portfolioUrl`、`cvPath`、`availableInGermanyFrom`、`governmentEmployee`。身份必填项缺失会停止投递；筛选问题缺失只会阻塞对应岗位。 |
@@ -172,6 +172,8 @@ Agent 必须**严格串行**：一次只搜一个查询、一次只开一个职�
 
 日报按 `sources` 顺序按平台分节（先 LinkedIn、后 Indeed）。每一节内的命中岗位再分为 **Easy Apply** 和 **No Easy Apply** 两部分（部分内 Premium 提示行优先，再按公司规模排序），已提交的行移到排除岗位前的 **已提交** 一节；运行汇总表每个平台一列，最后加总计列。之后是确认代招岗位通过同样检查后单独列出的「代招岗位」表、需要时的待复核表，以及最后写明具体原因的排除岗位。No Easy Apply 部分由 agent 打开第三方页面并填写表单，`externalApply: true` 时直接提交，`fill` 时保留标签页由你点 Submit。每张表都有 `Source` 列，跨平台时也能看清。日报格式由 `.opencode/skills/job-discovery/references/daily-report-format.md` 统一规定，语言由 `common.preferredReportLanguage` 指定（默认 `English`）。格式文档只固定结构，翻译的只是可读文字。
 
+**两个独立部分。** 第一部分就是上面描述的常规运行，德语 JD 一律不算命中；`germanJdPass.enabled` 为 `true` 时，标题通过但 JD 为德语的岗位不直接排除，而是记入 `<run>/german-jd-audit.md`。第一部分发布后，第二部分只保留强匹配（React/TypeScript 前端或高级前端、React/Node.js 全栈），每次最多投 `germanJdPass.maxPerRun` 个，并通过 `reports/runs/both-lan-queue.md` 跨天慢慢处理。结果只写 `<run>/both-lan.md` 和投递记录；阻塞项带 `"pass": "both-lan"` 写入 `help.json`，你回答后下次重试。第二部分绝不修改第一部分的报告、审计或计数。
+
 同一职位在 LinkedIn 投递过，就不会在 Indeed 再次出现或再次投递；未投递的重复职位只加注记，不合并。
 
 `job-hunter.config.json` 和 `reports/daily/` 都被 Git 忽略。如果配置了 `common.reportRepo`，每次运行后只会把当天日报提交并推送到你指定的仓库。配置 `common.reportExpiryHours` 后，已推送的副本超过该小时数会再次被删除；本地日报永远不会被删除。
@@ -237,7 +239,7 @@ reports/interviews/                               第二阶段产出
 | 没有生成报告 | 配置缺失、`common.searchTitles` 为空，或没有可用的浏览器工具。Agent 被要求明确说明是哪一种。 |
 | 提示「浏览器工具不可用」 | 在 OpenCode 中启用浏览器集成。本仓库不提供也不配置浏览器工具。 |
 | 搜索停在登录或验证码 | 你在该浏览器中自行登录该平台后重试。Agent 不得绕过这些限制。 |
-| 德语职位都被排除 | `jdLanguages` 只接受英语。把 `acceptGermanJdWithEnglishWorkingLanguage` 设为 `true`，或把 `German` 加入列表。 |
+| 德语职位都被排除 | 这是第一部分的既定规则。把 `germanJdPass.enabled` 设为 `true`，它们会进入 `german-jd-audit.md`，由第二部分挑强匹配投递（报告见 `both-lan.md`）；或把 `German` 加入 `jdLanguages.include`。 |
 | 结果太少 | 放宽 `common.jobTitles`、使用 `matchMode: "any"`、减少关键词，或调大 `common.lookbackHours`。 |
 | 结果太多 | 收紧 `jobTitles`/关键词，限制 `common.workModes` 或 `common.employmentTypes`，或补充 `common.locations`。 |
 | 只想临时改一次条件 | 直接在对话里说。Agent 只对本次运行生效，不会改写你的配置。 |

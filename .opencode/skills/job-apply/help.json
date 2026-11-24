@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-23",
+  "updatedAt": "2026-11-24",
   "blockers": [
     {
       "id": "b-001",
@@ -210,6 +210,39 @@
       "reason": "Recurring rule: every nationality or national-identity question is answered China",
       "status": "fixed",
       "answer": "Chinese (China)"
+    },
+    {
+      "id": "b-020",
+      "date": "2026-11-24",
+      "company": "Event Inc Group",
+      "role": "AI-Native Software Engineer (Human)",
+      "field": "Will you be able to work from our Hamburg office 4 days a week from your start date?",
+      "kind": "field",
+      "reason": "Required yes/no question asks for 4 office days per week; applications.screening.officeAttendance only states 'Yes, at least 3 days per week'",
+      "status": "fixed",
+      "answer": "Yes - can work from the Hamburg office 4 days a week from the start date (now in applications.screening.officeAttendance)"
+    },
+    {
+      "id": "b-021",
+      "date": "2026-11-24",
+      "company": "Wandelbots",
+      "role": "Senior Software Engineer (gn) Shopfloor Orchestration NOVA Cloud",
+      "field": null,
+      "kind": "infrastructure",
+      "reason": "Personio form was filled and Submit Application was clicked once, but the tab closed with no confirmation page or reference shown; submission is unconfirmed",
+      "status": "open",
+      "answer": null
+    },
+    {
+      "id": "b-023",
+      "date": "2026-11-24",
+      "company": "Any",
+      "role": null,
+      "field": "Office attendance / willingness to work X days per week in the office",
+      "kind": "field",
+      "reason": "Recurring rule: every office-attendance or willingness question is answered Yes, and when asked how many days per week, answer 4",
+      "status": "fixed",
+      "answer": "Yes - willing to work 4 days per week in the office; any 'willing to come to the office X days' question = Yes; if asked how many days, write 4"
     }
   ]
 }

@@ -19,7 +19,7 @@ Strictly sequential: one posting, one tab, one row at a time.
    - `Developer` = `Engineer`; `TS` → `TypeScript`, `JS` → `JavaScript`, `Dev` → `Developer`, `Sr.` → `Senior`, `Jr.` → `Junior`.
    - A title containing any `jobTitles.excludeWords` word is a confirmed mismatch even when a configured title also appears. Never widen the family for "frontend focus" or "fullstack".
 2. **Poster type** — `direct`, `third_party` or `unknown`. `third_party` = staffing firm, headhunter, agency portal, "our client", "on behalf of", `im Auftrag`, `für unseren Kunden`, `Arbeitnehmerüberlassung`. A consultancy hiring for its own projects is `direct`. Unclear → `unknown`. With `thirdPartyPostings: exclude`, a confirmed `third_party` stops here as `not_matched`; with `separate` or `include`, continue — poster type is never a bypass.
-3. **JD language** — in `common.jdLanguages.include`. A German JD matches when `acceptGermanJdWithEnglishWorkingLanguage` is `true` and the JD names English as the working language. Mixed, short or truncated → `unknown`.
+3. **JD language** — in `common.jdLanguages.include`. A German JD is **not judged here** when `germanJdPass.enabled` is `true`: record it in `<run>/german-jd-audit.md` (`references/german-jd-pass.md`) and mark the row `deferred (German JD)`. It is not a Part 1 match, not an exclusion and never enters `report.md`; the separate both-lan pass reopens it after this report is published. When `germanJdPass.enabled` is `false`, a German JD is `not_matched` (`JD language: German`) exactly as before. Mixed, short or truncated → `unknown` → review.
 4. **Language requirement level** — only when `maxRequiredLevel` has an entry for that language. Map to CEFR: A1 < A2 < B1 < B2 < C1 < C2. `basic`/`Grundkenntnisse` → A2; `good`/`gute`/`solid` → B1; `business fluent` → B2; `fluent`/`fließend`/`verhandlungssicher` → C1; `native`/`muttersprachlich` → C2. Bare `German required` / `Deutschkenntnisse` = B1. `nice to have`, `plus`, `von Vorteil`, `optional` are not requirements. Use the highest stated level. Above the configured level → `not_matched` with `language requirement: <language> <required> > <configured>`; at or below → passes; unmappable → `unknown` → review.
 5. **Technical keywords** — per `technicalKeywords.matchMode`; accept JS/JavaScript, TS/TypeScript, NodeJS/Node.js, ReactJS/React. With `any`, stop at the first hit.
 6. **Work mode** — only when `workModes` is a real subset. Missing → `unknown`.
@@ -52,6 +52,7 @@ Active only when `common.saveMatchedJobs` is `true`. Skipped entirely when it is
 
 Record `easyApply` (`yes` / `no` / `unknown`), `applyType` (`easy_apply` / `external` / `unknown`) and `coverLetter` (`yes` / `no` / `unknown`) for every inspected vacancy. They never affect classification.
 
+- `deferred (German JD)` — read the Apply control label only. Never click it, never open a one-click modal, never inspect the employer form, no `fields.json` in Part 1. Record `easyApply` from the label and `applyType: unknown`; the both-lan pass opens the real form later.
 - `easy_apply` — open the one-click form once, read-only, record every visible field (label, type, required, options, mapped value) into `<run>/<Company>-<JobTitle>/fields.json`, close it. **Never type, upload or submit.** The row stays with the user.
 - `external` — click Apply once, confirm the destination leaves the platform, and inspect the employer form read-only: ATS, host, final `applyUrl`, blockers and every field into `fields.json`. `job-apply` files it after the report; a blocker is written by `job-apply` as `blocked: <reason>` in `fields.json` plus one entry in `.opencode/skills/job-apply/help.json` (`status: "open"`).
 - `unknown` — do not click; record it and leave the row for the user.
@@ -60,7 +61,7 @@ The daily report carries only the short `Apply form` status, never a field table
 
 ## 5. Cover letters
 
-Draft a cover letter for **every matched vacancy** — Easy Apply, external and every agency/third-party row — whenever `common.isNeededCover` is `true`, whether or not the form exposes a field.
+Draft a cover letter for **every matched vacancy** — Easy Apply, external and every agency/third-party row — whenever `common.isNeededCover` is `true`, whether or not the form exposes a field. Deferred German-JD rows get no letter in Part 1; the both-lan pass drafts one for each row it actually applies to.
 
 - Generation is unconditional; only the upload follows `applications.coverLetterMode`.
 - The letter is always written in **English**, whatever `common.preferredReportLanguage` says.
@@ -71,7 +72,7 @@ Draft a cover letter for **every matched vacancy** — Easy Apply, external and 
 
 ## 6. Output
 
-- `matched` and `review` rows go to the report tables; `not_matched` goes to the excluded table. Every row that was inspected is recorded in this run's report and audit only.
+- `matched` and `review` rows go to the report tables; `not_matched` goes to the excluded table; `deferred (German JD)` rows go only to `<run>/german-jd-audit.md` and carry that status in the main `job-audit.md` merged list (the next run's dedupe needs it). Every row that was inspected is recorded in this run's report and audit only.
 - Record `posterType` for every inspected vacancy; record `business` only from an explicit JD statement. For `third_party`, the client goes in Notes.
 - Record the `saved` state (`saved` / `already saved` / `not saved: <reason>`) for every matched row in the report's `Saved` column; review and excluded rows are never saved.
 - Read the top-applicant marker only when the platform reference defines it and the config enables it (LinkedIn: `platforms.LinkedIn.premium`). It orders rows and is never a check.

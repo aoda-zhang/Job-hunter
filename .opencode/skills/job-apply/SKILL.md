@@ -38,6 +38,16 @@ Candidate vacancies:
 
 Never apply through a platform one-click apply flow. Never apply to a job that is not in this run's report/index.
 
+## 1a. Both-lan pass (Part 2)
+
+A second, optional pass over German-language JDs that Part 1 deferred. Run it only after this run's `report.md` has been written and published, and only when `germanJdPass.enabled` is `true` and `applications.enabled` is `true`. It is a separate part: it never edits `report.md`, `job-audit.md` or `german-jd-audit.md`, never changes Part 1 counts, and never delays Part 1's publish or email.
+
+1. Read this run's `<run>/german-jd-audit.md` and the local queue `reports/runs/both-lan-queue.md`. The full specification — eligibility gates, queue rules, `both-lan.md` format, ordering — is `job-discovery/references/german-jd-pass.md`.
+2. Process `pending` queue rows oldest first, then this run's deferrals — one posting at a time, to the end of the list. Apply every eligibility gate in that reference §2.1: a candidate that passes is applied to, a candidate that fails is recorded with its reason, then the next posting is opened. There is no per-run cap.
+3. Apply with the normal field mapping and hard rules of this skill. Save first when `common.saveMatchedJobs` is `true`, draft the cover letter when `common.isNeededCover` is `true`, never touch a one-click apply, and tag every `help.json` entry with `"pass": "both-lan"`.
+4. Write `<run>/both-lan.md` (reference §4), append the rows to `reports/applications/YYYY-MM-DD.md` with a `both-lan:` Notes prefix, update the queue, then publish the run folder again with `report-publish.sh` so the published copy contains the new file.
+5. A blocker is `blocked: <reason>` in `fields.json` plus one `help.json` entry; never guess a value. When the user answers an entry, the queue row returns to `pending` on the next run.
+
 ## 2. Candidate data
 
 Read `applicant` and `applications.screening`.
@@ -139,7 +149,7 @@ If the user is present, a login/CAPTCHA/2FA blocker may be handed to them with t
 | Background check consent | `applications.screening.backgroundCheckConsent` | `true` → agree, `false` → decline, `null` → blocked |
 | Interview recording consent (e.g. Metaview) | `applications.screening.interviewRecordingConsent` | `true` → agree, `false` → decline |
 | Project you could present / technical example | `applications.screening.projectHighlights` | paste the configured link(s) verbatim, one per line; never invent a project |
-| Office attendance / "office-first?" / "come into the office?" | `applications.screening.officeAttendance` | exact; never infer from `willingToRelocate` |
+| Office attendance / "office-first?" / "come into the office?" / "willing to work X days in the office?" | `applications.screening.officeAttendance` + `help.json` b-023 | every willingness question → `Yes`; when asked how many days per week → `4`; never infer from `willingToRelocate` |
 | Why this company / "short summary why applying" | `applications.screening.motivation` | `cover-letter` → use the shortened 3–5 sentence message version of the cover letter for that job; empty + required → blocked |
 | Work permit status (select) | `applications.screening.workPermitStatus` | exact option text; any yes/no right-to-work or permit question → `Yes`; never select a "no permit" option |
 | Years with a named technology | `applications.screening.techYears["<technology>"]` | exact; missing or empty + required → blocked with the technology name |
@@ -174,7 +184,7 @@ Write `reports/applications/YYYY-MM-DD.md` (create the directory when missing), 
 | 1 | Example GmbH | Senior Frontend Engineer | Greenhouse | Filled (awaiting submit) | 21:48 | [Open](applyUrl) | tab left open |
 ```
 
-Status values: `Inspected`, `Filled (awaiting submit)`, `Submitted`, `Blocked`, `Failed`, `Skipped`. Notes name the exact blocker or missing config key. When `applications.externalApply` is `false` the row is `Inspected` and the daily report carries the field table.
+Status values: `Inspected`, `Filled (awaiting submit)`, `Submitted`, `Blocked`, `Failed`, `Skipped`. `Blocked` means the form cannot be completed (missing required answer, login, CAPTCHA, upload restriction); a policy decision (third party excluded, account creation, one-click apply) is `Skipped` and never `Blocked`; a submit that produced no confirmation page is `Failed` with `submission unconfirmed` in Notes. Notes name the exact blocker or missing config key. When `applications.externalApply` is `false` the row is `Inspected` and the daily report carries the field table.
 
 Update this run's report too (the file this run created, `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM/report.md`): set `External applications submitted` in the run summary (per-source column plus total), add `[filled MM-DD HH:MM]`, `[applied MM-DD HH:MM]` or `[apply blocked MM-DD HH:MM]` to the job's Notes as defined in `daily-report-format.md`, and keep the inspected field table in `<run>/<Company>-<JobTitle>/fields.json` **only for jobs that were not successfully submitted** (never in the report itself): `blocked`, `filled` (waiting for the user's Submit), `failed` and inspected-only rows keep their block; a job submitted successfully gets no block (its `Apply form` cell reads `Submitted`) and is recorded only in `reports/applications/`. A newly submitted row leaves its source section and moves to the global `Submitted` section just before the excluded table (see `daily-report-format.md` 4.3), so renumber the source section's `#` and part totals, drop the row's apply-form block and renumber the remaining blocks. Never touch one-click apply rows, and never touch a row that was skipped because another platform already had the application.
 
@@ -202,7 +212,8 @@ Structure (enforced by `help.schema.json`):
       "kind": "field",
       "reason": "the concrete blocker",
       "status": "open",
-      "answer": null
+      "answer": null,
+      "pass": "both-lan"
     }
   ]
 }
@@ -211,11 +222,12 @@ Structure (enforced by `help.schema.json`):
 - `kind` is one of `field` (unconfigured or rejected value), `login`, `captcha`, `upload`, `infrastructure` (browser/relay failure), `unavailable` (expired, 404, blank page).
 - `status` is one of `open`, `answered`, `fixed`.
 - `answer` is `null` while `open`; a non-empty string once `answered` or `fixed`.
+- `pass` is optional: `both-lan` for a blocker from the Part 2 pass, absent (or `main`) for Part 1. It lets the user see which queue the question belongs to.
 
 Rules:
 
 - Before filling a form, read `help.json`. `status: "answered"` → use `answer` for that company + role + field. `open` → still blocks and is reported again. `fixed` → the value is already in `job-hunter.config.json`.
-- Every blocked submission appends one object: date, company, role, the exact field label (`null` when the blocker is not one field), `kind`, the concrete reason, `status: "open"`, `answer: null`.
+- Every blocked submission appends one object: date, company, role, the exact field label (`null` when the blocker is not one field), `kind`, the concrete reason, `status: "open"`, `answer: null`, and `pass: "both-lan"` in the Part 2 pass.
 - One object per company + role + field. When the same blocker reappears, update its `date`; never add a duplicate open object.
 - An entry with `company: "Any"` and `role: null` is a global rule (e.g. nationality), not a blocker: apply it to every form.
 - When the user answers, set `status: "answered"` and write the answer.

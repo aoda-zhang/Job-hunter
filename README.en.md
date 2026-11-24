@@ -20,14 +20,15 @@ First copy `job-hunter.config.example.json` to `job-hunter.config.json`, then cu
   - `common.lookbackHours`: preferred posting recency.
   - `common.thirdPartyPostings`: `separate` (default) keeps confirmed staffing or recruiting-agency postings in a dedicated `Agency / third-party postings` section; `include` lists them with normal matches; `exclude` drops them; unclear cases go to review.
   - `common.jobTitles.include`: target job-title variants, used for matching and the shallow title filter (never as queries).
-  - `common.jdLanguages.include`: accepted JD languages. `.acceptGermanJdWithEnglishWorkingLanguage`: when `true`, a German JD still matches if it explicitly states that English is the working, team or company language. `.maxRequiredLevel`: optional limits, e.g. `{"German": "A2", "English": "C1"}`; a JD requiring a higher level is excluded as `language requirement`, a bare "German required" counts as B1, and "nice to have/plus/optional" is not a requirement.
+  - `common.jdLanguages.include`: accepted JD languages. `.maxRequiredLevel`: optional limits, e.g. `{"German": "A2", "English": "C1"}`; a JD requiring a higher level is excluded as `language requirement`, a bare "German required" counts as B1, and "nice to have/plus/optional" is not a requirement.
+  - `germanJdPass`: Part 2, the optional German-JD pass — `enabled` (default `false`), `reportFile`, `requireEnglishWorkingLanguage` and `minStackMatches` (default `2` configured keyword hits; React is not required). It works the whole list each run, one posting at a time, with no cap. Part 1 never matches a German JD; with this enabled those postings are deferred to `<run>/german-jd-audit.md`, and after Part 1 is published the agent applies to the strong matches and writes `<run>/both-lan.md`. Off = German JDs are excluded as before.
   - `common.technicalKeywords.include`: technologies to find in the JD. `.matchMode`: `any` means at least one keyword; `all` means every keyword.
   - `common.sortBy` / `common.sortDirection`: ordering inside each part, after prompted rows, currently `companySize`; `sortDirection` is `asc` / `desc`.
   - `common.saveMatchedJobs`: default `false`. When `true`, every vacancy that ends as `matched` (normal and confirmed agency/third-party, including rows later submitted) gets one verified Save/bookmark click on its source platform page, right after classification — whether or not you apply. Review, excluded, expired and skipped rows are never saved; existing saves are never toggled off.
   - `common.dedupe.crossSource` / `.skipApplied`: recognise the same company + title + city on two platforms, and never apply to a vacancy twice.
   - `common.report.splitBySource`: one matched section per platform, in `sources` order.
   - `common.reportRepo`: optional Git URL where the daily report is pushed after each run.
-  - `common.reportExpiryHours`: default `0` (off). With `reportRepo` set, a pushed report is removed from that repo once its publishing commit is older than this many hours; `common.reportExpiryCheckMinutes` (default `15`) controls the cleanup interval and `common.reportExpiryMode` is `purge-history` (default: rewrite the branch to one empty root commit) or `delete-repo`. The local report is never deleted.
+  - `common.reportExpiryHours`: default `0` (off). With `reportRepo` set, a pushed report is removed from that repo once its publishing commit is older than this many hours; expiry is armed per publish as a one-shot launchd job (`reportExpiryCheckMinutes` is ignored) and `common.reportExpiryMode` is `purge-history` (default: rewrite the branch to one empty root commit) or `delete-repo`. The local report is never deleted.
   - `common.preferredReportLanguage`: language of the daily report, e.g. `English`, `German`, `Chinese`; defaults to `English`.
 - `platforms.LinkedIn`: `enabled`, `premium` (order `You'd be a top applicant` matches first), `search.queryMode`, `feedReview`, `feedJobs`.
 - `platforms.Indeed`: `enabled`, `domain`, and `search` — `queryMode` (`titles` by default, or `custom` with `queries`), `maxPagesPerQuery`, `lookbackHours`, `filters` (`date` / `employmentType` / `language` / `remote` / `quickApply`).
@@ -49,7 +50,7 @@ You do not need to run an npm command, initialize a database or configure CI. If
 | Dimension | Rule |
 |---|---|
 | Job title | Recognize common title variants; seniority wording only filters when `common.seniority.include` is configured |
-| JD language | Detect the language used in the JD, not the country or page interface |
+| JD language | Detect the language used in the JD, not the country or page interface. A German JD is never a Part 1 match; with `germanJdPass.enabled` it is deferred to its own audit instead of being dropped |
 | Technical keywords | Search the JD case-insensitively and recognize clear aliases |
 | Work mode | Compare with `workModes`; disabled when the list is absent, empty or lists all three types |
 | Employment type | Compare with `employmentTypes`; disabled when the list is absent, empty or lists every type |

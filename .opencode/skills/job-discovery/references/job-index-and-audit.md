@@ -15,7 +15,7 @@ Both active files are Git-ignored and local only: never publish them to `common.
 
 The skip sources are exactly two:
 
-1. **Previous-run set** — every job ID / canonical URL in the merged list of the single most recent earlier run's `<run>/job-audit.md`, **whatever its status** (`sent to JD review`, `matched`, `needs review`, `excluded`, `removed by shallow filter`, `previously reported`, `already applied (skipped)`). A vacancy the previous run merged, opened, excluded, left in review or shallow-filtered is examined once and never re-opened by the next run. Fallback only when that `job-audit.md` is missing or has no merged list: use the previous `report.md` tables and record the fallback in `limitations`. A card in this set is not opened, not judged and not listed; count it as `previously reported`.
+1. **Previous-run set** — every job ID / canonical URL in the merged list of the single most recent earlier run's `<run>/job-audit.md`, **whatever its status** (`sent to JD review`, `matched`, `needs review`, `excluded`, `deferred (German JD)`, `removed by shallow filter`, `previously reported`, `already applied (skipped)`). A vacancy the previous run merged, opened, excluded, left in review or shallow-filtered is examined once and never re-opened by the next run. Fallback only when that `job-audit.md` is missing or has no merged list: use the previous `report.md` tables and record the fallback in `limitations`. A card in this set is not opened, not judged and not listed; count it as `previously reported`.
 2. **Today's applications** — every row in `reports/applications/YYYY-MM-DD.md`, mapped to normalized `company + title + city`. Those vacancies are `already applied (skipped)` on any platform.
 
 Everything else is checked. No older run's audit is read (`common.dedupe.previousRunOnly`) and no older application log is read (`common.dedupe.checkAppliedHistory: false`).
@@ -103,6 +103,7 @@ Path: `reports/runs/YYYY-MM-DD.jsonl`. Append one line per run; never overwrite.
   "matched": "<N>",
   "matchedBySource": { "LinkedIn": "<N>" },
   "thirdPartyMatched": "<N>",
+  "germanJdDeferred": "<N>",
   "review": "<N>",
   "excluded": "<N>",
   "crossSourceDuplicates": "<N>",
@@ -131,6 +132,7 @@ Rules:
 - `appliedSkipped` = jobs in today's log for the same platform; `appliedElsewhereSkipped` = cards skipped because another platform already had the application; `previouslyReportedSkipped` = cards found in the previous run's `job-audit.md` merged list (fallback: its report tables).
 - `saved` = matched rows whose Save click was verified this run; `savedAlready` = matched rows already in the saved list and left untouched; `saveFailed` = matched rows recorded as `not saved: <reason>`. All three are `0` when `common.saveMatchedJobs` is not `true`.
 - `thirdPartyMatched` is a subset of `matched`.
+- `germanJdDeferred` = postings whose title gate passed and whose JD is German, written to `<run>/german-jd-audit.md` and excluded from every Part 1 table (`germanJdPass.enabled` must be `true`, else `0`). Part 2's own counts live in `<run>/both-lan.md`, not in this line.
 - `limitations`: only actual limitations; empty on a normal run.
 
 ## 4. Retention

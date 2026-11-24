@@ -271,6 +271,7 @@ while true; do
 
   load_state
   if [ ${#EXPIRED[@]} -eq 0 ] && [ "$PURGE_NOW" != "1" ]; then
+    print -r -- "no published unit older than ${HOURS}h"
     exit 0
   fi
 

@@ -22,7 +22,7 @@ exactly as it is.
 |---|---|
 | `common.reportRepo` | Target Git URL. Unset = nothing to clean. |
 | `common.reportExpiryHours` | TTL in hours. `0` or absent disables cleanup. |
-| `common.reportExpiryCheckMinutes` | Timer interval (default `15`). |
+| `common.reportExpiryCheckMinutes` | **Deprecated / ignored.** Expiry is armed per publish, not polled. |
 | `common.reportExpiryMode` | `purge-history` (default) or `delete-repo`. |
 
 Modes:
@@ -42,9 +42,20 @@ all. Never edit it by hand.
 
 ## Running it
 
-The launchd task `ai.jobhunter.expire` runs the script every
-`common.reportExpiryCheckMinutes`. Do not duplicate its work unless the user
-asks for a manual run.
+Expiry is **event-driven, not polled**. Publishing goes through
+`.opencode/scripts/report-publish.sh`, which pushes the report and then arms a
+one-shot launchd job at `publish_time + common.reportExpiryHours + 90s`
+(`.opencode/scripts/schedule-expiry.sh` → `run-expiry-once.sh`). The job removes
+itself after it runs, so there is no recurring timer and no idle `git fetch`.
+
+If a report was pushed by hand, arm the timer for it:
+
+```sh
+.opencode/scripts/schedule-expiry.sh          # one-shot at TTL from now
+.opencode/scripts/schedule-expiry.sh --delay 60 --dry-run   # test
+```
+
+Do not duplicate the cleanup by hand unless the user asks for a manual run.
 
 ```sh
 # what would happen, no changes

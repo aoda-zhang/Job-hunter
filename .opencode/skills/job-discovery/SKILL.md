@@ -17,7 +17,9 @@ Read `job-hunter.config.json` (Git-ignored). Never use the example as personal s
 - `common.searchTitles` — ordered titles, **one query per entry**. Required; stop and ask when empty.
 - `common.countries` / `common.locations` — scope. Empty `locations` = the whole country.
 - `common.lookbackHours`, `workModes`, `employmentTypes`, `seniority.include` — scope and filters.
-- `common.jobTitles.include`, `jdLanguages.*`, `technicalKeywords.*` — **matching only, never queries**.
+- `common.jobTitles.include`, `technicalKeywords.*` — **matching only, never queries**.
+- `common.jdLanguages.include` / `maxRequiredLevel` — accepted JD languages and optional CEFR caps. A German JD is never a Part 1 match; with `germanJdPass.enabled` it is deferred instead (below).
+- `germanJdPass` — Part 2, the separate both-lan pass over German-language JDs: `enabled`, `reportFile`, `requireEnglishWorkingLanguage` and `minStackMatches` (how many `common.technicalKeywords.include` terms the JD must show; the title gate already passed during the deferral). It works the whole list every run, one posting at a time, with no cap. Its audit, gates, queue and report format are `references/german-jd-pass.md`.
 - `common.jobTitles.stackExclude` — optional string array; a title containing any of these **whole words/phrases** (case-insensitive) is removed in step 2 before any JD is opened, **unless** the title also contains a `stackIncludeOverride` phrase. This is a primary-stack gate: it intentionally beats the `jobTitles.include` guard. Use whole-word matching so `Java` does not match `JavaScript`.
 - `common.jobTitles.stackIncludeOverride` — optional string array; if a title contains one of these frontend terms, a `stackExclude` hit does not remove it, and the row goes to JD review.
 - `common.jobTitles.shallowExclude` — optional string array; a title containing any of these strings (case-insensitive) is removed in step 2 before any JD is opened, unless the normalized/translated title also contains a `jobTitles.include` phrase (that guard always wins).
@@ -69,7 +71,7 @@ Cross-source rules (`common.dedupe`):
 
 Run them in this order; never merge or reorder them. Step 1 finishes every source before step 2 starts. Step 3 opens exactly one posting at a time.
 
-Platform mechanics live in `references/linkedin.md` and `references/indeed.md`; report structure lives in `references/daily-report-format.md`; run-log and audit fields in `references/job-index-and-audit.md`.
+Platform mechanics live in `references/linkedin.md` and `references/indeed.md`; report structure lives in `references/daily-report-format.md`; run-log and audit fields in `references/job-index-and-audit.md`; the Part 2 German-JD deferral, queue and `both-lan.md` format in `references/german-jd-pass.md`.
 
 ## 4. Rules for every step
 
@@ -84,11 +86,12 @@ Platform mechanics live in `references/linkedin.md` and `references/indeed.md`; 
 
 ## 5. Outputs
 
-1. **Report** — this run's file, in `common.preferredReportLanguage`, following `references/daily-report-format.md`: run header, summary, matched, review, excluded. The step-1 record is a separate `<run>/job-audit.md`.
+1. **Report** — this run's file, in `common.preferredReportLanguage`, following `references/daily-report-format.md`: run header, summary, matched, review, excluded. The step-1 record is a separate `<run>/job-audit.md`; deferred German-JD rows go to `<run>/german-jd-audit.md`.
 2. **Application log** — record every attempted application in `reports/applications/YYYY-MM-DD.md`; never write `reports/job-index.json`.
 3. **Audit** — append one JSON line to `reports/runs/YYYY-MM-DD.jsonl` with real `runAt`, `finishedAt`, `durationSeconds`, `reportPath` and the fields in `references/job-index-and-audit.md`. Never write `finishedAt` in advance.
-4. **Publish** — when `reportRepo` is set, push only the run folder. Never publish the index, runs or applications. Published copies are temporary: the `report-cleanup` skill removes them after `common.reportExpiryHours` (default `0` = off). With `reportExpiryMode: "delete-repo"` the whole repo is deleted, so if the clone fails because the remote is gone, recreate it first with `gh repo create <owner>/<name> --public`, then push. A missing remote is expected, never a publish failure — never re-push expired content.
-5. **Apply** — when `applications.enabled` is `true`, load `job-apply` after the report and index are written.
+4. **Publish** — when `reportRepo` is set, run `.opencode/scripts/report-publish.sh <run-folder> reports/<YYYY-MM-DD>/<YYYY-MM-DD-HHMM>/report.md "docs: add <run>"; it pushes only that unit and arms the one-shot expiry timer. Push only the run folder. Never publish the index, runs or applications. Published copies are temporary: the `report-cleanup` skill removes them after `common.reportExpiryHours` (default `0` = off). With `reportExpiryMode: "delete-repo"` the whole repo is deleted, so if the clone fails because the remote is gone, recreate it first with `gh repo create <owner>/<name> --public`, then push. A missing remote is expected, never a publish failure — never re-push expired content.
+5. **Apply** — when `applications.enabled` is `true`, load `job-apply` after the report and index are written. Once Part 1 is published, the optional Part 2 (`job-apply` §1a, `germanJdPass.enabled`) works `german-jd-audit.md` and the queue, and writes `<run>/both-lan.md`; it never changes Part 1.
 6. **Email** — when `notifications.email.enabled` is `true`, send one summary via `email-notify`.
+7. **Both-lan pass (Part 2)** — after 4–6, and only when `germanJdPass.enabled` and `applications.enabled` are `true`: `job-apply` §1a with `references/german-jd-pass.md`, output `<run>/both-lan.md`, then publish the run folder again. It never changes Part 1.
 
-Report completion: report path and start time, scope, titles submitted, the step-1 funnel, skips, matched / Easy Apply / No Easy Apply, saved / not saved, applications filled / submitted / blocked, third-party postings, review, excluded, coverage and stop reason per source, email status, limitations.
+Report completion: report path and start time, scope, titles submitted, the step-1 funnel, skips, matched / Easy Apply / No Easy Apply, saved / not saved, applications filled / submitted / blocked, third-party postings, review, excluded, deferred German JDs, coverage and stop reason per source, email status, limitations. Part 2 is reported separately: candidates, strong matches, submitted, blocked, Easy Apply left to the user, queue size and the `both-lan.md` path.

@@ -98,7 +98,7 @@ Add `## Feed hiring posts` with the matched rows. When none match, write one lin
 
 If `notifications.email.enabled`, load `email-notify` and send one email with the checklist replies and job rows.
 
-If `common.reportRepo` is set, clone/pull it, copy the report to `reports/linkedin-feed/YYYY-MM-DD.md`, commit `docs: add LinkedIn feed review for YYYY-MM-DD`, push and verify. Never force-push. Never publish `reports/runs/` or `reports/applications/`. Published copies expire per `common.reportExpiryHours`; with `reportExpiryMode: "delete-repo"` the repo itself is deleted, so recreate it with `gh repo create <owner>/<name> --public` when the clone reports it missing.
+If `common.reportRepo` is set, run `.opencode/scripts/report-publish.sh reports/linkedin-feed/YYYY-MM-DD.md reports/linkedin-feed/YYYY-MM-DD.md "docs: add LinkedIn feed review for YYYY-MM-DD"`; it pushes and arms the one-shot expiry timer. Never force-push. Never publish `reports/runs/` or `reports/applications/`. Published copies expire per `common.reportExpiryHours`; with `reportExpiryMode: "delete-repo"` the repo itself is deleted, so recreate it with `gh repo create <owner>/<name> --public` when the clone reports it missing.
 
 ## 8. Merge
 

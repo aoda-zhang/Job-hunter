@@ -43,7 +43,6 @@
       "include": [
         "English"
       ],
-      "acceptGermanJdWithEnglishWorkingLanguage": false,
       "maxRequiredLevel": {}
     },
     "technicalKeywords": {
@@ -65,7 +64,6 @@
     "preferredReportLanguage": "English",
     "reportRepo": "",
     "reportExpiryHours": 0,
-    "reportExpiryCheckMinutes": 15,
     "reportExpiryMode": "purge-history",
     "isNeededCover": false,
     "saveMatchedJobs": false,
@@ -76,6 +74,12 @@
     "report": {
       "splitBySource": true
     }
+  },
+  "germanJdPass": {
+    "enabled": false,
+    "reportFile": "both-lan.md",
+    "requireEnglishWorkingLanguage": true,
+    "minStackMatches": 2
   },
   "applicant": {
     "firstName": "",

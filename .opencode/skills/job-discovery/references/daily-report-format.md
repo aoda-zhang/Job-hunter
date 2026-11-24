@@ -89,6 +89,7 @@ Write it as a plain list directly under the title, before the summary:
 ```
 
 - `Saved` is written only when `common.saveMatchedJobs` is `true`; name each not-saved reason in the audit, not in the header.
+- `Deferred German JDs: N` is written only when `germanJdPass.enabled` is `true` and N > 0: `N` postings whose title passed and whose JD is German, listed in `german-jd-audit.md` and worked by Part 2 after this report is published. They are never part of `Matched`, `Excluded` or `Needs manual review`. When `german-jd-audit.md` exists, link it next to the `job-audit` link.
 
 - `Start` = the moment the run started searching; `End` = the moment report, index and audit were finished. Both in local time with minutes; keep the timezone label on the start line only.
 - Take both values from the same clock source; never write a planned or estimated end time.
@@ -124,7 +125,7 @@ Mandatory in every run, but written to `<run>/job-audit.md`, never into `report.
 | 3 | adesso SE | Trainee SAP Software Developer (all genders) | [Open](https://www.linkedin.com/jobs/view/4467504321/) | JavaScript Developer | removed by shallow filter |
 ```
 
-- `Status / reason` is the final state after step 3, written in the report language, e.g. `标题不符合`, `第二层过滤：sap`, `早期严格匹配：标题不含配置职位`, `JD 为德语`, `JD 要求德语 B2 > 配置 A2`, `技术栈不符`, `匹配（Easy Apply）`, `匹配（外部投递）`, `需复核：工作模式未标注`, `上次已记录（跳过）`. Every row of the merged list gets exactly one final status.
+- `Status / reason` is the final state after step 3, written in the report language, e.g. `标题不符合`, `第二层过滤：sap`, `早期严格匹配：标题不含配置职位`, `JD 为德语`, `延后：德语 JD（见 german-jd-audit.md）`, `JD 要求德语 B2 > 配置 A2`, `技术栈不符`, `匹配（Easy Apply）`, `匹配（外部投递）`, `需复核：工作模式未标注`, `上次已记录（跳过）`. Every row of the merged list gets exactly one final status.
 - `Search titles`: every search title that returned this vacancy, separated by ` · `.
 - `Link`: canonical URL, always `[Open](url)`.
 - `removed by shallow filter` requires an obviously wrong title (other function, or a `jobTitles.excludeWords` word). `Software Engineer`, `Developer`, `Engineer` and anything ambiguous **must** be `sent to JD review`.
@@ -240,7 +241,7 @@ Columns:
 | # | Sequential in final display order |
 | Company | Company on the page; if poster ≠ employer, put the poster here and the employer in Notes |
 | Notes | Verifiable facts only: stack, level, contract, poster/employer mismatch, conflicts; ≤ about 90 characters; no fit language. Every external row (`Easy Apply` = `No` / `Unknown`) that was not submitted ends with `Not auto-submitted: <reason>` (translated in the report language), naming the concrete cause: login or account creation, a required field the config cannot answer, rejected value, CAPTCHA, expired posting, browser/relay failure, or a policy skip |
-| Apply form | `Inspected` (fields in the vacancy folder's `fields.json`), `Blocked`, `Submitted`, or `Not external` for a one-click apply recorded read-only |
+| Apply form | `Inspected` (fields in the vacancy folder's `fields.json`), `Blocked` (the form really cannot be completed: missing required answer, login, CAPTCHA, upload restriction), `Skipped: <reason>` (a policy decision: third party excluded, account creation required, one-click apply), `Unconfirmed` (a submit was clicked but no confirmation page appeared), `Submitted`, or `Not external` |
 | Saved | `Saved` (verified this run), `Already saved` (untouched), `Not saved: <reason>` (no save control, sign-in wall, control did not respond), or `—` when `common.saveMatchedJobs` is not `true` or the row is not a match |
 | Link | `[Open](canonical URL)` actually visited in this run |
 | Size | Range shown on the page, e.g. `51-200`, `9,000`, `10001+`; `Not specified` when absent |
