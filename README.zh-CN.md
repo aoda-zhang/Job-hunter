@@ -88,7 +88,7 @@ cp job-hunter.config.example.json job-hunter.config.json
 | `common.jobTitles.shallowExclude` | 否 | 字符串数组；职位名包含其中任一项（不区分大小写）时，在第二层浅过滤直接剔除，不打开 JD。 |
 | `common.jobTitles.earlyStrictMatch` | 否 | 为 `true` 时，第二层过滤直接套用严格标题门槛：规范化/翻译后不含 `include` 短语或含 `excludeWords` 的标题不打开 JD。 |
 | `common.jdLanguages.include` | 是 | 接受的 JD 语言，例如 `["English"]`。Indeed 会映射到它的 `Language` 筛选。 |
-| `germanJdPass` | 否 | 第二部分：可选的德语 JD 补充投递。`enabled`（默认 `false`）、`reportFile`、`requireEnglishWorkingLanguage`、`minStackMatches`（默认 `2`，JD 至少命中几个 `common.technicalKeywords`；不强制 React）。每次运行把整份清单逐个处理完，不设数量上限。开启后，标题通过但 JD 为德语的岗位不再直接排除，而是记入 `<run>/german-jd-audit.md`；第一部分发布后，agent 挑出强匹配（React/TypeScript 前端或高级前端、React/Node.js 全栈）去投递，并写 `<run>/both-lan.md`。关闭 = 德语 JD 照旧排除。 |
+| `germanJdPass` | 否 | 第二部分：可选的德语 JD 补充投递。`enabled`（默认 `false`）、`reportFile`、`excludeGermanOnly`（默认 `true`：只有 JD 明确只要求德语时才跳过；JD 完全没提语言要求的算通过）、`minStackMatches`（默认 `2`，JD 至少命中几个 `common.technicalKeywords`；不强制 React）。每次运行把整份清单逐个处理完，不设数量上限。开启后，标题通过但 JD 为德语的岗位不再直接排除，而是记入 `<run>/german-jd-audit.md`；第一部分发布后，agent 挑出强匹配（React/TypeScript 前端或高级前端、React/Node.js 全栈）去投递，并写 `<run>/both-lan.md`。关闭 = 德语 JD 照旧排除。 |
 | `common.jdLanguages.maxRequiredLevel` | 否 | 可选的语言等级上限，例如 `{"German": "A2", "English": "C1"}`。JD 明确要求高于该等级时，按 `language requirement` 排除。只写“German required”按 B1 计算；“nice to have/plus/optional”不算要求。 |
 | `common.technicalKeywords.include` | 是 | 要在 JD 中查找的技术关键词。 |
 | `common.technicalKeywords.matchMode` | 是 | `any`：命中任意一个即可；`all`：必须全部命中。 |
@@ -108,7 +108,7 @@ cp job-hunter.config.example.json job-hunter.config.json
 | `applications` | 否 | 投递策略：`enabled`；`externalApply` = `true`（自动填写并提交）/ `false`（只检查字段）；旧值 `off` / `inspect` / `fill`（填好停在 Submit 前）/ `submit` 仍然兼容；`scope`（`matched` 默认 / `review` / `all`）；`excludeThirdParty`（默认 `true`）；`requireNoAccount`（默认 `true`）；`requireExternalRedirect`（默认 `true`）；`maxPerRun`（数字或 `null`）；`coverLetterMode`（`never` / `required-only` / `always`）；`screening` 存放申请表答案。平台一键投递（LinkedIn Easy Apply、Indeed Apply）没有配置项，永远手动。 |
 | `platforms.LinkedIn.enabled` / `.premium` | 否 | `premium: true` 时，带 `You'd be a top applicant` 提示的命中岗位在所属部分内优先排序；`enabled: false` 跳过该平台。 |
 | `platforms.LinkedIn.search.queryMode` | 否 | `titles`（默认，每个 `common.searchTitles` 一条）或 `custom`（自带 `search.queries`）。 |
-| `platforms.LinkedIn.feedReview` | 否 | Feed 任务设置：`lookbackHours`、`maxPosts`、`excludeTopics`、`replyLanguage`。 |
+| `platforms.LinkedIn.feedReview` | 否 | 评论搜索设置：`searchTopics`、`lookbackHours`、`maxPosts`（目标 `3`）、`maxQueries`、`maxPagesPerQuery`、`excludeTopics`、`replyLanguage`。 |
 | `platforms.LinkedIn.feedJobs` | 否 | 招聘帖搜索，**只属于独立的 feed 任务**（职位检索任务绝不使用）：`enabled`、`lookbackHours`（feed 帖时间窗，缺省继承 `common.lookbackHours`）、`searchKeywords`、`maxQueries`、`maxPagesPerQuery`、`maxScreens`、`locationTerms`、`includeRecentFeed`。 |
 | `platforms.Indeed.enabled` | 否 | `false` 时跳过 Indeed，但仍保留在 `sources` 里。 |
 | `platforms.Indeed.domain` | 否 | 例如 `de.indeed.com`，要和 `common.countries` 一致。 |
@@ -134,7 +134,7 @@ cp job-hunter.config.example.json job-hunter.config.json
 
 **定时任务。** 只改配置里的 `schedules.linkedinJobSearch` 不会自动改变 launchd。改完 `times`、`weekdays` 或 `timezone` 后，运行 `.opencode/scripts/apply-schedule.sh`（或直接让 Agent 改时间）。launchd 使用 Mac 的本地时间，所以 `timezone` 必须和系统时区一致。`times` 为空数组会卸载并删除 job search 定时任务；填入时间会重新创建。
 
-LinkedIn feed 有独立的定时器。把 `schedules.linkedinFeedReview.times` 设成 `HH:MM` 数组，可用 `.weekdays` 限定星期（`[1,2,3,4,5]` 表示周一到周五），再运行同一个脚本；空数组表示不启动这个任务。每次运行只看 Recent feed，不检查关注列表：只回复作者岗位匹配 `common.jobTitles.include`、且作者地点确认在 `common.countries`/`common.locations` 内的帖子，没有每日最低数量（0 条也是正常结果），把匹配的招聘帖追加到本轮自己的 `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM/report.md`，在启用邮件通知时把回复草稿和招聘帖一起发送，并在配置了 `common.reportRepo` 时推送 `reports/linkedin-feed/YYYY-MM-DD.md` 和更新后的日报。
+LinkedIn feed 有独立的定时器。把 `schedules.linkedinFeedReview.times` 设成 `HH:MM` 数组，可用 `.weekdays` 限定星期（`[1,2,3,4,5]` 表示周一到周五），再运行同一个脚本；空数组表示不启动这个任务。每次运行按 `platforms.LinkedIn.feedReview.searchTopics`（德国的前端和 Node.js 全栈话题）搜索 LinkedIn 帖子，不再读取 Recent feed：先应用 `excludeTopics`，只保留通过话题、德国相关、值得评论三道硬门槛的帖子，最多选出 `maxPosts`（`3`）条，并为每条提供两个可直接发送的评论选项（不足 3 条也正常），把匹配的招聘帖追加到本轮自己的 `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM/report.md`，在启用邮件通知时把评论草稿和招聘帖一起发送，并在配置了 `common.reportRepo` 时推送 `reports/linkedin-feed/YYYY-MM-DD.md` 和更新后的日报。
 
 ## 6. 职位如何被筛选
 
@@ -217,7 +217,7 @@ Agent 必须**严格串行**：一次只搜一个查询、一次只开一个职�
 .opencode/skills/job-discovery/references/        linkedin.md、indeed.md、
                                                   _template.md
 .opencode/skills/job-apply/SKILL.md               填写第三方 ATS 申请表，停在 Submit 前
-.opencode/skills/linkedin-feed-review/SKILL.md    值得回复的 feed 帖子
+.opencode/skills/linkedin-feed-review/SKILL.md    值得评论的话题帖子
 .opencode/skills/linkedin-feed-jobs/SKILL.md      feed 招聘帖写入日报
 .opencode/skills/company-research/SKILL.md        第二阶段：公司调研与面试准备
 .opencode/skills/cover-letter/                    JSON → 定制 cover letter PDF

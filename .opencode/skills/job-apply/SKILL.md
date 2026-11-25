@@ -43,10 +43,10 @@ Never apply through a platform one-click apply flow. Never apply to a job that i
 A second, optional pass over German-language JDs that Part 1 deferred. Run it only after this run's `report.md` has been written and published, and only when `germanJdPass.enabled` is `true` and `applications.enabled` is `true`. It is a separate part: it never edits `report.md`, `job-audit.md` or `german-jd-audit.md`, never changes Part 1 counts, and never delays Part 1's publish or email.
 
 1. Read this run's `<run>/german-jd-audit.md` and the local queue `reports/runs/both-lan-queue.md`. The full specification — eligibility gates, queue rules, `both-lan.md` format, ordering — is `job-discovery/references/german-jd-pass.md`.
-2. Process `pending` queue rows oldest first, then this run's deferrals — one posting at a time, to the end of the list. Apply every eligibility gate in that reference §2.1: a candidate that passes is applied to, a candidate that fails is recorded with its reason, then the next posting is opened. There is no per-run cap.
-3. Apply with the normal field mapping and hard rules of this skill. Save first when `common.saveMatchedJobs` is `true`, draft the cover letter when `common.isNeededCover` is `true`, never touch a one-click apply, and tag every `help.json` entry with `"pass": "both-lan"`.
+2. Process `interrupted` queue rows oldest first (only rows left by a hard stop), then this run's deferrals — one posting at a time, to the end of the list. Apply every eligibility gate in that reference §2.1: a candidate that passes is applied to, a candidate that fails is recorded with its reason, then the next posting is opened. There is no per-run cap, and no row is ever carried over as "pending": it is either applied, blocked, closed, skipped, or the run itself is stopped.
+3. Skip a posting only when the JD explicitly requires German and never names English (`germanJdPass.excludeGermanOnly`); a JD that says nothing about languages passes. Then apply with the normal field mapping and hard rules of this skill. Save first when `common.saveMatchedJobs` is `true`, draft the cover letter when `common.isNeededCover` is `true`, never touch a one-click apply, and tag every `help.json` entry with `"pass": "both-lan"`.
 4. Write `<run>/both-lan.md` (reference §4), append the rows to `reports/applications/YYYY-MM-DD.md` with a `both-lan:` Notes prefix, update the queue, then publish the run folder again with `report-publish.sh` so the published copy contains the new file.
-5. A blocker is `blocked: <reason>` in `fields.json` plus one `help.json` entry; never guess a value. When the user answers an entry, the queue row returns to `pending` on the next run.
+5. A blocker is `blocked: <reason>` in `fields.json` plus one `help.json` entry; never guess a value. When the user answers an entry, that row is retried and becomes `applied` or `skipped` — it never sits in a "pending" state.
 
 ## 2. Candidate data
 
@@ -141,6 +141,7 @@ If the user is present, a login/CAPTCHA/2FA blocker may be handed to them with t
 | English level | `applications.screening.englishLevel` | exact |
 | Highest education | `applications.screening.highestEducation` | exact |
 | Willing to relocate | `applications.screening.willingToRelocate` | boolean |
+| "Where would you like to work in general?" / work-mode preference | `common.workModes` | check every mode listed there (`Remote`, `Hybrid`, `On-site`); never narrow it to one mode |
 | Government official / public sector | `applicant.governmentEmployee` | `null` → blocked |
 | How did you hear about us | `applications.screening.howDidYouHear` | exact |
 | Gender / "I identify as" | `applications.screening.gender` | exact; when unset, choose "Prefer not to say" only if that option exists |

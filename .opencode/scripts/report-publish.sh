@@ -5,10 +5,12 @@
 # the one-shot cleanup timer, so a report lives on GitHub for exactly
 # reportExpiryHours and then disappears. Never force-pushes.
 #
-# Usage: report-publish.sh <local-path> <path-in-repo> [commit message]
+# Usage: report-publish.sh <local-path> <path-in-repo> [ignored]
 #   report-publish.sh reports/daily/2026-11-24/2026-11-24-1500 \
-#       reports/2026-11-24/2026-11-24-1500/report.md \
-#       "docs: add daily report 2026-11-24 15:00"
+#       reports/2026-11-24/2026-11-24-1500/report.md
+#
+# Every publish is committed with the fixed message "test something"; a
+# third argument is accepted for backwards compatibility but ignored.
 set -u
 setopt NULL_GLOB
 
@@ -20,12 +22,12 @@ LOG="${JOB_HUNTER_PUBLISH_LOG:-$HOME/Library/Logs/jobhunter-publish.log}"
 
 SRC="${1:-}"
 DEST="${2:-}"
-MSG="${3:-docs: publish report}"
+MSG="test something"
 
 log() { print -r -- "$(date '+%Y-%m-%d %H:%M:%S') [publish] $*" >> "$LOG"; }
 
 if [ -z "$SRC" ] || [ -z "$DEST" ]; then
-  print -u2 -- "usage: report-publish.sh <local-path> <path-in-repo> [commit message]"
+  print -u2 -- "usage: report-publish.sh <local-path> <path-in-repo> [ignored]"
   exit 2
 fi
 [ -e "$SRC" ] || { print -u2 -- "source not found: $SRC"; exit 2; }

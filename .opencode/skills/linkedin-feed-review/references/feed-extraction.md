@@ -1,6 +1,8 @@
 # LinkedIn Recent feed extraction
 
-Use this recipe for `linkedin-feed-review` and `linkedin-feed-jobs`. It matches the current LinkedIn feed DOM.
+Use this recipe only for the `linkedin-feed-jobs` Recent-feed supplement.
+`linkedin-feed-review` does not read the home feed; it uses
+`post-search.md` instead. This file matches the current LinkedIn feed DOM.
 
 ## 1. Open and sort
 

@@ -45,11 +45,11 @@ It works the local queue (section 3) and this run's deferred rows **to the end**
 ### 2.1 Eligibility, in order — stop at the first failure
 
 1. **Validity** — 404, closed or "no longer accepting applications" → queue `closed`.
-2. **English working language** — when `germanJdPass.requireEnglishWorkingLanguage` is `true`, the JD must state English is used at work. Accept one verbatim phrase:
-   - both languages together: `Deutsch und Englisch`, `Englisch und Deutsch`, `deutsche und englische Sprachkenntnisse`, `Deutsch- und Englischkenntnisse`, `fließend Deutsch und Englisch`;
-   - English named as a working, team or company language: `Englisch als Arbeitssprache`, `Arbeitssprache Englisch`, `Unternehmenssprache Englisch`, `Firmensprache Englisch`, `English is our working language`, `we work in English`, `we communicate in English`;
-   - English skills required next to German skills: `Deutschkenntnisse` + `Englischkenntnisse`, `gute Deutsch- und Englischkenntnisse`, `Englisch in Wort und Schrift`.
-   Never accept `international team`, `global player`, `diverse team`, the company name, an English job title, the platform UI or an English application page. A JD that says German only (`nur Deutsch`, `ausschließlich Deutsch`, German required with no English mention) fails here.
+2. **German-only requirement** — with `germanJdPass.excludeGermanOnly` (default `true`), skip the posting **only** when the JD explicitly requires German and never names English:
+   - a stated German level or fluency: `Deutschkenntnisse`, `Deutsch in Wort und Schrift`, `fließend` / `verhandlungssicher` / `sicher` / `sehr gute Deutschkenntnisse`, `Deutsch (B2/C1/C2)`, `Deutsch als Arbeitssprache`, `nur Deutsch`, `ausschließlich Deutsch`;
+   - and no English counterpart anywhere in the JD (`Englisch`, `English`, `Englischkenntnisse`).
+
+   A JD that says **nothing** about languages passes this gate — silence is not a requirement. `Deutsch von Vorteil` / `Plus` / `wünschenswert` / `nice to have` is not a requirement and does not trigger the skip. Never infer a requirement from the German ad itself, the company name, the location or an "international team". With `excludeGermanOnly: false`, even a German-only JD is accepted.
 3. **Role fit** — the strict title gate already passed before the deferral (step 3 check 1: a `common.jobTitles.include` phrase, no `excludeWords` word), so any deferred posting is already in your role family. Re-read the title on the reopened page and stop only when it changed to another role or now contains an exclude word.
 4. **Stack fit ("basically consistent")** — the JD must show at least `germanJdPass.minStackMatches` (default `2`) terms from `common.technicalKeywords.include`, with aliases `JS`/`JavaScript`, `TS`/`TypeScript`, `NodeJS`/`Node.js`/`Node`, `ReactJS`/`React`. **React is not required**: `TypeScript` + `Node.js` is enough, and so is `JavaScript` + `HTML`/`CSS`. Fewer hits → fail (`技术栈命中不足：<n> 个`).
 5. **Primary stack** — the role's main language/framework in `common.jobTitles.stackExclude` with `applications.screening.techYears` = `0` → fail (`primary stack`). A React mention inside a Java/Python role never qualifies.
@@ -71,22 +71,24 @@ Reopen the canonical URL, then use the normal `job-apply` procedure and field ma
 
 ## 3. Queue — `reports/runs/both-lan-queue.md`
 
-Local working state, Git-ignored, never published. It is what makes "apply slowly, answer blockers later" work: a candidate deferred today is still there next week.
+Local working state, Git-ignored, never published. It records what happened to every German-JD row; it is **not** a to-do list for a later run.
 
 ```markdown
 | # | First seen | Company | Title | Link | Status | Note |
 |---|---|---|---|---|---|---|
-| 1 | 2026-11-24 15:00 | Example GmbH | Senior Frontend Engineer | [Open](https://…) | pending | — |
+| 1 | 2026-11-24 15:00 | Example GmbH | Senior Frontend Engineer | [Open](https://…) | applied | submitted 2026-11-24 15:42 |
 | 2 | 2026-11-24 15:00 | Another AG | Fullstack Developer | [Open](https://…) | blocked: b-014 | required field `Node years` |
-| 3 | 2026-11-23 20:30 | Third GmbH | React Developer | [Open](https://…) | applied | submitted 2026-11-23 21:10 |
+| 3 | 2026-11-23 20:30 | Third GmbH | React Developer | [Open](https://…) | skipped: 技术栈命中不足：0 个 | — |
 ```
 
-- Add every deferred row of the current run as `pending`, deduplicated by canonical URL and by normalized `company + title + city`.
-- Update statuses: `applied`, `blocked: b-NNN`, `skipped: <reason>`, `closed`, `pending`.
-- A `blocked: b-NNN` row becomes `pending` again once that `help.json` entry is `answered` or `fixed`.
-- Evaluate eligibility only for a row being processed; a failed gate marks it `skipped: <reason>` so it never returns. `pending` survives only when a run is interrupted (stop-all, browser failure) — the next run resumes those rows first.
-- Prune `applied`, `skipped` and `closed` rows older than 30 days; never delete a `blocked` or `pending` row.
-- Process `pending` rows first (oldest first), then this run's new deferrals; finish the list unless the run is stopped.
+- **`pending` does not exist.** A row is written only together with its terminal or blocker state: `applied`, `blocked: b-NNN`, `skipped: <reason>`, `closed`, or `interrupted`.
+- **No row may be left "for the next run".** Running out of turns, time or budget is not a status: the pass either finishes the row or the whole run stops (see the stop-all rule), which is the only case that writes `interrupted`.
+- `interrupted` means the run was cut off hard (stop-all dialog, browser failure, crash) before the row was handled. Those rows are resumed first by the next run; they are the only rows that carry over.
+- Add every deferred row of the current run in one of those states, deduplicated by canonical URL and by normalized `company + title + city`.
+- A `blocked: b-NNN` row changes to `applied` / `skipped` once that `help.json` entry is `answered` or `fixed` and the row is retried; until then it stays `blocked` and is reported as blocked, never as "waiting".
+- Evaluate eligibility only for a row being processed; a failed gate marks it `skipped: <reason>` so it never returns.
+- Prune `applied`, `skipped` and `closed` rows older than 30 days; never delete a `blocked` or `interrupted` row.
+- Process `interrupted` rows first (oldest first), then this run's new deferrals; finish the list unless the run is stopped by the stop-all rule.
 
 ## 4. `both-lan.md` format
 
@@ -99,7 +101,7 @@ Written in the run folder as `<run>/` + `germanJdPass.reportFile` (default `both
 - 第一部分报告：`report.md`（已发布）
 - 德语 JD 审计：`german-jd-audit.md`
 - 本次处理：处理 7 · 强匹配 4 · 已提交 2 · 阻塞 1 · 留给你（Easy Apply）1 · 未通过 3
-- 队列：`reports/runs/both-lan-queue.md`（待处理 N）
+- 队列：`reports/runs/both-lan-queue.md`（本次处理的 7 条均已终态；未处理 0）
 
 ## 强匹配候选
 
@@ -113,7 +115,7 @@ Written in the run folder as `<run>/` + `germanJdPass.reportFile` (default `both
 
 | # | 公司 | 职位 | 原因 |
 |---|---|---|---|
-| 1 | Example Two | Frontend Developer | 未写明英语同为工作语言 |
+| 1 | Example Two | Frontend Developer | JD 明确只要求德语（`fließend Deutsch`） |
 | 2 | Example Three | Fullstack Developer | 技术栈命中不足：1 个 |
 ```
 

@@ -5,7 +5,7 @@ description: Search LinkedIn posts by hiring keywords for the titles, locations 
 
 # LinkedIn Feed Jobs
 
-Read-only. Find hiring posts through keyword search plus a Recent-feed pass, match them against the config, add matches to that feed pass's report. This skill runs **only inside the feed pass** (`feed-review-run.sh`, next to `linkedin-feed-review`); a normal job-search run must never load it or open the LinkedIn feed. Never apply, message, like, comment, react, repost, follow or connect. Never change `job-discovery` output.
+Read-only. Find hiring posts through keyword search, plus an optional Recent-feed pass when `platforms.LinkedIn.feedJobs.includeRecentFeed` is `true`, match them against the config, add matches to that feed pass's report. This skill runs **only inside the feed pass** (`feed-review-run.sh`, next to `linkedin-feed-review`); a normal job-search run must never load it or open the LinkedIn feed. Never apply, message, like, comment, react, repost, follow or connect. Never change `job-discovery` output.
 
 ## 1. Read config
 
@@ -96,7 +96,7 @@ Renumber `#` after merging.
 
 ## 7. Publish
 
-Only when this skill is the only writer of the run report: if `common.reportRepo` is set, run `.opencode/scripts/report-publish.sh <local report> reports/<YYYY-MM-DD>/YYYY-MM-DD-HHMM/report.md "docs: add feed-sourced jobs for YYYY-MM-DD HH:MM"`; it pushes and arms the one-shot expiry timer. Never merge into another run's remote file. On failure, report it and keep the local file. Never force-push. Published copies expire per `common.reportExpiryHours`; with `reportExpiryMode: "delete-repo"` the repo itself is deleted, so recreate it with `gh repo create <owner>/<name> --public` when the clone reports it missing. A remote that the cleanup removed is expected, not a failed push.
+Only when this skill is the only writer of the run report: if `common.reportRepo` is set, run `.opencode/scripts/report-publish.sh <local report> reports/<YYYY-MM-DD>/YYYY-MM-DD-HHMM/report.md`; it pushes and arms the one-shot expiry timer and commits with the fixed message `test something`. Never merge into another run's remote file. On failure, report it and keep the local file. Never force-push. Published copies expire per `common.reportExpiryHours`; with `reportExpiryMode: "delete-repo"` the repo itself is deleted, so recreate it with `gh repo create <owner>/<name> --public` when the clone reports it missing. A remote that the cleanup removed is expected, not a failed push.
 
 When `job-discovery` runs in the same pass, the orchestrator publishes after this step: do not push. Never send email; the orchestrator sends one run summary.
 

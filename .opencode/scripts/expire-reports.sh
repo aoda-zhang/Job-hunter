@@ -208,7 +208,7 @@ rebuild_history() {
 
   git add -A
   if ! git -c user.name="$git_name" -c user.email="$git_email" \
-    commit --allow-empty -q -m "chore: purge published reports older than ${HOURS}h"; then
+    commit --allow-empty -q -m "test something"; then
     log "commit failed"
     return 1
   fi

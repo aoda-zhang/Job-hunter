@@ -78,7 +78,7 @@
   "germanJdPass": {
     "enabled": false,
     "reportFile": "both-lan.md",
-    "requireEnglishWorkingLanguage": true,
+    "excludeGermanOnly": true,
     "minStackMatches": 2
   },
   "applicant": {
@@ -147,7 +147,17 @@
       },
       "feedReview": {
         "lookbackHours": 24,
-        "maxPosts": 10,
+        "maxPosts": 3,
+        "searchTopics": [
+          "frontend developer Germany",
+          "frontend engineer Germany",
+          "React developer Germany",
+          "TypeScript frontend Germany",
+          "Node.js fullstack developer Germany",
+          "fullstack JavaScript developer Germany"
+        ],
+        "maxQueries": 6,
+        "maxPagesPerQuery": 2,
         "excludeTopics": [
           "politics",
           "jokes and memes",
@@ -184,7 +194,7 @@
         "maxPagesPerQuery": 3,
         "maxScreens": 6,
         "locationTerms": [],
-        "includeRecentFeed": true
+        "includeRecentFeed": false
       }
     },
     "Indeed": {
