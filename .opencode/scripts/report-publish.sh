@@ -7,7 +7,16 @@
 #
 # Usage: report-publish.sh <local-path> <path-in-repo> [ignored]
 #   report-publish.sh reports/daily/2026-11-24/2026-11-24-1500 \
-#       reports/2026-11-24/2026-11-24-1500/report.md
+#       reports/2026-11-24/2026-11-24-1500
+#
+# A run folder is published as a filtered tree: only report artifacts
+# (report.md, job-audit.md, german-jd-audit.md, both-lan.md, per-vacancy
+# fields.json / cover-letter.json / *.pdf) are copied. Hidden scratch files
+# (.step2.py, .q1.tsv, .DS_Store, ...) never reach the report repo. A legacy
+# destination ending in report.md publishes the folder that contains it, so old
+# invocations keep working without creating a directory named report.md.
+#
+# A file source is published as that single file (e.g. a feed review markdown).
 #
 # Every publish is committed with the fixed message "test something"; a
 # third argument is accepted for backwards compatibility but ignored.
@@ -32,6 +41,11 @@ if [ -z "$SRC" ] || [ -z "$DEST" ]; then
 fi
 [ -e "$SRC" ] || { print -u2 -- "source not found: $SRC"; exit 2; }
 SRC_ABS="$(cd "$(dirname "$SRC")" && pwd)/${SRC:t}"
+
+# Keep every write inside the report cache.
+case "/$DEST/" in
+  //*|*/../*|*/..) print -u2 -- "invalid destination: $DEST"; exit 2 ;;
+esac
 
 if ! command -v jq >/dev/null 2>&1; then
   print -u2 -- "jq is required"
@@ -89,10 +103,65 @@ else
   find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} + 2>/dev/null || true
 fi
 
-target="$CACHE/$DEST"
-mkdir -p "$(dirname "$target")"
-rm -rf "$target"
-cp -R "$SRC_ABS" "$target" || { print -u2 -- "copy failed: $SRC_ABS -> $target"; exit 1; }
+# Drop anything under reports/ that is not a report artifact. This also heals
+# helper files pushed by older versions of this script.
+prune_report_repo() {
+  local f rel
+  [ -d reports ] || return 0
+  # Heal the old bug where a run folder was copied into a directory named
+  # report.md: a report file name is never a directory.
+  find reports -type d -name '*.md' -prune -exec rm -rf {} + 2>/dev/null || true
+  while IFS= read -r f; do
+    rel="${f#reports/}"
+    case "$rel" in
+      *.md|*.pdf|*/fields.json|fields.json|*/cover-letter.json|cover-letter.json) ;;
+      *) rm -f "$f" ;;
+    esac
+  done < <(find reports -type f 2>/dev/null)
+  find reports -type d -empty -delete 2>/dev/null || true
+}
+prune_report_repo
+
+# Report artifacts only. A run folder may hold hidden scratch helpers from the
+# discovery steps; those are local working files, never part of the report.
+copy_report_tree() {
+  local src="$1" target="$2" f rel copied=0 skipped=0
+  while IFS= read -r f; do
+    rel="${f#$src/}"
+    case "$rel" in
+      *.md|*.pdf|*/fields.json|fields.json|*/cover-letter.json|cover-letter.json) ;;
+      *) skipped=$((skipped + 1)); continue ;;
+    esac
+    mkdir -p "$target/${rel:h}"
+    if ! cp "$f" "$target/$rel"; then
+      return 1
+    fi
+    copied=$((copied + 1))
+  done < <(find "$src" -type f 2>/dev/null)
+  print -r -- "publish: copied $copied report file(s), skipped $skipped non-report file(s)" >&2
+  return 0
+}
+
+if [ -d "$SRC_ABS" ]; then
+  # Run folder. A legacy destination naming the report file points at the
+  # folder that contains it; otherwise the destination is the folder itself.
+  if [ "${DEST:t}" = "report.md" ]; then
+    DEST="${DEST:h}"
+  fi
+  case "$DEST" in
+    ""|.|/) print -u2 -- "invalid destination for a run folder"; exit 2 ;;
+  esac
+  target="$CACHE/$DEST"
+  mkdir -p "$(dirname "$target")"
+  rm -rf "$target"
+  mkdir -p "$target"
+  copy_report_tree "$SRC_ABS" "$target" || { print -u2 -- "copy failed: $SRC_ABS -> $target"; exit 1; }
+else
+  target="$CACHE/$DEST"
+  mkdir -p "$(dirname "$target")"
+  rm -rf "$target"
+  cp "$SRC_ABS" "$target" || { print -u2 -- "copy failed: $SRC_ABS -> $target"; exit 1; }
+fi
 
 git add -A
 if git diff --cached --quiet; then

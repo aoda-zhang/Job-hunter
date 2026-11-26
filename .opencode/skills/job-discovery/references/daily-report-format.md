@@ -37,7 +37,7 @@ Format baseline for `reports/daily/`. Read before writing or updating a report. 
 - The same run keeps one folder: a later step of that run (`job-apply`) edits the files the run created, not "today's report". Feed hiring posts are written only by the separate feed pass, never by `job-discovery`.
 - Create the directories when missing.
 - Deduplicate inside a run's report by canonical URL; without one, use `source + company + title + location` and flag a possible duplicate.
-- Keep `runs/` and `reports/applications/` out of the report and out of `common.reportRepo`. Run folders (report plus per-job `fields.json`, `cover-letter.json` and the PDF) are published.
+- Keep `runs/` and `reports/applications/` out of the report and out of `common.reportRepo`. Run folders (report plus per-job `fields.json`, `cover-letter.json` and the PDF) are published. `report-publish.sh` copies only `*.md`, `*.pdf`, `fields.json` and `cover-letter.json`, so hidden scratch helpers (`.step2.py`, `.q1.tsv`, `.DS_Store`, JSON/TSV dumps) are never pushed.
 
 Write human-readable text in `common.preferredReportLanguage`; fall back to English when absent or unsupported.
 
