@@ -75,6 +75,23 @@ run_phase() {
   return $code
 }
 
+copy_desktop_report() {
+  local phase="$1"
+  [[ ",$PHASES," == *",$phase,"* ]] || return 0
+  local day="$REPO/reports/daily/$RUN_DAY"
+  local folder
+  folder="$(find "$day" -maxdepth 1 -type d -name "$RUN_STAMP*" 2>/dev/null | sort | tail -n 1)"
+  if [ -z "$folder" ]; then
+    print -r -- "=== $(date) desktop copy skipped: no run folder for $RUN_STAMP ===" >> "$LOG"
+    return 0
+  fi
+  if "$REPO/.opencode/scripts/copy-report-to-desktop.sh" "$folder" >> "$LOG" 2>&1; then
+    return 0
+  fi
+  print -r -- "=== $(date) desktop copy failed for $folder ===" >> "$LOG"
+  return 0
+}
+
 STOP_RULE="If any platform shows a trust signal — verify you are human, CAPTCHA, unusual activity, automated access, are you a robot, an AI-agent warning, or a forced re-login/2FA — stop the entire run immediately, submit nothing further, report the exact dialog text and hand control back."
 
 SERIAL_RULE="Work strictly sequentially with ONE working browser tab for the whole run. Create or reuse that tab once and pass its id to every browser call. Never call navigate with a URL and no tab (that opens a new background tab), never open a second tab to try a fallback URL or a UI experiment, and close any accidental extra tab immediately. Reuse the same tab for every query, page turn and JD; before writing the report, list the tabs and close every tab this run opened. One query at a time, one posting at a time. Finish a job (open, read, classify, apply or inspect, record) before opening the next. Never batch-open job cards or job URLs, never loop over several job IDs in one tool call, and never run browser actions in parallel."
@@ -85,9 +102,11 @@ INDEED_PROMPT="Run today's job-search pass for Indeed only. Load job-discovery a
 
 run_phase linkedin "$LINKEDIN_PROMPT" "Job Hunter LinkedIn"
 linkedin_code=$?
+copy_desktop_report linkedin
 
 run_phase indeed "$INDEED_PROMPT" "Job Hunter Indeed"
 indeed_code=$?
+copy_desktop_report indeed
 
 print -r -- "=== $(date) daily run finished (linkedin=$linkedin_code indeed=$indeed_code) ===" >> "$LOG"
 

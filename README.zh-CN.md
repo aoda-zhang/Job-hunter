@@ -98,6 +98,7 @@ cp job-hunter.config.example.json job-hunter.config.json
 | `common.dedupe.crossSource` | 否 | 默认 `true`。公司 + 职位 + 城市（规范化后）相同即视为同一职位，第二个平台的行加注记而不重复列出。 |
 | `common.dedupe.skipApplied` | 否 | 默认 `true`。某个职位在一个平台投递过，其他平台就跳过，永不重复投递。 |
 | `common.report.splitBySource` | 否 | 默认 `true`。日报按平台分节，顺序同 `sources`，每节再分 Easy Apply / No Easy Apply。 |
+| `common.report.desktopCopy` | 否 | 默认关闭。`enabled: true` 时，在 `afterHour`（默认 `18`）及以后开始的 job search 会把整轮报告产物复制到 `<directory>/JobHunter-<YYYY-MM-DD-HHMM>`（默认 `~/Desktop`）。不复制隐藏临时文件、`reports/runs/` 和 `reports/applications/`。 |
 | `common.isNeededCover` | 否 | 为 `true` 时，留在报告里的命中/复核岗位若 JD 要求求职信，就生成一封。可用 `cover-letter` skill 渲染 PDF。默认 `false`。 |
 | `common.saveMatchedJobs` | 否 | 默认 `false`。为 `true` 时，每个最终判定为 `matched` 的岗位（普通命中与确认的代招岗位，含之后被提交的行）都会在分类完成后、在来源平台的职位页点一次已验证的 Save/收藏。无论你是否投递、投递是否成功都会保存；复核、排除、过期和跳过的岗位永不保存，已收藏的岗位不会被取消，缺少按钮或需要登录时只记为 `not saved: <原因>`。 |
 | `common.reportRepo` | 否 | 可选 Git 地址。配置后每次运行会把当天日报提交并推送到该仓库。 |
@@ -210,6 +211,7 @@ Agent 必须**严格串行**：一次只搜一个查询、一次只开一个职�
 ```
 .opencode/agents/job-hunter.md                    你对话的 Agent
 .opencode/scripts/daily-run.sh                    launchd 入口脚本
+.opencode/scripts/copy-report-to-desktop.sh       把 18:00 后的运行复制到桌面
 .opencode/scripts/apply-schedule.sh               把定时配置同步到 launchd
 .opencode/scripts/feed-review-run.sh              feed review 的 launchd 入口
 .opencode/skills/job-discovery/SKILL.md           第一阶段：搜索、筛选、写报告

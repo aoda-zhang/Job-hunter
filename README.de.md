@@ -89,6 +89,7 @@ Du sprichst immer nur mit dem Job-Hunter-Agenten. Er lädt `job-discovery` selbs
 | `common.skipPreviousReport` | nein | Standard `true`. Überspringt jede Stelle aus der Merged-List der letzten `job-audit.md`, unabhängig vom Endstatus (matched, review, ausgeschlossen, flach gefiltert, übersprungen). Nur ohne diese Audit-Datei wird auf die Tabellen des letzten Berichts zurückgegriffen; der Fallback wird vermerkt. |
 | `common.dedupe.crossSource` / `.skipApplied` | nein | Standard `true`. Dieselbe Stelle (Firma + Titel + Stadt) auf zwei Plattformen wird erkannt; nach einer Bewerbung wird sie anderswo nicht erneut geöffnet oder abgeschickt. |
 | `common.report.splitBySource` | nein | Standard `true`. Tagesbericht je Plattform in `sources`-Reihenfolge, je Abschnitt Easy Apply / No Easy Apply. |
+| `common.report.desktopCopy` | nein | Standard aus. Bei `enabled: true` kopiert die geplante Jobsuche ab `afterHour` (Standard `18`) die Berichtsdateien des Laufs nach `<directory>/JobHunter-<YYYY-MM-DD-HHMM>` (Standard `~/Desktop`). Versteckte Arbeitsdateien, `reports/runs/` und `reports/applications/` werden nie kopiert. |
 | `common.reportRepo` / `common.preferredReportLanguage` / `common.sortBy` / `common.sortDirection` / `common.isNeededCover` | nein | Wie zuvor: Push-Ziel, Berichtssprache, Sortierung, Anschreiben-Erstellung. |
 | `common.reportExpiryHours` | nein | Standard `0` (aus). Mit `common.reportRepo`: Der gepushte Bericht wird dort entfernt, sobald der veröffentlichende Commit älter als diese Stundenzahl ist. der Ablauf wird pro Veröffentlichung als einmaliger launchd-Job geplant (`reportExpiryCheckMinutes` wird ignoriert), `common.reportExpiryMode` ist `purge-history` (Standard: Branch auf einen leeren Root-Commit zurücksetzen) oder `delete-repo`. Der lokale Bericht bleibt erhalten. |
 | `common.saveMatchedJobs` | nein | Standard `false`. Bei `true` bekommt jede Stelle, die als `matched` endet (normale und bestätigte Agentur-/Drittanbieter-Stellen, auch später abgeschickte), direkt nach der Klassifizierung einen verifizierten Speichern-Klick auf der Quellplattform – unabhängig davon, ob du dich bewirbst. Review-, ausgeschlossene, abgelaufene und übersprungene Stellen werden nie gespeichert, bestehende Speicherungen nie aufgehoben. |
@@ -177,6 +178,7 @@ Diese Phase startest du manuell; sie läuft nie während der täglichen Suche.
 ```
 .opencode/agents/job-hunter.md                    der Agent, mit dem du sprichst
 .opencode/scripts/daily-run.sh                    launchd-Einstiegspunkt
+.opencode/scripts/copy-report-to-desktop.sh       Bericht ab 18:00 auf den Schreibtisch kopieren
 .opencode/scripts/apply-schedule.sh               Zeitplan aus der Konfiguration anwenden
 .opencode/skills/job-discovery/SKILL.md           Phase 1: Suche, Filter, Bericht
 .opencode/skills/job-discovery/references/        Berichtsformat, Index- und Audit-Regeln

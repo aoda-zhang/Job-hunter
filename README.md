@@ -98,6 +98,7 @@ The file has three layers: `sources` (run order), `common` (shared preferences),
 | `common.dedupe.crossSource` | no | Default `true`. Treats the same normalized company + title + city on LinkedIn and Indeed as one vacancy and annotates the second one. |
 | `common.dedupe.skipApplied` | no | Default `true`. Once a vacancy is applied to on one platform, it is skipped on every other platform and never applied to again. |
 | `common.report.splitBySource` | no | Default `true`. Writes the daily report as one matched section per platform, in `sources` order, each split into Easy Apply / No Easy Apply. |
+| `common.report.desktopCopy` | no | Default off. When `enabled` is `true` and the job search started at or after `afterHour` (default `18`), copies the run's report artifacts to `<directory>/JobHunter-<YYYY-MM-DD-HHMM>` (default `~/Desktop`). Hidden scratch files, `reports/runs/` and `reports/applications/` are never copied. |
 | `common.isNeededCover` | no | When `true`, a job kept in the report (`matched` or `review`) whose JD requires a cover letter gets one. The agent drafts it from the JD and CV and can render a PDF with the `cover-letter` skill (`python3 .opencode/skills/cover-letter/scripts/render.py <json>`). Default `false`. |
 | `common.saveMatchedJobs` | no | Default `false`. When `true`, every vacancy that ends as `matched` (normal and confirmed agency/third-party, including rows later submitted) gets one verified Save/bookmark click on its source platform page, right after classification. It happens whether or not you apply and whatever the apply outcome. Review, excluded, expired and skipped rows are never saved; an existing save is never toggled off, and a missing control or sign-in wall is only recorded as `not saved: <reason>`. |
 | `common.reportRepo` | no | Optional Git URL. When set, the day's report is committed and pushed there after each run. |
@@ -220,6 +221,7 @@ This phase is manual and never runs during daily discovery.
 ```
 .opencode/agents/job-hunter.md                    the agent you talk to
 .opencode/scripts/daily-run.sh                    launchd entry point
+.opencode/scripts/copy-report-to-desktop.sh       copy an after-18:00 run to the Desktop
 .opencode/scripts/apply-schedule.sh               sync the schedule config to launchd
 .opencode/scripts/feed-review-run.sh             feed review launchd entry point
 .opencode/skills/job-discovery/SKILL.md           phase 1: search, filter, report

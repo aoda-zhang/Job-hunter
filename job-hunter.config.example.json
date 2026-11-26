@@ -72,7 +72,12 @@
       "skipApplied": true
     },
     "report": {
-      "splitBySource": true
+      "splitBySource": true,
+      "desktopCopy": {
+        "enabled": false,
+        "afterHour": 18,
+        "directory": "~/Desktop"
+      }
     }
   },
   "germanJdPass": {
