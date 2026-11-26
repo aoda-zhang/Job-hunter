@@ -1,6 +1,6 @@
 ---
 name: job-apply
-description: Inspect external ATS application forms for matched, non-agency vacancies, record their fields in today's report and draft cover letters; optionally fill or submit when configured. Never uses a platform one-click apply (LinkedIn Easy Apply, Indeed Apply).
+description: Inspect external ATS application forms for matched vacancies, including confirmed agency/third-party rows when configured, record their fields in today's report and draft cover letters; optionally fill or submit when configured. Never uses a platform one-click apply (LinkedIn Easy Apply, Indeed Apply).
 ---
 
 # Job Apply

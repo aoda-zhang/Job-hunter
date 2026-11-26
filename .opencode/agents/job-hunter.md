@@ -73,7 +73,7 @@ Cross-platform rule: with `common.dedupe.crossSource`, normalize `company + titl
 When the user asks to apply, auto-apply, or run today's applications, or when step 8 of job discovery runs:
 
 1. Load `job-apply` and follow its gates.
-2. Use only matched, non-third-party vacancies from today's report with `easyApply: "no"` whose Apply button is confirmed to leave the platform (`linkedin.com`, `indeed.com`, `smartapply.indeed.com`) for a third-party page.
+2. Use every matched vacancy from today's report with `easyApply: "no"` whose Apply button is confirmed to leave the platform (`linkedin.com`, `indeed.com`, `smartapply.indeed.com`) for a third-party page. Confirmed agency/third-party rows are included whenever `applications.excludeThirdParty` is `false`; they are skipped only when that flag is `true`.
 3. Never fill or submit a one-click platform apply, never create an account, never solve a CAPTCHA, never invent an answer.
 4. Skip any vacancy whose normalized company + title + city is already applied to on another platform (`common.dedupe.skipApplied`). One vacancy is applied to once.
 5. When `applications.externalApply` is `true`, submit each completed form once and verify the confirmation page; when it is `fill` (legacy confirm mode), stop before the final Submit and tell the user which tabs are ready.
