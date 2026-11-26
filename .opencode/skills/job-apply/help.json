@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-25",
+  "updatedAt": "2026-11-26",
   "blockers": [
     {
       "id": "b-001",
@@ -368,8 +368,8 @@
       "field": "Do you currently have a residence permit that allows you to work for any employer in Germany or the Netherlands?",
       "kind": "field",
       "reason": "Config says the permit can be provided within 5-8 weeks; neither 'I currently have a residence permit' nor 'I would require visa sponsorship' is accurate.",
-      "status": "open",
-      "answer": null,
+      "status": "fixed",
+      "answer": "Yes",
       "pass": "main"
     },
     {
@@ -380,8 +380,8 @@
       "field": "Do you currently have the legal right to work in the country where you would be employed?",
       "kind": "field",
       "reason": "applicant.workPermitStatus says yes while applications.screening.workAuthorization says a permit can be provided in 5-8 weeks; the two conflict and the answer cannot be derived.",
-      "status": "open",
-      "answer": null,
+      "status": "fixed",
+      "answer": "Yes",
       "pass": "main"
     },
     {
@@ -407,6 +407,39 @@
       "status": "fixed",
       "answer": "Enter the notice period as the number 30 in the text field and select 'days' in the unit select (not '30 days' as text); keep 'Until' = 'any day'. Submitted successfully 2026-11-25 21:16.",
       "pass": "both-lan"
+    },
+    {
+      "id": "b-038",
+      "date": "2026-11-26",
+      "company": "Accenture DACH",
+      "role": "Generative AI Software Engineer Specialist (all genders)",
+      "field": "Create Account/Sign In",
+      "kind": "login",
+      "reason": "Workday application step 1 of 6 requires creating an account or signing in; account creation is prohibited by policy",
+      "status": "open",
+      "answer": null
+    },
+    {
+      "id": "b-039",
+      "date": "2026-11-26",
+      "company": "smartclip",
+      "role": "Software Engineer API (f/m/d) - Node.js, SQL",
+      "field": "Project Deep Dive: Challenges & Solutions",
+      "kind": "field",
+      "reason": "Required free-text answer about a project's challenges and solutions; no configured value, and inventing would fabricate experience",
+      "status": "open",
+      "answer": null
+    },
+    {
+      "id": "b-040",
+      "date": "2026-11-26",
+      "company": "smartclip",
+      "role": "Software Engineer API (f/m/d) - Node.js, SQL",
+      "field": "Work authorization",
+      "kind": "field",
+      "reason": "Required radio options do not match the configured status: work permit obtainable in 5-8 weeks, not currently authorized and not based in Germany",
+      "status": "fixed",
+      "answer": "Yes"
     }
   ]
 }
