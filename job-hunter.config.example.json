@@ -125,23 +125,6 @@
       "howDidYouHear": "LinkedIn"
     }
   },
-  "notifications": {
-    "email": {
-      "enabled": false,
-      "backend": "smtp",
-      "to": [
-        "you@example.com"
-      ],
-      "from": "you@example.com",
-      "smtp": {
-        "host": "smtp.gmail.com",
-        "port": 465,
-        "security": "ssl",
-        "user": "you@example.com",
-        "password": ""
-      }
-    }
-  },
   "platforms": {
     "LinkedIn": {
       "enabled": true,

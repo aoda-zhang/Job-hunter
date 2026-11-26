@@ -82,13 +82,13 @@ Local working state, Git-ignored, never published. It records what happened to e
 ```
 
 - **`pending` does not exist.** A row is written only together with its terminal or blocker state: `applied`, `blocked: b-NNN`, `skipped: <reason>`, `closed`, or `interrupted`.
-- **No row may be left "for the next run".** Running out of turns, time or budget is not a status: the pass either finishes the row or the whole run stops (see the stop-all rule), which is the only case that writes `interrupted`.
-- `interrupted` means the run was cut off hard (stop-all dialog, browser failure, crash) before the row was handled. Those rows are resumed first by the next run; they are the only rows that carry over.
+- **No row may be left "for the next run".** Running out of turns, time or budget is not a status: the pass either finishes the row or the whole run stops (see the primary-platform stop-all rule), which is the only case that writes `interrupted`. A third-party page signal is a `blocked` row, not an `interrupted` run.
+- `interrupted` means the run was cut off hard (primary-platform stop-all dialog, browser failure, crash) before the row was handled. Those rows are resumed first by the next run; they are the only rows that carry over.
 - Add every deferred row of the current run in one of those states, deduplicated by canonical URL and by normalized `company + title + city`.
 - A `blocked: b-NNN` row changes to `applied` / `skipped` once that `help.json` entry is `answered` or `fixed` and the row is retried; until then it stays `blocked` and is reported as blocked, never as "waiting".
 - Evaluate eligibility only for a row being processed; a failed gate marks it `skipped: <reason>` so it never returns.
 - Prune `applied`, `skipped` and `closed` rows older than 30 days; never delete a `blocked` or `interrupted` row.
-- Process `interrupted` rows first (oldest first), then this run's new deferrals; finish the list unless the run is stopped by the stop-all rule.
+- Process `interrupted` rows first (oldest first), then this run's new deferrals; finish the list unless the run is stopped by the primary-platform stop-all rule.
 
 ## 4. `both-lan.md` format
 
@@ -128,7 +128,7 @@ Written in the run folder as `<run>/` + `germanJdPass.reportFile` (default `both
 
 ## 5. Order and failure isolation
 
-1. Part 1: report → audit → publish → (matched external rows via `job-apply`) → summary email.
+1. Part 1: report → audit → publish → (matched external rows via `job-apply`).
 2. Part 2: queue update → candidates → `both-lan.md` → applications log → queue update → publish the run folder again.
 
-Part 2 never edits `report.md`, `job-audit.md` or `german-jd-audit.md`, never changes Part 1 counts, and never blocks the email. If Part 2 fails or is interrupted, keep what it wrote, record it in its `both-lan.md` header and the queue, and leave Part 1 exactly as published. The stop-all rule applies to both parts.
+Part 2 never edits `report.md`, `job-audit.md` or `german-jd-audit.md`, never changes Part 1 counts. If Part 2 fails or is interrupted, keep what it wrote, record it in its `both-lan.md` header and the queue, and leave Part 1 exactly as published. The primary-platform stop-all rule applies to both parts; a third-party page signal blocks only that posting.

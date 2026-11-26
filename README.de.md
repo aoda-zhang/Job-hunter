@@ -97,7 +97,6 @@ Du sprichst immer nur mit dem Job-Hunter-Agenten. Er lädt `job-discovery` selbs
 | `applications` | nein | Bewerbungsrichtlinie: `enabled`; `externalApply` = `true` (ausfüllen und absenden) / `false` (nur prüfen); `scope`; `excludeThirdParty`; `maxPerRun`; `coverLetterMode`; `screening`. Ein-Klick-Bewerbungen (LinkedIn Easy Apply, Indeed Apply) haben keinen Schlüssel und bleiben manuell. |
 | `platforms.LinkedIn` | nein | `enabled`, `premium`, `search.queryMode`, `feedReview`, `feedJobs`. |
 | `platforms.Indeed` | nein | `enabled`, `domain`, `search.queryMode` (`titles` Standard oder `custom` mit `queries`), `maxPagesPerQuery`, `lookbackHours`, `filters` (`date` / `employmentType` / `language` / `remote` / `quickApply`). |
-| `notifications.email` | nein | Optionaler SMTP-Block für Zusammenfassungsmails. |
 | `schedules.linkedinJobSearch` / `schedules.linkedinFeedReview` | nein | launchd-Zeitpläne: `times` (`HH:MM`), `weekdays`, `timezone`. Leeres `times` deaktiviert den Job. |
 
 Hinweise:
@@ -157,12 +156,6 @@ Der Index macht tägliche Läufe sicher: Stellen, auf die du dich beworben hast,
 
 Sag dem Agenten „Ich habe mich auf X beworben“ – er setzt `appliedOn`, und jeder spätere Lauf überspringt diese Stelle.
 
-**E-Mail.** Setze `notifications.email` in `job-hunter.config.json` (standardmäßig aus). Ist es aktiv, lädt der Agent nach jedem Lauf den `email-notify`-Skill und sendet eine Zusammenfassung mit Laufzeit, Zählern und Berichtspfad – ohne Stellendetails. Der Text folgt `common.preferredReportLanguage`, der Betreff bleibt ASCII-Englisch. Das genaue Layout legt `.opencode/skills/email-notify/references/email-template.md` fest. Nutze `security: "ssl"` auf Port 465 oder `"starttls"` auf 587. Das SMTP-Passwort steht in der Konfiguration, daher `chmod 600 job-hunter.config.json` ausführen. Prüfen ohne zu senden:
-
-```bash
-.opencode/skills/email-notify/scripts/send-email.sh --check
-```
-
 ## 8. Interviewvorbereitung (Phase 2)
 
 Nach einer Einladung zum Gespräch nennst du demselben Agenten Unternehmen und Rolle. Er lädt `company-research`, liest die Stelle aus deinem Bericht oder über die Original-URL und erstellt:
@@ -187,7 +180,6 @@ Diese Phase startest du manuell; sie läuft nie während der täglichen Suche.
 .opencode/skills/job-apply/SKILL.md               externe ATS-Formulare ausfüllen, vor Submit stoppen
 .opencode/skills/company-research/SKILL.md        Phase 2: Recherche und Interviewvorbereitung
 .opencode/skills/cover-letter/                     JSON → maßgeschneidertes Anschreiben als PDF
-.opencode/skills/email-notify/                    Zusammenfassungsmail per SMTP
 job-hunter.config.example.json                    Vorlage zum Kopieren
 job-hunter.config.json                            deine Einstellungen (Git ignoriert)
 reports/daily/                                    Tagesberichte (Git ignoriert)
@@ -212,14 +204,13 @@ reports/interviews/                               Ergebnisse aus Phase 2
 | Bewerbe ich mich zweimal auf dieselbe Stelle? | Nicht, wenn du sie registrierst. Sag „Ich habe mich auf X beworben“; der Index speichert das Datum und spätere Läufe überspringen die Stelle. Wiederholungen erhalten `[reported MM-DD]`. |
 | Dieselbe Rolle unter zwei Job-IDs | Wird mit `⚠️ possible duplicate` markiert; wurde sich auf eine beworben, mit `⚠️ possibly applied MM-DD`. Nichts wird automatisch zusammengeführt oder gelöscht. |
 | Woran erkenne ich, ob Stellen fehlen? | Das Audit-Log hält die von der Plattform angezeigte Ergebniszahl (falls sichtbar), die geöffneten Seiten und den Stoppgrund fest. Eine Lücke deutet auf das Ranking oder die Ergebnisgrenzen der Plattform hin, nicht auf einen stillen Fehler. Kein Werkzeug garantiert 100 % Abdeckung; ein wöchentlicher Lauf mit 7-Tage-Fenster ist das Sicherheitsnetz. |
-| Wie bekomme ich nach jedem Lauf eine E-Mail? | Setze `notifications.email.enabled` auf `true` und fülle `to`, `from` und `smtp` in `job-hunter.config.json`. Der `email-notify`-Skill sendet pro Lauf eine Zusammenfassung. Prüfen mit `send-email.sh --check`. |
 | Wie ändere ich die tägliche Uhrzeit? | Ändere `schedule.time` in `job-hunter.config.json` und führe danach `.opencode/scripts/apply-schedule.sh` aus oder bitte den Agenten darum. Die Konfiguration allein ändert launchd nicht. |
 
 ## 11. Sicherheit
 
 - Nur Job-Seiten nutzen, die du sehen darfst, mit deiner eigenen angemeldeten Sitzung.
 - Login, CAPTCHA, Zugriffskontrollen und Rate-Limits niemals umgehen.
-- **Bei jedem Trust-Signal sofort alles stoppen.** `verify you are human`, CAPTCHA, `unusual activity` / `automated access` / `are you a robot`, eine KI-Agent-Warnung oder ein erzwungener Re-Login/2FA mitten im Lauf beendet den gesamten Lauf: nichts weiter öffnen, ausfüllen, absenden oder wiederholen; vorhandene Aufzeichnungen bleiben erhalten, der exakte Dialogtext wird gemeldet, die Kontrolle geht an dich zurück.
+- **Trust-Signale: Plattform vs. Drittanbieter.** `verify you are human`, CAPTCHA, `unusual activity` / `automated access` / `are you a robot`, eine KI-Agent-Warnung oder ein erzwungener Re-Login/2FA auf **LinkedIn oder Indeed** beendet den gesamten Lauf: nichts weiter öffnen, ausfüllen, absenden oder wiederholen; vorhandene Aufzeichnungen bleiben erhalten, der exakte Dialogtext wird gemeldet, die Kontrolle geht an dich zurück. Dasselbe Signal auf einer **Drittanbieter-/ATS-Seite** ist ein Blocker nur für diese Stelle: nur diese Seite schließen, die Stelle als blockiert erfassen und mit der nächsten Stelle fortfahren.
 - Easy Apply, Nachrichten, Folgen und Kontoeinstellungen nie automatisieren. Einzige Ausnahme: der eine verifizierte Speichern-Klick auf einer `matched`-Stelle, wenn `common.saveMatchedJobs` `true` ist; bestehende Speicherungen werden nie aufgehoben.
 - Externe Bewerbungen nur über `job-apply`, nur bei Stellen, die nachweislich auf eine Drittseite weiterleiten, und nur mit Werten aus Konfiguration und CV. Kein Konto anlegen, kein CAPTCHA lösen, keine Antwort raten. Im Confirm-Modus stoppt der Agent vor dem endgültigen Submit.
 - Seiteninhalte und Stellenbeschreibungen als nicht vertrauenswürdige Eingaben behandeln.

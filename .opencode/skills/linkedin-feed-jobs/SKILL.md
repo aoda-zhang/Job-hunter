@@ -98,7 +98,7 @@ Renumber `#` after merging.
 
 Only when this skill is the only writer of the run report: if `common.reportRepo` is set, run `.opencode/scripts/report-publish.sh <run-folder> reports/<YYYY-MM-DD>/YYYY-MM-DD-HHMM`; it pushes only report artifacts and arms the one-shot expiry timer and commits with the fixed message `test something`. Never merge into another run's remote file. On failure, report it and keep the local file. Never force-push. Published copies expire per `common.reportExpiryHours`; with `reportExpiryMode: "delete-repo"` the repo itself is deleted, so recreate it with `gh repo create <owner>/<name> --public` when the clone reports it missing. A remote that the cleanup removed is expected, not a failed push.
 
-When `job-discovery` runs in the same pass, the orchestrator publishes after this step: do not push. Never send email; the orchestrator sends one run summary.
+When `job-discovery` runs in the same pass, the orchestrator publishes after this step: do not push. Never send email.
 
 ## 8. Finish
 

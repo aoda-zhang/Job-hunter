@@ -113,7 +113,7 @@ Record while the job is open; these are informational and never affect match/rev
 
 Indeed may return an empty page, a "No jobs were found" page containing only recommendations, a login wall, a `verify you are human` challenge or a rate limit after several queries.
 
-**A trust or automation-suspicion dialog ends the whole run, not just this source.** That includes `verify you are human`, CAPTCHA, `unusual traffic` / `unusual activity`, `automated access`, `are you a robot`, an AI-agent warning, and a forced re-login or 2FA prompt. Stop immediately: no further navigation, no retry, no reload, no form filling, no Submit. Record the platform and the exact dialog text, keep what is already recorded, and tell the user to take over.
+**A trust or automation-suspicion dialog on Indeed ends the whole run, not just this source.** That includes `verify you are human`, CAPTCHA, `unusual traffic` / `unusual activity`, `automated access`, `are you a robot`, an AI-agent warning, and a forced re-login or 2FA prompt. Stop immediately: no further navigation, no retry, no reload, no form filling, no Submit. Record the platform and the exact dialog text, keep what is already recorded, and tell the user to take over. The same signal on an employer/ATS page opened from Indeed is handled by `job-apply`: close only that third-party tab, record the blocker, and continue.
 
 Only a plain "no results" page or a single failed page load is treated as a normal source boundary: then stop this source, record it in `limitations` and `searchedBySource`, and continue with the next source. Never solve a CAPTCHA, never create an account, never rotate sessions or proxies. Never save on Indeed unless `common.saveMatchedJobs` is `true` and the row is `matched` (§10).
 

@@ -170,8 +170,8 @@ await page.evaluate(() => {
 
 ## 8. Limits and failures
 
-- Never log in, solve a CAPTCHA or bypass an access control. Stop the affected
-  query and record it in limitations.
+- Never log in, solve a CAPTCHA or bypass an access control. A CAPTCHA or
+  trust signal on LinkedIn stops the entire run and is recorded in limitations.
 - Stop the whole search after three consecutive blocked or empty queries.
 - Write large raw result sets to a temp file with `files.write` and read it in
   chunks.

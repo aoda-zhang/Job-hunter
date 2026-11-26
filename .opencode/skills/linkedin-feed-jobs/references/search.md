@@ -157,7 +157,7 @@ When `platforms.LinkedIn.feedJobs.includeRecentFeed` is `true`, run one Recent-f
 
 ## 9. Limits and failures
 
-- Never log in, solve a CAPTCHA or bypass an access control. Stop the affected query and record it in limitations.
+- Never log in, solve a CAPTCHA or bypass an access control. A CAPTCHA or trust signal on LinkedIn stops the entire run and is recorded in limitations.
 - Stop the whole search after three consecutive blocked or empty queries and fall back to the Recent feed pass.
 - Write large raw result sets to a temp file with `files.write` and read it in chunks.
 - Search results are not proof a role is still open; validity is judged from the post text only.

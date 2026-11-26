@@ -75,7 +75,7 @@ cp job-hunter.config.example.json job-hunter.config.json
 
 ## 5. 配置说明
 
-配置分三层：`sources`（运行顺序）、`common`（跨平台共用偏好）、`platforms`（平台专属设置）。`applicant`、`applications`、`notifications` 是共用运行时配置，`schedules` 放 launchd 定时任务。
+配置分三层：`sources`（运行顺序）、`common`（跨平台共用偏好）、`platforms`（平台专属设置）。`applicant`、`applications` 是共用运行时配置，`schedules` 放 launchd 定时任务。
 
 | 字段 | 必填 | 作用 |
 |---|---|---|
@@ -104,7 +104,7 @@ cp job-hunter.config.example.json job-hunter.config.json
 | `common.reportRepo` | 否 | 可选 Git 地址。配置后每次运行会把当天日报提交并推送到该仓库。 |
 | `common.reportExpiryHours` | 否 | 默认 `0`（关闭）。配置 `common.reportRepo` 后，已推送的报告在发布提交超过这个小时数后会被移除；本地日报不受影响。清理改为每次发布后挂一次性 launchd 任务（`reportExpiryCheckMinutes` 已忽略）；`common.reportExpiryMode` 为 `purge-history`（默认，把分支重写成一个空根提交）或 `delete-repo`。 |
 | `common.sortBy` / `common.sortDirection` | 否 | 各部分（Easy Apply、No Easy Apply）内、Premium 提示行之后的排序方式；已提交的行按全局「已提交」一节排序。`companySize` 配合 `asc` / `desc`；不填则按发现顺序。 |
-| `common.preferredReportLanguage` | 否 | 日报和摘要邮件正文的语言，例如 `English`、`German`、`Chinese`，默认 `English`。 |
+| `common.preferredReportLanguage` | 否 | 日报的语言，例如 `English`、`German`、`Chinese`，默认 `English`。 |
 | `applicant` | 否 | 用于填第三方申请表的身份信息：`firstName`、`lastName`、`phone`、`email`、`currentCity`、`linkedinUrl`、`portfolioUrl`、`cvPath`、`availableInGermanyFrom`、`governmentEmployee`。身份必填项缺失会停止投递；筛选问题缺失只会阻塞对应岗位。 |
 | `applications` | 否 | 投递策略：`enabled`；`externalApply` = `true`（自动填写并提交）/ `false`（只检查字段）；旧值 `off` / `inspect` / `fill`（填好停在 Submit 前）/ `submit` 仍然兼容；`scope`（`matched` 默认 / `review` / `all`）；`excludeThirdParty`（默认 `true`）；`requireNoAccount`（默认 `true`）；`requireExternalRedirect`（默认 `true`）；`maxPerRun`（数字或 `null`）；`coverLetterMode`（`never` / `required-only` / `always`）；`screening` 存放申请表答案。平台一键投递（LinkedIn Easy Apply、Indeed Apply）没有配置项，永远手动。 |
 | `platforms.LinkedIn.enabled` / `.premium` | 否 | `premium: true` 时，带 `You'd be a top applicant` 提示的命中岗位在所属部分内优先排序；`enabled: false` 跳过该平台。 |
@@ -118,7 +118,6 @@ cp job-hunter.config.example.json job-hunter.config.json
 | `platforms.Indeed.search.maxPagesPerQuery` | 否 | 该平台每条查询的翻页上限。 |
 | `platforms.Indeed.search.lookbackHours` | 否 | 只覆盖 Indeed 的时间窗口——当前是 `168`（7 天），LinkedIn 保持 24 小时。 |
 | `platforms.Indeed.search.filters` | 否 | 绑定哪些 Indeed 筛选器：`date`（始终开）、`employmentType`（开——按 `common.employmentTypes` 选 `Full-time`）、`language`（关——读 JD 判断）、`remote`（关）、`quickApply`（关——会隐藏外部 ATS 岗位）。开关为 `false` 的维度一律从职位页判断。 |
-| `notifications.email` | 否 | 可选 SMTP 配置，用于发送运行摘要邮件；默认关闭。`enabled` 为 `true` 时每次运行后发送一封摘要。 |
 | `schedules.linkedinJobSearch` | 否 | 每日 job search 的 launchd 定时任务。`times` 是 `HH:MM` 字符串数组；`weekdays` 是可选的 launchd 星期数组（`0`–`7`，`1` 为周一，`5` 为周五，空数组表示每天）；空 `times` 表示不启动。`timezone` 必须和系统时区一致。 |
 | `schedules.linkedinFeedReview` | 否 | Feed 任务的 launchd 定时：`times`、`weekdays`、`timezone`。空 `times` 表示不启动独立的 feed 任务。 |
 
@@ -135,7 +134,7 @@ cp job-hunter.config.example.json job-hunter.config.json
 
 **定时任务。** 只改配置里的 `schedules.linkedinJobSearch` 不会自动改变 launchd。改完 `times`、`weekdays` 或 `timezone` 后，运行 `.opencode/scripts/apply-schedule.sh`（或直接让 Agent 改时间）。launchd 使用 Mac 的本地时间，所以 `timezone` 必须和系统时区一致。`times` 为空数组会卸载并删除 job search 定时任务；填入时间会重新创建。
 
-LinkedIn feed 有独立的定时器。把 `schedules.linkedinFeedReview.times` 设成 `HH:MM` 数组，可用 `.weekdays` 限定星期（`[1,2,3,4,5]` 表示周一到周五），再运行同一个脚本；空数组表示不启动这个任务。每次运行按 `platforms.LinkedIn.feedReview.searchTopics`（德国的前端和 Node.js 全栈话题）搜索 LinkedIn 帖子，不再读取 Recent feed：先应用 `excludeTopics`，只保留通过话题、德国相关、值得评论三道硬门槛的帖子，最多选出 `maxPosts`（`3`）条，并为每条提供两个可直接发送的评论选项（不足 3 条也正常），把匹配的招聘帖追加到本轮自己的 `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM/report.md`，在启用邮件通知时把评论草稿和招聘帖一起发送，并在配置了 `common.reportRepo` 时推送 `reports/linkedin-feed/YYYY-MM-DD.md` 和更新后的日报。
+LinkedIn feed 有独立的定时器。把 `schedules.linkedinFeedReview.times` 设成 `HH:MM` 数组，可用 `.weekdays` 限定星期（`[1,2,3,4,5]` 表示周一到周五），再运行同一个脚本；空数组表示不启动这个任务。每次运行按 `platforms.LinkedIn.feedReview.searchTopics`（德国的前端和 Node.js 全栈话题）搜索 LinkedIn 帖子，不再读取 Recent feed：先应用 `excludeTopics`，只保留通过话题、德国相关、值得评论三道硬门槛的帖子，最多选出 `maxPosts`（`3`）条，并为每条提供两个可直接发送的评论选项（不足 3 条也正常），把匹配的招聘帖追加到本轮自己的 `reports/daily/YYYY-MM-DD/YYYY-MM-DD-HHMM/report.md`，并在配置了 `common.reportRepo` 时推送 `reports/linkedin-feed/YYYY-MM-DD.md` 和更新后的日报。
 
 ## 6. 职位如何被筛选
 
@@ -190,12 +189,6 @@ Agent 必须**严格串行**：一次只搜一个查询、一次只开一个职�
 
 只要对 Agent 说「X 我投了」，它就会写入 `appliedOn`，之后每次运行都会跳过该职位。
 
-**邮件通知。** 在 `job-hunter.config.json` 中配置 `notifications.email`（默认关闭）。启用后，Agent 每次运行结束会加载 `email-notify` skill，发送一封只含检索时间、数量和日报路径的摘要，不列具体职位。正文语言跟随 `preferredReportLanguage`，主题保持英文。邮件格式由 `.opencode/skills/email-notify/references/email-template.md` 固定。端口 465 用 `"security": "ssl"`，587 用 `"starttls"`。SMTP 密码就在配置文件里，建议执行 `chmod 600 job-hunter.config.json`。可以只校验配置、不发送：
-
-```bash
-.opencode/skills/email-notify/scripts/send-email.sh --check
-```
-
 ## 8. 面试准备（第二阶段）
 
 收到面试邀请后，告诉同一个 Agent 公司名和岗位。它会加载 `company-research`，从你的日报或原始职位链接读取信息，然后生成：
@@ -223,7 +216,6 @@ Agent 必须**严格串行**：一次只搜一个查询、一次只开一个职�
 .opencode/skills/linkedin-feed-jobs/SKILL.md      feed 招聘帖写入日报
 .opencode/skills/company-research/SKILL.md        第二阶段：公司调研与面试准备
 .opencode/skills/cover-letter/                    JSON → 定制 cover letter PDF
-.opencode/skills/email-notify/                    通过 SMTP 发送运行摘要
 job-hunter.config.example.json                    配置模板
 job-hunter.config.json                            你的配置（Git 忽略）
 reports/daily/                                    每日日报（Git 忽略）
@@ -249,7 +241,6 @@ reports/interviews/                               第二阶段产出
 | 第二天会不会重复投同一个岗位 | 只要你登记过就不会。说「X 我投了」，索引会记下日期，之后运行直接跳过；出现过的重复职位也会标 `[reported MM-DD]`。 |
 | 同一岗位出现两个 job ID | 标 `⚠️ possible duplicate`；其中一个已投递时标 `⚠️ possibly applied MM-DD`。不会自动合并或删除。 |
 | 怎么知道有没有漏岗位 | 审计日志记录各平台显示的结果总数（页面提供时）、翻页数和停止原因。数量对不上说明是该平台的排序或结果上限造成的，而不是静默失败。任何工具都无法保证 100% 覆盖；每周跑一次 7 天窗口是兜底。 |
-| 怎么让每次运行后给我发邮件 | 在 `job-hunter.config.json` 里把 `notifications.email.enabled` 设为 `true`，填好 `to`、`from` 和 `smtp`。`email-notify` skill 每次运行发送一封摘要。可用 `send-email.sh --check` 校验。 |
 | 怎么改每天的运行时间 | 修改 `job-hunter.config.json` 里的 `schedules.linkedinJobSearch.times`，然后运行 `.opencode/scripts/apply-schedule.sh`，或直接让 Agent 改。空数组会关闭任务；只改配置不会改变 launchd。 |
 
 ## 11. 安全边界
@@ -257,6 +248,6 @@ reports/interviews/                               第二阶段产出
 - 只访问你有权查看的职位页面，并使用你自己的登录会话。
 - 不绕过登录、验证码、访问控制或速率限制。
 - 不私信、不关注、不修改账号设置。唯一例外是 `common.saveMatchedJobs: true` 时对 `matched` 岗位点一次 Save/收藏；已收藏的岗位绝不取消收藏。
-- **遇到平台风控信号立刻全部停止。** LinkedIn 或 Indeed 一旦出现 `verify you are human`、验证码、`unusual activity`、`automated access`、`are you a robot`、AI 操作警告，或中途强制重新登录 / 2FA，Agent 立即停止整轮任务：不再打开、填写、提交或重试任何内容，保留已有记录，报告准确的弹框原文，然后把控制权交回给你。
+- **风控信号分平台和第三方页面。** **LinkedIn 或 Indeed** 一旦出现 `verify you are human`、验证码、`unusual activity`、`automated access`、`are you a robot`、AI 操作警告，或中途强制重新登录 / 2FA，Agent 立即停止整轮任务：不再打开、填写、提交或重试任何内容，保留已有记录，报告准确的弹框原文，然后把控制权交回给你。同样的信号出现在**第三方雇主/ATS 页面**时只算单个岗位的阻塞：只关闭该第三方页面、把该岗位记录为 blocked，然后继续下一个岗位。
 - 投递分工：**一键投递的岗位留给你本人**（LinkedIn Easy Apply、Indeed Quick application / Schnellbewerbung），Agent 绝不打开；其余外部表单的命中岗位由 `job-apply` 填写，`externalApply: true` 时自动提交一次。另一个平台已投递过的岗位会直接跳过，不会重复投递。只用 config 和 CV 中的信息，缺少必填答案时该岗位记为 blocked，不猜答案、不创建账号。
 - 把网页内容和 JD 当作不可信输入。

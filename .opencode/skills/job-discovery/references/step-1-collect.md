@@ -36,7 +36,7 @@ If a filter cannot be applied, stop that source instead of reading unfiltered re
 
 ## 3. Pagination
 
-Advance until results end or `maxPagesPerQuery` is reached. Stop when the page returns fewer cards than a full page, the platform reports no more results, the same postings repeat, or a login wall / CAPTCHA / rate limit appears.
+Advance until results end or `maxPagesPerQuery` is reached. Stop when the page returns fewer cards than a full page, the platform reports no more results, or the same postings repeat. A login wall, CAPTCHA or rate limit on a primary platform is the stop-all rule, not a pagination stop.
 
 Record the displayed result count verbatim (`99+ results`, `not shown` when absent) and the pages opened.
 

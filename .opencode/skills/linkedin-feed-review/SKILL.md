@@ -24,7 +24,7 @@ Read `job-hunter.config.json`:
   `common.locations` = whole country.
 - `common.technicalKeywords.include`, `.matchMode` — confirms a post is about the
   configured stack.
-- `common.preferredReportLanguage`, `notifications.email`, `common.reportRepo`.
+- `common.preferredReportLanguage`, `common.reportRepo`.
 
 If `platforms.LinkedIn.feedReview.searchTopics` and
 `common.technicalKeywords.include` are both empty, stop and ask.
@@ -132,10 +132,7 @@ Add `## Feed hiring posts` with the matched rows. When none match, write one lin
 `No matching hiring posts this run.`. Add one `## Coverage notes` line. Do not add
 a post-detail section or paste full posts.
 
-### Email and publish
-
-If `notifications.email.enabled`, load `email-notify` and send one email with the
-checklist comments and job rows.
+### Publish
 
 If `common.reportRepo` is set, run `.opencode/scripts/report-publish.sh reports/linkedin-feed/YYYY-MM-DD.md reports/linkedin-feed/YYYY-MM-DD.md`; it pushes and arms the one-shot expiry timer and commits with the fixed message `test something`. Never force-push. Never publish `reports/runs/` or `reports/applications/`. Published copies expire per `common.reportExpiryHours`; with `reportExpiryMode: "delete-repo"` the repo itself is deleted, so recreate it with `gh repo create <owner>/<name> --public` when the clone reports it missing.
 
@@ -149,5 +146,5 @@ says they commented, mark `[x]` and add `[commented MM-DD]`.
 
 Report the path, window, search topics, queries run, posts reviewed, exclusion
 count, topic-rejected count, location-rejected count, selected count, left-out
-count, job count, email status, publish status and limitations. State that fewer
+count, job count, publish status and limitations. State that fewer
 than three is valid and that search results may not show every post.

@@ -60,9 +60,9 @@ Record the displayed result count when shown, plus pages opened and the stop rea
 
 ## 6. Access boundaries
 
-If LinkedIn requires login, shows a CAPTCHA or blocks the run, stop this source and record it in `limitations`. Never ask for credentials and never bypass access controls. Never message, follow or change account settings. Never save a job on LinkedIn unless `common.saveMatchedJobs` is `true` and the row is `matched` (§9); never save from a login wall. Opening an employer form read-only is allowed; never fill, upload or submit it.
+If LinkedIn requires login, shows a CAPTCHA or blocks the run, stop the entire run and record it in `limitations`. Never ask for credentials and never bypass access controls. Never message, follow or change account settings. Never save a job on LinkedIn unless `common.saveMatchedJobs` is `true` and the row is `matched` (§9); never save from a login wall. Opening an employer form read-only is allowed; never fill, upload or submit it.
 
-**A trust or automation-suspicion signal stops everything.** `verify you are human`, CAPTCHA, `unusual activity` / `unusual traffic`, `automated access`, `are you a robot`, an AI-agent warning, or a forced re-login/2FA mid-run: stop the whole run immediately — no navigation, retry, refresh, filling or Submit. Record the exact dialog text and tell the user to take over.
+**A trust or automation-suspicion signal on LinkedIn stops everything.** `verify you are human`, CAPTCHA, `unusual activity` / `unusual traffic`, `automated access`, `are you a robot`, an AI-agent warning, or a forced re-login/2FA mid-run: stop the whole run immediately — no navigation, retry, refresh, filling or Submit. Record the exact dialog text and tell the user to take over. The same signal on an employer/ATS page opened from LinkedIn is handled by `job-apply`: close only that third-party tab, record the blocker, and continue.
 
 ## 7. Application-process fields
 
