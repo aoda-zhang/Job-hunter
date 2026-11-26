@@ -10,7 +10,7 @@ Open LinkedIn Jobs and submit **one query per `common.searchTitles` entry, in or
 - Submit one query, finish all its pages, then start the next. Re-submitting replaces the active filters, so re-apply and re-verify `Past 24 hours` + `Full-time` after every new query.
 - Read the search box back: LinkedIn appends `full-time posted in the past 24 hours`; that suffix is UI-added and acceptable. If the title itself differs, clear the box and resubmit.
 - Set `queryVerbatim: true` in the audit only after that comparison passed, and name the titles actually submitted.
-- Fallback when the search box is unavailable: `https://www.linkedin.com/jobs/search-results/?keywords=<title>&f_TPR=r86400&f_SAL=f_SA_id_226001%3A272015&start=<n>` yields the same filtered list. Say so in `limitations` and keep the title exactly as configured.
+- Fallback when the search box is unavailable: `https://www.linkedin.com/jobs/search-results/?keywords=<title>&f_TPR=r86400&f_SAL=f_SA_id_226001%3A272015&start=<n>` yields the same filtered list. Load it **in the existing working tab**, never in a new tab; do not try the legacy `/jobs/search/` URL. Say so in `limitations` and keep the title exactly as configured.
 
 ## 2. Filter mapping
 

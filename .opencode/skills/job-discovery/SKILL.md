@@ -75,7 +75,7 @@ Platform mechanics live in `references/linkedin.md` and `references/indeed.md`; 
 
 ## 4. Rules for every step
 
-- **Strictly sequential**: one query, one posting, one tab. Never batch-open cards or URLs, never loop over job IDs inside one call or script, never keep more than one job tab open.
+- **Strictly sequential, one tab for the whole run**: one query, one posting, one working tab. Create that tab once (or reuse a tab the user lent) and pass its id to every `navigate` / `eval` / `snapshot` / `click` call. `browse.navigate` with a URL but **no** `tab` opens a new background tab — never do that, and never open a second tab to try a fallback URL or a UI experiment. The `job-audit.md` file, not the open search page, is the record between steps, so keep using the same tab for every query, page turn and JD. Close any accidentally created tab immediately and record `tab hygiene` in `limitations`. Before the report is written, list the tabs and close every tab this run opened (the only exception is a `fill`-mode application tab the user must submit, which is reported as left open). Never batch-open cards or URLs, never loop over job IDs inside one call or script, never keep more than one job tab open.
 - Search results are not evidence: recommendation and fallback blocks ignore the filters. Judge every posting from its own page.
 - One source failure does not stop the run: record it in `limitations` and `searchedBySource`, continue, report it.
 - **Stop-all**: `verify you are human`, CAPTCHA, `unusual activity` / `unusual traffic`, `automated access`, `are you a robot`, an AI-agent warning, or a forced re-login/2FA stops the entire run immediately — no navigation, search, apply or retry. Keep what is written and tell the user to take over.

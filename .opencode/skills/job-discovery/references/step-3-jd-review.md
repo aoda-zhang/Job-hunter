@@ -7,7 +7,7 @@ Read this file after step 2. Open the `sent to JD review` rows one at a time, in
 1. Open the canonical URL, prefer the canonical URL, and confirm the posting is still open.
 2. In that same visit extract: title, company, company size, city, work mode, employment type, posted age, JD language and explicit language-requirement level, technical keywords, poster type, business, `easyApply`, `applyType`, cover-letter hint, top-applicant marker.
 3. Never reopen a JD for a missing report field — write `Not stated` / `unknown` / `review` instead.
-4. Keep the search tab and reuse one detail tab. Close every JD and apply-form tab immediately after its row is written.
+4. Reuse the single working tab from step 1: navigate it to each canonical URL. Do not open a second tab, not even for a fallback URL or a re-check — the merged list in `job-audit.md` is the search record, so the search page does not need to stay open. An apply-form tab (external ATS) is the only allowed second tab and is closed immediately after its row is written; a `fill`-mode tab the user must submit stays open and is reported. Close the working tab when the last row is written.
 
 Strictly sequential: one posting, one tab, one row at a time.
 

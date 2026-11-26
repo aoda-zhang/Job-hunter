@@ -2,6 +2,15 @@
 
 Read this file when starting a run. It builds the `job-audit` list: every card the platforms returned, with no JD opened.
 
+## 0. One tab
+
+Open the platform once and keep that tab's id for the whole step. Every query, filter change and page turn happens in that same tab.
+
+- Never call `browse.navigate` with a URL and no `tab`: that opens a new background tab. Pass the tab id you already hold to every browser call.
+- Never open a second tab for a fallback URL or a UI experiment. Load it in the existing tab instead.
+- If an extra tab appears anyway, close it immediately and record `tab hygiene` in `limitations`.
+- At the end of step 1 the search tab may stay open until the first JD is opened; step 3 reuses it.
+
 ## 1. Queries
 
 For each source selected for this run (`SKILL.md` §1.1), in `sources` order, submit **one query per `common.searchTitles` entry**, in order, one at a time. A platform whose schedule is not due today is not opened at all.
