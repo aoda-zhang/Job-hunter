@@ -9,6 +9,7 @@ Open LinkedIn Jobs and submit **one query per `common.searchTitles` entry, in or
 - Use the search box (`Describe the job you want`) and type the configured title exactly. Never rewrite, split, translate, merge, shorten or extend it, and never append cities, stack words or a time range — the filters are set in the UI, not in the query.
 - Submit one query, finish all its pages, then start the next. Re-submitting replaces the active filters, so re-apply and re-verify `Past 24 hours` + `Full-time` after every new query.
 - Read the search box back: LinkedIn appends `full-time posted in the past 24 hours`; that suffix is UI-added and acceptable. If the title itself differs, clear the box and resubmit.
+- If the result page URL contains `origin=SEMANTIC_SEARCH_LANDING_PAGE` or has no `f_TPR`, the submission opened an unfiltered semantic list: do not read its cards. Reapply the filters and reload the `search-results` URL with `f_TPR` / `f_SAL` before collecting.
 - Set `queryVerbatim: true` in the audit only after that comparison passed, and name the titles actually submitted.
 - Fallback when the search box is unavailable: `https://www.linkedin.com/jobs/search-results/?keywords=<title>&f_TPR=r86400&f_SAL=f_SA_id_226001%3A272015&start=<n>` yields the same filtered list. Load it **in the existing working tab**, never in a new tab; do not try the legacy `/jobs/search/` URL. Say so in `limitations` and keep the title exactly as configured.
 
@@ -28,13 +29,15 @@ Do not add filters that are not in the config (salary, company, Easy Apply, appl
 
 **Gate before reading any card.** `Past 24 hours` and `Full-time` must both render as active filter pills — not suggested chips. If either is missing, set it again and re-verify. If a filter genuinely cannot be applied, stop this source instead of reading unfiltered results.
 
+The pills control only the organic result list. The `Viewed` / recently-viewed strip at the top, promoted / `Verified job` cards and any `SEMANTIC_SEARCH_LANDING_PAGE` list are not filtered by them. Read each card's printed age and drop anything already outside the lookback (§3); never collect a whole unfiltered block just because the pills are visible above it.
+
 ## 3. Result extraction
 
 Step 1 reads cards only; it never opens a posting.
 
 - Job ID: numeric ID in the card link, e.g. `4487182341`. The current UI carries `componentkey="job-card-component-ref-<jobId>"` on the card element.
 - Canonical URL: `https://www.linkedin.com/jobs/view/<jobId>/`. Strip `?trk=`, `?refId=`, `?trackingId=`, `?originalSubdomain=`.
-- Company, title, location and posting age come from the card; the detail page wins on conflicts in step 3.
+- Company, title, location and posting age come from the card; the detail page wins on conflicts in step 3. Read the printed age (`Posted 9 hours ago`, `Reposted 16h`, `1 month ago`) and apply the card-level lookback gate from `step-1-collect.md` §2 before recording: a card already outside the window is dropped, never opened.
 - Record per card: company, published title, canonical URL, job ID, source, and which search title returned it.
 - Deduplicate by job ID / canonical URL across all titles before counting.
 

@@ -18,6 +18,8 @@ Apply, before the title filter:
 - entries in today's `reports/applications/YYYY-MM-DD.md` → status `already applied (skipped)`;
 - the applied set from another platform → status `applied on another platform (skipped)`.
 
+Also drop, before the title filter, every card whose recorded card age is outside `common.lookbackHours` (or `platforms.<name>.search.lookbackHours`) → status `dropped: outside lookback`. This is a pre-open drop: never open the JD, never carry the row into matched, review or excluded, and never show it in `report.md`. A card with no printed age stays in the review set and step 3 decides.
+
 None of these are opened in step 3 and none appear in the matched, review or excluded tables.
 
 ## 3. Primary-stack filter

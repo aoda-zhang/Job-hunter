@@ -91,6 +91,7 @@ Write it as a plain list directly under the title, before the summary:
 - `Saved` is written only when `common.saveMatchedJobs` is `true`; name each not-saved reason in the audit, not in the header.
 - `Deferred German JDs: N` is written only when `germanJdPass.enabled` is `true` and N > 0: `N` postings whose title passed and whose JD is German, listed in `german-jd-audit.md` and worked by Part 2 after this report is published. They are never part of `Matched`, `Excluded` or `Needs manual review`. When `german-jd-audit.md` exists, link it next to the `job-audit` link.
 
+- `Platform filters (verified)` describes only the organic lists actually read. When any collected card came from a block the pills do not control (promoted / `Verified job` slot, `Viewed` strip, semantic landing page), state that in `limitations`; never imply the whole dataset was date-filtered.
 - `Start` = the moment the run started searching; `End` = the moment report, index and audit were finished. Both in local time with minutes; keep the timezone label on the start line only.
 - Take both values from the same clock source; never write a planned or estimated end time.
 - `Apply dedupe` must state the real result of the pre-run check. When it skipped jobs, name the count and keep the skipped rows out of every table.
@@ -331,7 +332,7 @@ Always the last job table.
 - Group similar reasons. Do not paste long JD passages.
 - Duplicate relationships may be noted; never double-count.
 - A top-applicant job that failed a check lists only the failed dimension.
-- Cards skipped before opening never appear here.
+- Cards skipped before opening never appear here. That includes cards dropped at collection for being outside the lookback: they stay in `job-audit.md` as `dropped: outside lookback` and are never an exclusion row.
 - `Link` is mandatory: `[Open](URL)` for the page opened in this run.
 - Never use excluded URLs as a cross-day dedup key.
 
