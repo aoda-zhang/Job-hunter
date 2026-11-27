@@ -28,9 +28,9 @@ Format baseline for `reports/daily/`. Read before writing or updating a report. 
 - The file is a flat object: one key per field the application requires, value = the answer to fill. Key = the form label in `snake_case`, value = the configured answer, or `""` when the answer is unknown, unconfigured or unanswered (never `null`, never invented).
 - `note` is the only non-field key: `apply DONE` when this run submitted the application automatically, otherwise `blocked: <concrete blocker>` or `not applied: <reason>`.
 - No job metadata inside the file (`jobId`, `company`, `ats`, `applyUrl`, …): the folder name identifies the vacancy, the report row carries the link and status.
-- Easy Apply: open the apply modal read-only once, record the fields it shows, close it — **never submit and never fill it**.
+- Easy Apply: with `applications.easyApply.enabled: true`, record only the label in Part 1 and let `job-apply` fill one modal at a time; otherwise open the apply modal read-only once, record the fields it shows, close it — **discovery never fills or submits it**.
 - Folder name = company + published job title, spaces → hyphens, umlauts transliterated (`ä`→`ae`, `ö`→`oe`, `ü`→`ue`, `ß`→`ss`) and gender markers dropped: `AboutYou-Senior-TypeScript-Developer`, `Wolt-Senior-Software-Engineer`. Never use ids or dates in the name.
-- The folder exists for every matched row that has an apply control: Easy Apply rows get their read-only field map, external rows get theirs plus the fill/blocker note. Third-party rows are included only when `common.thirdPartyPostings` is not `exclude`.
+- The folder exists for every matched row that has an apply control: when Easy Apply automation is off, Easy Apply rows get a read-only field map; external rows get theirs plus the fill/blocker note. Third-party rows are included only when `common.thirdPartyPostings` is not `exclude`.
 - `report.md` never contains field tables; its `Apply form` cell carries only the short status.
 - Two runs that start in the same minute: append `-2`, `-3`, … (`2026-11-20-2101-2/`). Never merge them.
 - A second run on the same day gets its own new folder. **Never merge across runs, never append today's results to an earlier run's folder, and never rewrite an earlier run's report.**
@@ -204,7 +204,7 @@ Split the section's matched jobs into exactly two parts, in this order. The spli
 
 - All matched jobs with `Easy Apply = Yes` that are not submitted, including top-applicant rows.
 - Keep the heading text `Easy Apply` in every language, or its localized equivalent of the column header.
-- The agent opens each one-click form once, read-only, and records its fields in `fields.json`. It never fills or submits — the user applies manually.
+- The agent opens each one-click form once. When `applications.easyApply.enabled` is `true`, `job-apply` fills and submits it one at a time and the row moves to `Submitted`; otherwise the form is recorded read-only and the user applies manually.
 - Number = rows in this part / total non-submitted rows in this section.
 
 ```markdown
@@ -241,7 +241,7 @@ Columns:
 |---|---|
 | # | Sequential in final display order |
 | Company | Company on the page; if poster ≠ employer, put the poster here and the employer in Notes |
-| Notes | Verifiable facts only: stack, level, contract, poster/employer mismatch, conflicts; ≤ about 90 characters; no fit language. Every external row (`Easy Apply` = `No` / `Unknown`) that was not submitted ends with `Not auto-submitted: <reason>` (translated in the report language), naming the concrete cause: login or account creation, a required field the config cannot answer, rejected value, CAPTCHA, expired posting, browser/relay failure, or a policy skip |
+| Notes | Verifiable facts only: stack, level, contract, poster/employer mismatch, conflicts; ≤ about 90 characters; no fit language. Every row that was not submitted — an external row (`Easy Apply` = `No` / `Unknown`) or a one-click row the agent handled — ends with `Not auto-submitted: <reason>` (translated in the report language), naming the concrete cause: login or account creation, a required field the config cannot answer, rejected value, CAPTCHA, expired posting, browser/relay failure, or a policy skip |
 | Apply form | `Inspected` (fields in the vacancy folder's `fields.json`), `Blocked` (the form really cannot be completed: missing required answer, login, CAPTCHA, upload restriction), `Skipped: <reason>` (a policy decision: third party excluded, account creation required, one-click apply), `Unconfirmed` (a submit was clicked but no confirmation page appeared), `Submitted`, or `Not external` |
 | Saved | `Saved` (verified this run), `Already saved` (untouched), `Not saved: <reason>` (no save control, sign-in wall, control did not respond), or `—` when `common.saveMatchedJobs` is not `true` or the row is not a match |
 | Link | `[Open](canonical URL)` actually visited in this run |

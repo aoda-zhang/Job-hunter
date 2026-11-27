@@ -64,7 +64,7 @@ Reopen the canonical URL, then use the normal `job-apply` procedure and field ma
 
 - **Save** first when `common.saveMatchedJobs` is `true` (one verified click, never toggled off).
 - **Cover letter** when `common.isNeededCover` is `true`, saved in `<run>/<Company>-<JobTitle>/`.
-- **Easy Apply / Schnellbewerbung** — never fill or submit; leave it to the user, record it in `both-lan.md` and the queue.
+- **Easy Apply / Schnellbewerbung** — with `applications.easyApply.enabled` `true`, fill and submit it through `job-apply` one vacancy at a time; otherwise never fill or submit, leave it to the user, and record it in `both-lan.md` and the queue.
 - **External** — inspect the form into `fields.json`, fill and submit per `applications.externalApply` (`true` submits, `fill` stops before Submit, `false` inspects only). Third-party postings follow `applications.excludeThirdParty`.
 - **Blocked** — `note: "blocked: <reason>"` in `fields.json` plus one `help.json` entry with `"pass": "both-lan"`. Never guess an answer.
 - Never create an account, never bypass a CAPTCHA, never apply twice.
@@ -100,7 +100,7 @@ Written in the run folder as `<run>/` + `germanJdPass.reportFile` (default `both
 - 运行编号：`2026-11-24-1500`
 - 第一部分报告：`report.md`（已发布）
 - 德语 JD 审计：`german-jd-audit.md`
-- 本次处理：处理 7 · 强匹配 4 · 已提交 2 · 阻塞 1 · 留给你（Easy Apply）1 · 未通过 3
+- 本次处理：处理 7 · 强匹配 4 · 已提交 3 · 阻塞 1 · 未通过 3
 - 队列：`reports/runs/both-lan-queue.md`（本次处理的 7 条均已终态；未处理 0）
 
 ## 强匹配候选
@@ -109,7 +109,7 @@ Written in the run folder as `<run>/` + `germanJdPass.reportFile` (default `both
 |---|---|---|---|---|---|---|---|---|---|---|
 | 1 | Example GmbH | Senior Frontend Engineer | Berlin | Hybrid | React, TypeScript | `Deutsch und Englisch` | Submitted | Saved | [Open](https://…) | 21:42 已提交 |
 | 2 | Another AG | Fullstack Developer | Remote | Remote | React, Node.js | `Englisch als Arbeitssprache` | Blocked | Saved | [Open](https://…) | 阻塞：必填 `Node years`（b-014） |
-| 3 | Third GmbH | React Developer | Munich | On-site | React, TypeScript | `Deutsch und Englisch` | Manual only | — | [Open](https://…) | Easy Apply，留给你 |
+| 3 | Third GmbH | React Developer | Munich | On-site | React, TypeScript | `Deutsch und Englisch` | Submitted | Saved | [Open](https://…) | 21:44 已提交（Easy Apply） |
 
 ## 未通过强匹配
 
@@ -119,7 +119,7 @@ Written in the run folder as `<run>/` + `germanJdPass.reportFile` (default `both
 | 2 | Example Three | Fullstack Developer | 技术栈命中不足：1 个 |
 ```
 
-- `Apply form`: `Submitted` / `Blocked` / `Inspected` / `Manual only` (Easy Apply).
+- `Apply form`: `Submitted` / `Blocked` / `Inspected` / `Manual only` (Easy Apply when automation is disabled).
 - `结果` names the concrete outcome and the `help.json` id when blocked; never claim a submit without the confirmation page.
 - The `未通过强匹配` table uses the exact failing gate (`未写明英语同为工作语言`, `技术栈命中不足：<n> 个`, `主技术栈 <stack>`, `工作模式未标注`, `已投递过`, `职位已关闭`).
 - Write the file even when nothing qualified: keep the header and the `本次处理` line, and omit the empty tables.

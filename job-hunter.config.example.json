@@ -104,6 +104,10 @@
   "applications": {
     "enabled": false,
     "externalApply": false,
+    "easyApply": {
+      "enabled": false,
+      "maxPerRun": null
+    },
     "scope": "matched",
     "excludeThirdParty": true,
     "requireNoAccount": true,

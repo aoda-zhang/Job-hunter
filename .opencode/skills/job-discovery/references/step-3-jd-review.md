@@ -53,7 +53,7 @@ Active only when `common.saveMatchedJobs` is `true`. Skipped entirely when it is
 Record `easyApply` (`yes` / `no` / `unknown`), `applyType` (`easy_apply` / `external` / `unknown`) and `coverLetter` (`yes` / `no` / `unknown`) for every inspected vacancy. They never affect classification.
 
 - `deferred (German JD)` — read the Apply control label only. Never click it, never open a one-click modal, never inspect the employer form, no `fields.json` in Part 1. Record `easyApply` from the label and `applyType: unknown`; the both-lan pass opens the real form later.
-- `easy_apply` — open the one-click form once, read-only, record every visible field (label, type, required, options, mapped value) into `<run>/<Company>-<JobTitle>/fields.json`, close it. **Never type, upload or submit.** The row stays with the user.
+- `easy_apply` — when `applications.easyApply.enabled` is `true`, only record `easyApply: Yes` and `applyType: easy_apply`; the modal belongs to `job-apply`. Otherwise open the one-click form once, read-only, record every visible field (label, type, required, options, mapped value) into `<run>/<Company>-<JobTitle>/fields.json`, close it. **Discovery never types, uploads or submits in either mode.**
 - `external` — click Apply once, confirm the destination leaves the platform, and inspect the employer form read-only: ATS, host, final `applyUrl`, blockers and every field into `fields.json`. `job-apply` files it after the report; a blocker is written by `job-apply` as `blocked: <reason>` in `fields.json` plus one entry in `.opencode/skills/job-apply/help.json` (`status: "open"`).
 - `unknown` — do not click; record it and leave the row for the user.
 

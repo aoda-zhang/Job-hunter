@@ -75,7 +75,7 @@ Record these while the job page is open; they never affect classification.
 
 **Apply type:** `easy_apply` / `external` / `unknown` from the same button.
 
-**Easy Apply form:** open the modal once, read-only, record every visible field into `<run>/<Company>-<JobTitle>/fields.json`, close it. Never fill, upload or submit.
+**Easy Apply form:** when `applications.easyApply.enabled` is `true`, record only `easyApply: Yes` / `applyType: easy_apply` and leave the modal to `job-apply`. Otherwise open the modal once, read-only, record every visible field into `<run>/<Company>-<JobTitle>/fields.json`, close it. In both cases discovery never fills, uploads or submits.
 
 **External form:** click Apply once, confirm the destination is not `linkedin.com`, then inspect read-only: ATS, host, final `applyUrl`, blockers and every field. `job-apply` files it after the report; a blocker becomes `blocked: <reason>` in `fields.json` plus one entry in `.opencode/skills/job-apply/help.json`. Draft the cover letter when the form asks for one.
 
