@@ -158,6 +158,11 @@ Run only with `applications.enabled: true`, `applications.easyApply.enabled: tru
 | "Production experience with LLMs / RAG / agents?" | — | not in the config: a required answer is `blocked: unanswerable LLM experience`; never invent a project |
 | Highest education | `applications.screening.highestEducation` | exact |
 | Willing to relocate | `applications.screening.willingToRelocate` | boolean |
+| Requires relocation support (paid move) | `applications.screening.requiresRelocationSupport` | `false` → `No`; never confuse with willingness to relocate |
+| "Have you heard of <company> before?" | `applications.screening.heardOfCompanyBefore` | exact (`Yes (via LinkedIn)`); never claim prior knowledge of the product |
+| Remote-work experience | `applications.screening.remoteExperience` | `none` → `This would be my first remote role`; never claim remote years |
+| Cloud / AWS / Kubernetes / production-workload experience | `applications.screening.cloudYears` + `techYears` | exact configured years; missing + required → blocked |
+| Street / postcode / mailing address | `applications.screening.postalAddress` | `null` + required → `blocked: no German address`; skip the posting |
 | "Where would you like to work in general?" / work-mode preference | `common.workModes` | check every mode listed there (`Remote`, `Hybrid`, `On-site`); never narrow it to one mode |
 | Government official / public sector | `applicant.governmentEmployee` | `null` → blocked |
 | How did you hear about us | `applications.screening.howDidYouHear` | exact |
