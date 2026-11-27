@@ -83,7 +83,7 @@ Write it as a plain list directly under the title, before the summary:
 - Scope: all of Germany (no city limit)
 - Search titles (in order): <common.searchTitles, separated by ·>
 - Platform filters (verified): Past 24 hours · Full-time
-- Apply dedupe: previous run `job-audit.md` merged list and today's `reports/applications/` checked before the run; N already-applied hits; none re-applied
+- Apply dedupe: previous job-search run's `job-audit.md` merged list and today's `reports/applications/` checked before the run; N already-applied hits; none re-applied
 - Saved: N matched jobs saved on the platform (LinkedIn N · Indeed N); M not saved
 - Report: `reports/daily/2026-11-20/2026-11-20-2101/report.md`
 ```

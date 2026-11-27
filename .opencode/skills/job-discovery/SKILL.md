@@ -49,7 +49,7 @@ Read `job-hunter.config.json` (Git-ignored). Never use the example as personal s
 
 Read these once, before the first platform:
 
-- **previous-run set** — job IDs and canonical URLs in the merged list of the single most recent earlier run's `<run>/job-audit.md`, every status included (matched, review, excluded, shallow-filtered, skipped). Those cards are skipped and recorded only in this run's `job-audit`. Fall back to that run's `report.md` tables only when its audit is missing or has no merged list, and say so in `limitations`.
+- **previous-run set** — job IDs and canonical URLs in the merged list of the single most recent earlier **job-search** run's `<run>/job-audit.md`, every status included (matched, review, excluded, shallow-filtered, skipped). A feed-only run (`linkedin-feed-review` / `linkedin-feed-jobs`) writes no `job-audit.md` and is not the previous run for this set. Those cards are skipped and recorded only in this run's `job-audit`. Fall back to that job-search run's `report.md` tables only when its audit is missing or has no merged list, and say so in `limitations`.
 - **applied set** — every application row in today's `reports/applications/YYYY-MM-DD.md`, keyed by normalized `company + title + city`; extended as this run applies. `reports/job-index.json` is legacy and is never read or written.
 
 Scope: require one non-empty `common.countries`; non-empty `locations` limits to those cities. Never narrow silently.

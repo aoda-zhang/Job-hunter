@@ -55,7 +55,7 @@ It works the local queue (section 3) and this run's deferred rows **to the end**
 5. **Primary stack** — the role's main language/framework in `common.jobTitles.stackExclude` with `applications.screening.techYears` = `0` → fail (`primary stack`). A React mention inside a Java/Python role never qualifies.
 6. **Work mode, employment type, seniority** — only when configured in `common`; judge from the page. An `unknown` **fails** here (no review queue in Part 2) and the reason is `work mode not stated` etc.
 7. **German level** — `common.jdLanguages.maxRequiredLevel.German` does **not** gate this pass; the stated level is already in the audit and goes into the report so the user can judge. The `English` cap still applies.
-8. **Dedupe** — skip a candidate already applied to (today's `reports/applications/*.md`, the queue, or the previous run's audit), or already matched in this run's Part 1.
+8. **Dedupe** — skip a candidate already applied to (today's `reports/applications/*.md`, the queue, or the previous job-search run's audit), or already matched in this run's Part 1.
 9. **Then apply** — a candidate that passes every gate is handled in §2.2; a failing one is recorded in `both-lan.md` with its reason and in the queue as `skipped: <reason>`. Move on to the next posting.
 
 ### 2.2 Applying
