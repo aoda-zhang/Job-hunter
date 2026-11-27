@@ -47,6 +47,13 @@ print -r -- "$$" > "$LOCK"
 trap 'rm -f "$LOCK"' EXIT INT TERM HUP
 print -r -- "=== $(date) lock acquired (pid $$) ===" >> "$LOG"
 
+# Refuse to apply under rules that contradict job-hunter.config.json.
+# See .opencode/scripts/check-apply-policy.sh.
+if ! "$REPO/.opencode/scripts/check-apply-policy.sh" >> "$LOG" 2>&1; then
+  print -r -- "=== $(date) run aborted: apply policy contradicts the config (see log) ===" >> "$LOG"
+  exit 4
+fi
+
 # The browse extension needs Chrome; bring it up quietly if it is closed.
 if ! pgrep -x "Google Chrome" >/dev/null 2>&1; then
   open -g -a "Google Chrome"

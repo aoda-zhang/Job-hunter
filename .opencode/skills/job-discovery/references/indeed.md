@@ -105,7 +105,7 @@ Record while the job is open; these are informational and never affect match/rev
 
 **Cover letter** — `Yes` only when the page or JD explicitly requires one; `No` when explicitly optional or absent; `Unknown` when unstated.
 
-**Quick application form** — open it once, read-only, record every visible field into `<run>/<Company>-<JobTitle>/fields.json`, close it. Never fill, upload or submit it; the row stays with the user.
+**Quick application form** — when `applications.easyApply.enabled` is `true`, record only `easyApply: Yes` / `applyType: easy_apply` and leave the modal to `job-apply`; otherwise open it once, read-only, and record every visible field into `<run>/<Company>-<JobTitle>/fields.json`, then close it. Discovery never fills, uploads or submits it in either mode; in manual mode the row stays with the user.
 
 **External form** — click `Continue to the application` once, record the ATS, host, final `applyUrl` and every field read-only. `job-apply` files it after the report; a blocker becomes `blocked: <reason>` in `fields.json` plus one entry in `.opencode/skills/job-apply/help.json`.
 

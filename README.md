@@ -215,6 +215,7 @@ This phase is manual and never runs during daily discovery.
 .opencode/agents/job-hunter.md                    the agent you talk to
 .opencode/scripts/daily-run.sh                    launchd entry point
 .opencode/scripts/copy-report-to-desktop.sh       copy an after-18:00 run to the Desktop
+.opencode/scripts/check-apply-policy.sh           fail when the apply docs contradict the config
 .opencode/scripts/apply-schedule.sh               sync the schedule config to launchd
 .opencode/scripts/feed-review-run.sh             feed review launchd entry point
 .opencode/skills/job-discovery/SKILL.md           phase 1: search, filter, report

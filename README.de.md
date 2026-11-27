@@ -172,6 +172,7 @@ Diese Phase startest du manuell; sie läuft nie während der täglichen Suche.
 .opencode/agents/job-hunter.md                    der Agent, mit dem du sprichst
 .opencode/scripts/daily-run.sh                    launchd-Einstiegspunkt
 .opencode/scripts/copy-report-to-desktop.sh       Bericht ab 18:00 auf den Schreibtisch kopieren
+.opencode/scripts/check-apply-policy.sh           Bewerbungsregeln gegen die Konfiguration prüfen
 .opencode/scripts/apply-schedule.sh               Zeitplan aus der Konfiguration anwenden
 .opencode/skills/job-discovery/SKILL.md           Phase 1: Suche, Filter, Bericht
 .opencode/skills/job-discovery/references/        Berichtsformat, Index- und Audit-Regeln

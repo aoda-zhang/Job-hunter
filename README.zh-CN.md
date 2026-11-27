@@ -205,6 +205,7 @@ Agent 必须**严格串行**：一次只搜一个查询、一次只开一个职�
 .opencode/agents/job-hunter.md                    你对话的 Agent
 .opencode/scripts/daily-run.sh                    launchd 入口脚本
 .opencode/scripts/copy-report-to-desktop.sh       把 18:00 后的运行复制到桌面
+.opencode/scripts/check-apply-policy.sh           投递前校验文档规则与配置是否一致
 .opencode/scripts/apply-schedule.sh               把定时配置同步到 launchd
 .opencode/scripts/feed-review-run.sh              feed review 的 launchd 入口
 .opencode/skills/job-discovery/SKILL.md           第一阶段：搜索、筛选、写报告
