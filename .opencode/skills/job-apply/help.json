@@ -230,8 +230,8 @@
       "field": null,
       "kind": "infrastructure",
       "reason": "Personio form was filled and Submit Application was clicked once, but the tab closed with no confirmation page or reference shown; submission is unconfirmed",
-      "status": "open",
-      "answer": null
+      "status": "fixed",
+      "answer": "Submission was unconfirmed; do not retry (avoids a duplicate). Treat as submitted unless the user explicitly asks to reapply."
     },
     {
       "id": "b-023",
