@@ -67,6 +67,7 @@ Reopen the canonical URL, then use the normal `job-apply` procedure and field ma
 - **Easy Apply / Schnellbewerbung** — with `applications.easyApply.enabled` `true`, fill and submit it through `job-apply` one vacancy at a time; otherwise never fill or submit, leave it to the user, and record it in `both-lan.md` and the queue.
 - **External** — inspect the form into `fields.json`, fill and submit per `applications.externalApply` (`true` submits, `fill` stops before Submit, `false` inspects only). Third-party postings follow `applications.excludeThirdParty`.
 - **Blocked** — `note: "blocked: <reason>"` in `fields.json` plus one `help.json` entry with `"pass": "both-lan"`. Never guess an answer.
+- **Queue sync** — the moment a submit succeeds, write the applications-log row and set that queue row to `applied` in the same step, including a `blocked` row that was just retried. A queue row and an applications row must never disagree about the same URL; a stale `blocked` row caused a duplicate submission on 2026-11-27.
 - Never create an account, never bypass a CAPTCHA, never apply twice.
 
 ## 3. Queue — `reports/runs/both-lan-queue.md`
@@ -86,6 +87,7 @@ Local working state, Git-ignored, never published. It records what happened to e
 - `interrupted` means the run was cut off hard (primary-platform stop-all dialog, browser failure, crash) before the row was handled. Those rows are resumed first by the next run; they are the only rows that carry over.
 - Add every deferred row of the current run in one of those states, deduplicated by canonical URL and by normalized `company + title + city`.
 - A `blocked: b-NNN` row changes to `applied` / `skipped` once that `help.json` entry is `answered` or `fixed` and the row is retried; until then it stays `blocked` and is reported as blocked, never as "waiting".
+- **One state per URL.** A row that was `blocked` and is retried successfully becomes `applied` immediately — a submitted row is never left `blocked`. The queue is the dedupe source for this pass; the fallback is today's applications log, never an older one.
 - Evaluate eligibility only for a row being processed; a failed gate marks it `skipped: <reason>` so it never returns.
 - Prune `applied`, `skipped` and `closed` rows older than 30 days; never delete a `blocked` or `interrupted` row.
 - Process `interrupted` rows first (oldest first), then this run's new deferrals; finish the list unless the run is stopped by the primary-platform stop-all rule.
